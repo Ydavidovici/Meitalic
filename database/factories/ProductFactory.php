@@ -14,6 +14,7 @@ class ProductFactory extends Factory
         return [
             'name'        => $this->faker->word,
             'brand'       => $this->faker->company,
+            'category'    => $this->faker->randomElement(['skincare', 'makeup', 'haircare', 'fragrance', 'nail care']),
             'description' => $this->faker->paragraph,
             'price'       => $this->faker->randomFloat(2, 5, 200),
             'image'       => $this->faker->imageUrl(640, 480, 'fashion', true),
