@@ -9,10 +9,9 @@ class Product extends Model
 {
     use HasFactory;
 
-    // Updated fillable to include the new 'brand' field
     protected $fillable = [
         'name',
-        'brand',    
+        'brand',
         'description',
         'price',
         'image',
