@@ -9,10 +9,10 @@ class Product extends Model
 {
     use HasFactory;
 
-    // Fields from your products migration:
-    // id, name, description, price, image, inventory, created_at, updated_at
+    // Updated fillable to include the new 'brand' field
     protected $fillable = [
         'name',
+        'brand',    
         'description',
         'price',
         'image',
