@@ -10,7 +10,6 @@ class CreateOrdersTable extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            // Use foreignId for Laravel 7+; allows guest checkouts with nullable
             $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
             $table->text('shipping_address');
             $table->decimal('total', 8, 2);
