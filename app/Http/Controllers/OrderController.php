@@ -7,8 +7,11 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Stripe\Stripe;
 use Stripe\PaymentIntent;
+use App\Mail\OrderReceiptMail;
+use App\Mail\AdminOrderNotificationMail;
 
 class OrderController extends Controller
 {
@@ -67,8 +70,15 @@ class OrderController extends Controller
 
             DB::commit();
 
+            // --- Send Email Notifications ---
+            // Send an order receipt email to the customer
+            Mail::to($order->user->email)->send(new OrderReceiptMail($order));
+
+            // Send an admin notification email (admin email set in .env or config/mail.php)
+            $adminEmail = config('mail.admin_address', 'admin@example.com');
+            Mail::to($adminEmail)->send(new AdminOrderNotificationMail($order));
+
             // Redirect to a page where the user can confirm payment (or show a message)
-            // In a full integration, you might redirect to a Stripe Checkout page or embed Stripe Elements.
             return redirect()->route('order.show', $order->id)
                 ->with('success', 'Order placed. Please complete your payment.');
         } catch (\Exception $e) {
