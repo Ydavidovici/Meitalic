@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\CartService;
+use Illuminate\Http\Request;
 
 class CartController extends Controller
 {
@@ -11,8 +12,10 @@ class CartController extends Controller
     public function index()
     {
         return view('cart.index', [
-            'items' => $this->cart->all(),
-            'total' => $this->cart->total(),
+            'items'     => $this->cart->all(),
+            'total'     => $this->cart->total(),
+            'discount'  => $this->cart->getDiscount(),
+            'promoCode' => $this->cart->promoCode(),
         ]);
     }
 
@@ -26,5 +29,21 @@ class CartController extends Controller
     {
         $this->cart->remove($id);
         return back();
+    }
+
+    public function update(Request $request, $id)
+    {
+        $this->cart->update($id, $request->quantity);
+        return back()->with('success', 'Cart updated.');
+    }
+
+    public function applyPromo(Request $request)
+    {
+        try {
+            $this->cart->applyPromoCode($request->code);
+            return back()->with('success', 'Promo code applied!');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
     }
 }

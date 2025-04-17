@@ -3,12 +3,14 @@
 namespace App\Services;
 
 use App\Models\Product;
+use App\Models\PromoCode;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Session;
 
 class CartService
 {
     protected string $sessionKey = 'cart';
+    protected string $promoKey = 'promo_code';
 
     public function all(): Collection
     {
@@ -60,15 +62,49 @@ class CartService
     public function clear(): void
     {
         Session::forget($this->sessionKey);
+        Session::forget($this->promoKey);
     }
 
     public function total(): float
     {
-        return $this->all()->sum(fn($item) => $item['price'] * $item['quantity']);
+        $subtotal = $this->all()->sum(fn($item) => $item['price'] * $item['quantity']);
+        return max(0, $subtotal - $this->getDiscount());
     }
 
     public function count(): int
     {
         return $this->all()->sum('quantity');
+    }
+
+    public function applyPromoCode(string $code): PromoCode
+    {
+        $promo = PromoCode::where('code', $code)->firstOrFail();
+
+        if (!$promo->isValid()) {
+            throw new \Exception("Invalid or expired promo code.");
+        }
+
+        Session::put($this->promoKey, $promo->code);
+        return $promo;
+    }
+
+    public function getDiscount(): float
+    {
+        $code = Session::get($this->promoKey);
+        if (!$code) return 0;
+
+        $promo = PromoCode::where('code', $code)->first();
+        $total = $this->all()->sum(fn($item) => $item['price'] * $item['quantity']);
+
+        if (!$promo || !$promo->isValid()) return 0;
+
+        return $promo->discount_percent
+            ? $total * ($promo->discount_percent / 100)
+            : $promo->discount_amount;
+    }
+
+    public function promoCode(): ?string
+    {
+        return Session::get($this->promoKey);
     }
 }
