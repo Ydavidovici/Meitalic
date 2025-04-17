@@ -11,16 +11,21 @@ class OrderItemFactory extends Factory
 {
     protected $model = OrderItem::class;
 
-    public function definition()
+    public function definition(): array
     {
-        // Create a product to reference
         $product = Product::factory()->create();
+        $quantity = $this->faker->numberBetween(1, 5);
+        $price = $product->price;
 
         return [
-            'order_id'   => Order::factory(),  // creates a new order
+            'order_id'   => Order::factory(),
             'product_id' => $product->id,
-            'quantity'   => $this->faker->numberBetween(1, 5),
-            'price'      => $product->price,  // record product price at time of order
+            'name'       => $product->name,
+            'price'      => $price,
+            'quantity'   => $quantity,
+            'total'      => $price * $quantity,
+            'sku'        => $product->sku,
+            'options'    => $product->options,
         ];
     }
 }
