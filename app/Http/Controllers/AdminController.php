@@ -2,22 +2,25 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Order;
 use Illuminate\Http\Request;
+use Webkul\Order\Repositories\OrderRepository;
 
 class AdminController extends Controller
 {
-    public function index()
+    public function __construct()
     {
-        // Fetch recent orders, for example the latest 10 orders
-        $recentOrders = Order::latest()->take(10)->get();
+        $this->middleware('admin.auth');
+    }
+
+    public function index(OrderRepository $orderRepository)
+    {
+        $recentOrders = $orderRepository->orderBy('created_at', 'desc')->take(10)->get();
         return view('pages.admin.dashboard', compact('recentOrders'));
     }
 
-    public function orders()
+    public function orders(OrderRepository $orderRepository)
     {
-        // Show all orders
-        $orders = Order::latest()->paginate(20);
+        $orders = $orderRepository->orderBy('created_at', 'desc')->paginate(20);
         return view('pages.admin.orders', compact('orders'));
     }
 }

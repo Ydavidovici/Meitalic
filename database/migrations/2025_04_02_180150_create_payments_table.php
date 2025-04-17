@@ -10,11 +10,12 @@ class CreatePaymentsTable extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
-            // Link payment to an order
             $table->foreignId('order_id')->constrained()->onDelete('cascade');
             $table->string('stripe_payment_id');
             $table->decimal('amount', 8, 2);
+            $table->string('currency')->default('usd');
             $table->string('status');
+            $table->json('response_data')->nullable();
             $table->timestamps();
         });
     }

@@ -14,6 +14,9 @@ class CreateOrdersTable extends Migration
             $table->text('shipping_address');
             $table->decimal('total', 8, 2);
             $table->string('status')->default('pending');
+            $table->string('email')->nullable();
+            $table->string('phone')->nullable();
+            $table->json('meta')->nullable();
             $table->timestamps();
         });
     }

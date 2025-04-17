@@ -16,6 +16,9 @@ class CreateProductsTable extends Migration
             $table->text('description');
             $table->decimal('price', 8, 2);
             $table->string('image')->nullable();
+            $table->string('sku')->unique();
+            $table->json('options')->nullable();
+            $table->boolean('active')->default(true);
             $table->integer('inventory');
             $table->timestamps();
         });

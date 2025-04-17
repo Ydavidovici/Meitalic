@@ -14,7 +14,7 @@ class ProductController extends Controller
     {
         // Optionally, you can add filtering logic here if needed.
         $products = Product::all();
-        return view('pages.product', compact('products'));
+        return view('pages.products', compact('products'));
     }
 
     /**

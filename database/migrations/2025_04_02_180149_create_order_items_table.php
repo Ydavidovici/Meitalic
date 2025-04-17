@@ -10,13 +10,14 @@ class CreateOrderItemsTable extends Migration
     {
         Schema::create('order_items', function (Blueprint $table) {
             $table->id();
-            // Foreign key to orders
             $table->foreignId('order_id')->constrained()->onDelete('cascade');
-            // Foreign key to products
             $table->foreignId('product_id')->constrained()->onDelete('cascade');
+            $table->string('name');
             $table->integer('quantity');
-            // Price recorded at the time of order
             $table->decimal('price', 8, 2);
+            $table->decimal('total', 8, 2);
+            $table->string('sku')->nullable();
+            $table->json('options')->nullable();
             $table->timestamps();
         });
     }

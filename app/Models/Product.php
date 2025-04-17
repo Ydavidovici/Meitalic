@@ -17,6 +17,12 @@ class Product extends Model
         'price',
         'image',
         'inventory',
+        'sku',
+        'options',
+    ];
+
+    protected $casts = [
+        'options' => 'array',
     ];
 
     // A product can appear in many order items.
