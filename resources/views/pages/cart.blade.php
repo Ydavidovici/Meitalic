@@ -10,6 +10,10 @@
             <div class="mb-4 p-3 bg-green-100 text-green-700 rounded">
                 {{ session('success') }}
             </div>
+        @elseif(session('error'))
+            <div class="mb-4 p-3 bg-red-100 text-red-700 rounded">
+                {{ session('error') }}
+            </div>
         @endif
 
         @if(count($items) > 0)
@@ -45,6 +49,17 @@
             </div>
 
             <div class="flex flex-col items-end space-y-4">
+                {{-- Promo Code Form --}}
+                <form method="POST" action="{{ route('cart.applyPromo') }}" class="flex items-center gap-2">
+                    @csrf
+                    <input type="text" name="code" class="px-4 py-2 border rounded" placeholder="Promo code"
+                           value="{{ session('applied_promo') ?? '' }}">
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                        Apply
+                    </button>
+                </form>
+
+                {{-- Total --}}
                 <div class="text-xl font-semibold">
                     Total: ${{ number_format($total, 2) }}
                 </div>
