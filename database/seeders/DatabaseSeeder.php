@@ -17,7 +17,9 @@ class DatabaseSeeder extends Seeder
             PaymentSeeder::class,
             ConsultationSeeder::class,
             AdminUserSeeder::class,
-            PromoCodeSeeder::class
+            PromoCodeSeeder::class,
+            CartSeeder::class,
+            CartItemSeeder::class
         ]);
     }
 }
