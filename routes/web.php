@@ -26,7 +26,8 @@ Route::post('/contact', [ContactController::class, 'submit'])->name('contact.sub
 
 // Product Routes
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
+Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show'); // changed from {product}
+
 
 // Brand Routes
 Route::get('/brands', [BrandController::class, 'index'])->name('brands.index');
