@@ -76,6 +76,13 @@ Route::middleware(['auth', 'admin.auth'])->prefix('admin/products')->name('admin
     Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy');
 });
 
+Route::middleware(['auth'])->prefix('consultations')->name('consultations.')->group(function () {
+    Route::get('/', [ConsultationController::class, 'index'])->name('index');
+    Route::get('/create', [ConsultationController::class, 'create'])->name('create');
+    Route::post('/', [ConsultationController::class, 'store'])->name('store');
+});
+
+
 Route::get('/search', [ProductController::class, 'index'])->name('search');
 
 require __DIR__.'/auth.php';

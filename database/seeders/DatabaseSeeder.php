@@ -15,6 +15,9 @@ class DatabaseSeeder extends Seeder
             OrderSeeder::class,
             OrderItemSeeder::class,
             PaymentSeeder::class,
+            ConsultationSeeder::class,
+            AdminUserSeeder::class,
+            PromoCodeSeeder::class
         ]);
     }
 }
