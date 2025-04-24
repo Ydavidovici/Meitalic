@@ -14,7 +14,7 @@ class CartFactory extends Factory
     public function definition()
     {
         return [
-            'user_id' => User::factory(),
+            'user_id' => null,
             'session_id' => Str::uuid(),
             'total' => $this->faker->randomFloat(2, 20, 200),
             'promo_code' => null,

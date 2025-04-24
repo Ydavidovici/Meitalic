@@ -15,12 +15,13 @@ class PromoCodeFactory extends Factory
         $isPercent = $this->faker->boolean();
 
         return [
-            'code'              => strtoupper(Str::random(6)),
-            'discount_amount'   => $isPercent ? null : $this->faker->randomFloat(2, 5, 30),
-            'discount_percent'  => $isPercent ? $this->faker->randomFloat(2, 5, 30) : null,
-            'max_uses'          => $this->faker->optional()->numberBetween(10, 100),
-            'used_count'        => 0,
-            'expires_at'        => now()->addDays(rand(5, 30)),
+            'code'     => strtoupper(Str::random(6)),
+            'type'     => $isPercent ? 'percent' : 'fixed',
+            'discount' => $this->faker->randomFloat(2, 5, 30),
+            'max_uses' => $this->faker->optional()->numberBetween(10, 100),
+            'used_count' => 0,
+            'expires_at' => now()->addDays(rand(5, 30)),
+            'active'   => true,
         ];
     }
 }

@@ -78,7 +78,7 @@ class CartController extends Controller
 
         $this->calculateTotals($cartItem->cart);
 
-        return back()->with('success', 'Cart updated.');
+        return back()->with('success', 'cart updated.');
     }
 
     public function applyPromo(Request $request)
@@ -93,7 +93,10 @@ class CartController extends Controller
         }
 
         $cart->promo_code = $promo->code;
-        $cart->discount = $promo->type === 'fixed' ? $promo->discount : ($cart->total * ($promo->discount / 100));
+        $cart->discount = $promo->type === 'fixed'
+            ? $promo->discount
+            : ($cart->total * ($promo->discount / 100));
+
         $cart->total -= $cart->discount;
         $cart->save();
 
@@ -107,11 +110,15 @@ class CartController extends Controller
         if ($cart->promo_code) {
             $promo = PromoCode::where('code', $cart->promo_code)->first();
             if ($promo) {
-                $cart->discount = $promo->type === 'fixed' ? $promo->discount : ($cart->total * ($promo->discount / 100));
+                $cart->discount = $promo->type === 'fixed'
+                    ? $promo->discount
+                    : ($cart->total * ($promo->discount / 100));
+
                 $cart->total -= $cart->discount;
             }
         }
 
         $cart->save();
     }
+
 }

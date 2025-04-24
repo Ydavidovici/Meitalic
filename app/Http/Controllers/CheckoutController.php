@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\CartService;
+use App\Models\Cart;
 use Stripe\Stripe;
 use Stripe\Checkout\Session as StripeSession;
 
@@ -15,7 +16,7 @@ class CheckoutController extends Controller
     {
         $items = $this->cart->all();
 
-        if (empty($items)) {
+        if (!$items || count($items) === 0) {
             return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
         }
 
@@ -49,8 +50,18 @@ class CheckoutController extends Controller
 
     public function success()
     {
-        // Optionally clear the cart
-        $this->cart->clear();
+        $cart = auth()->check()
+            ? Cart::where('user_id', auth()->id())->first()
+            : Cart::where('session_id', session()->get('cart_session_id'))->first();
+
+        if ($cart) {
+            $cart->cartItems()->delete();
+            $cart->update([
+                'discount' => 0,
+                'promo_code' => null,
+                'total' => 0,
+            ]);
+        }
 
         return view('checkout.success');
     }

@@ -61,10 +61,33 @@ class CartTest extends TestCase
     }
 
     /** @test */
+    /** @test */
     public function guest_can_view_cart_page()
     {
+        // Create product
+        $product = Product::factory()->create(['price' => 20]);
+
+        // Simulate session (important to simulate guest cart)
+        $sessionId = (string) \Illuminate\Support\Str::uuid();
+        $this->withSession(['cart_session_id' => $sessionId]);
+
+        // Create cart and CartItem manually
+        $cart = \App\Models\Cart::create(['session_id' => $sessionId]);
+        \App\Models\CartItem::create([
+            'cart_id'    => $cart->id,
+            'product_id' => $product->id,
+            'quantity'   => 2,
+            'price'      => $product->price,
+            'total'      => $product->price * 2,
+        ]);
+
+        // GET the cart page
         $response = $this->get(route('cart.index'));
+
+        // Assert status and view
         $response->assertStatus(200)
-            ->assertViewIs('cart.index');
+            ->assertViewIs('cart.index')
+            ->assertSee($product->name);
     }
+
 }

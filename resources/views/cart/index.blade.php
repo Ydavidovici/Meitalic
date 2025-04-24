@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Your Cart')
+@section('title', 'Your cart')
 
 @section('content')
     <div class="max-w-4xl mx-auto py-12 px-4">
@@ -31,12 +31,12 @@
                     <tbody>
                     @foreach($items as $item)
                         <tr class="border-b">
-                            <td class="py-2">{{ $item['product']->name }}</td>
-                            <td>{{ $item['quantity'] }}</td>
-                            <td>${{ number_format($item['product']->price, 2) }}</td>
-                            <td>${{ number_format($item['product']->price * $item['quantity'], 2) }}</td>
+                            <td class="py-2">{{ $item->product->name }}</td>
+                            <td>{{ $item->quantity }}</td>
+                            <td>${{ number_format($item->price, 2) }}</td>
+                            <td>${{ number_format($item->total, 2) }}</td>
                             <td>
-                                <form method="POST" action="{{ route('cart.remove', $item['product']->id) }}">
+                                <form method="POST" action="{{ route('cart.remove', $item->id) }}">
                                     @csrf
                                     @method('DELETE')
                                     <button class="text-red-600 hover:underline">Remove</button>

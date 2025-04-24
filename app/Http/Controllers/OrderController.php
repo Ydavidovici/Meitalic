@@ -8,6 +8,7 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use Stripe\Stripe;
 use Stripe\PaymentIntent;
 use App\Mail\OrderReceiptMail;
@@ -17,72 +18,70 @@ class OrderController extends Controller
 {
     public function placeOrder(Request $request)
     {
-        // Validate request input (shipping_address and cart items)
+        Log::info('📦 placeOrder called', ['user_id' => auth()->id(), 'payload' => $request->all()]);
+
         $data = $request->validate([
             'shipping_address' => 'required|string',
-            'cart' => 'required|array', // Each item should have product_id and quantity
+            'cart' => 'required|array',
+            'cart.*.product_id' => 'required|exists:products,id',
+            'cart.*.quantity' => 'required|integer|min:1',
         ]);
 
-        // Wrap in a transaction for data consistency
         DB::beginTransaction();
         try {
-            // Create the order with temporary total=0 and pending status
             $order = Order::create([
                 'user_id'          => auth()->id(),
                 'shipping_address' => $data['shipping_address'],
-                'total'            => 0, // Will be updated below
+                'total'            => 0,
                 'status'           => 'pending',
             ]);
 
             $total = 0;
-            // Process each cart item
+
             foreach ($data['cart'] as $item) {
                 $product = Product::findOrFail($item['product_id']);
+                $quantity = $item['quantity'];
+                $lineTotal = $product->price * $quantity;
+
                 OrderItem::create([
                     'order_id'   => $order->id,
                     'product_id' => $product->id,
-                    'quantity'   => $item['quantity'],
+                    'name'       => $product->name,
+                    'quantity'   => $quantity,
                     'price'      => $product->price,
+                    'total'      => $lineTotal,
                 ]);
-                $total += $product->price * $item['quantity'];
+
+                $total += $lineTotal;
             }
 
-            // Update the order total
             $order->update(['total' => $total]);
 
-            // --- Initiate Payment via Stripe ---
-            // Set your Stripe secret key
             Stripe::setApiKey(config('services.stripe.secret'));
 
-            // Create a PaymentIntent with the total (amount in cents for Stripe)
             $paymentIntent = PaymentIntent::create([
-                'amount'   => (int) ($total * 100), // convert dollars to cents
+                'amount'   => (int) round($total * 100),
                 'currency' => 'usd',
-                // Optional: you can pass metadata to link this PaymentIntent to the order
                 'metadata' => ['order_id' => $order->id],
             ]);
 
-            // Retrieve the PaymentIntent ID (simulate this as our stripe_payment_id)
-            $stripePaymentId = $paymentIntent->id;
-
-            // Record the payment (status pending) via PaymentController helper method
-            app(PaymentController::class)->recordPayment($order, $stripePaymentId, $total);
+            app(PaymentController::class)->recordPayment($order, $paymentIntent->id, $total);
 
             DB::commit();
 
-            // --- Send Email Notifications ---
-            // Send an order receipt email to the customer
-            Mail::to($order->user->email)->send(new OrderReceiptMail($order));
+            if ($order->user && $order->user->email) {
+                Mail::to($order->user->email)->send(new OrderReceiptMail($order));
+            }
 
-            // Send an admin notification email (admin email set in .env or config/mail.php)
             $adminEmail = config('mail.admin_address', 'admin@example.com');
             Mail::to($adminEmail)->send(new AdminOrderNotificationMail($order));
 
-            // Redirect to a page where the user can confirm payment (or show a message)
             return redirect()->route('order.show', $order->id)
                 ->with('success', 'Order placed. Please complete your payment.');
+
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Order placement failed', ['error' => $e->getMessage()]);
             return redirect()->back()->withErrors('Order processing failed: ' . $e->getMessage());
         }
     }
