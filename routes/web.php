@@ -48,7 +48,7 @@ Route::middleware('auth')->group(function () {
 
 // Admin Routes
 Route::middleware(['auth'])->prefix('admin')->group(function () {
-    Route::get('/', fn () => view('admin.dashboard'))->name('admin.dashboard');
+    Route::get('/', fn () => view('pages.admin.dashboard'))->name('admin.dashboard');
     Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders');
 
     // Product Admin Routes (no admin. prefix on names)

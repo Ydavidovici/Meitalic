@@ -39,12 +39,14 @@ class ProductsTest extends TestCase
 
         $data = [
             'name'        => 'Test Product',
+            'description' => 'This is a test product',
+            'price'       => 19.99,
             'brand'       => 'Test Brand',
-            'description' => 'Test description',
-            'price'       => 99.99,
-            'image'       => 'http://example.com/image.png',
+            'category'    => 'Test Category',
             'inventory'   => 50,
+            'sku'         => 'TEST-SKU-001',
         ];
+
 
         $response = $this->post(route('products.store'), $data);
         $response->assertRedirect(route('products.index'));
@@ -111,6 +113,8 @@ class ProductsTest extends TestCase
         $updateData = [
             'name'        => 'Updated Name',
             'brand'       => 'Updated Brand',
+            'category'    => $product->category,
+            'sku'         => $product->sku,
             'description' => $product->description,
             'price'       => $product->price,
             'image'       => $product->image,

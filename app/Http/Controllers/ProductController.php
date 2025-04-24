@@ -41,6 +41,7 @@ class ProductController extends Controller
             'price'       => 'required|numeric',
             'image'       => 'nullable|string',
             'inventory'   => 'required|integer',
+            'sku'         => 'required|string|max:255|unique:products,sku',
         ]);
 
         Product::create($validatedData);
@@ -71,6 +72,7 @@ class ProductController extends Controller
             'price'       => 'required|numeric',
             'image'       => 'nullable|string',
             'inventory'   => 'required|integer',
+            'sku' => 'required|string|max:255|unique:products,sku,' . $id,
         ]);
 
         $product = Product::findOrFail($id);
