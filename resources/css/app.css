@@ -2,66 +2,44 @@
 @tailwind components;
 @tailwind utilities;
 
-/* — Base theme & resets — */
 @layer base {
     :root {
-        --color-primary:   #f5e4e1;   /* light rose */
-        --color-secondary: #fffaf7;   /* cream */
-        --color-accent:    #e3bfc3;   /* soft pink */
-        --color-text:      #333333;   /* dark gray */
+        --color-primary:   #f5e4e1;
+        --color-secondary: #fffaf7;
+        --color-accent:    #e3bfc3;
+        --color-text:      #333333;
     }
 
     body {
-        @apply bg-secondary
-        text-text
-        font-sans
-        leading-relaxed;
+        @apply bg-secondary text-text font-sans leading-relaxed;
     }
 
-    a {
-        @apply no-underline;
-    }
+    a { @apply no-underline; }
 }
 
-/* — Small reusable components — */
 @layer components {
-    /* Container for each section */
-    .section-wrapper {
-        @apply max-w-7xl mx-auto px-6;
-    }
+    .section-wrapper { @apply max-w-7xl mx-auto px-6; }
 
-    /* Buttons */
+    /* Login & other black buttons now dark gray */
     .btn-secondary {
-        @apply bg-black
-        text-white
-        px-6 py-3
-        rounded-full
-        hover:bg-gray-800
-        transition;
-    }
-    .btn-primary {
-        @apply bg-accent
-        text-white
-        px-6 py-3
-        rounded-full
-        hover:bg-pink-400
+        @apply bg-text text-white px-6 py-3
+        rounded-full hover:bg-gray-800
         transition;
     }
 
-    /* Headings, cards, etc. */
+    .btn-primary {
+        @apply bg-accent text-white px-6 py-3
+        rounded-full hover:bg-pink-400
+        transition;
+    }
+
     .section-title {
-        @apply text-3xl md:text-4xl
-        font-semibold
-        text-center
-        mb-8;
+        @apply text-3xl md:text-4xl font-semibold
+        text-center mb-8;
     }
 
     .card {
-        @apply bg-white
-        p-6
-        rounded-lg
-        shadow
-        hover:shadow-md
-        transition;
+        @apply bg-white p-6 rounded-lg shadow
+        hover:shadow-md transition;
     }
 }
