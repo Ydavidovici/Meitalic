@@ -4,14 +4,19 @@
 
 @section('content')
     <!-- Hero -->
-    <section class="flex flex-col-reverse md:flex-row items-center justify-between max-w-7xl mx-auto py-16 px-6">
-        <div class="md:w-1/2 text-center md:text-left">
-            <h2 class="text-5xl font-bold mb-4">Meitalic</h2>
-            <p class="text-lg mb-6">Where elegance meets skincare.</p>
-            <a href="#" class="bg-black text-white px-6 py-3 rounded-full">Shop Now</a>
+    <section class="flex flex-col-reverse lg:flex-row items-center justify-between max-w-7xl mx-auto px-6 py-32 gap-20 min-h-[80vh]">
+        <!-- Left Text -->
+        <div class="lg:w-1/2 text-center lg:text-left space-y-8">
+            <h1 class="text-6xl font-bold text-[color:var(--color-text)] leading-tight">Meitalic</h1>
+            <p class="text-xl text-gray-700 max-w-lg mx-auto lg:mx-0">
+                Where elegance meets skincare.
+            </p>
+            <a href="#" class="btn-secondary mt-6">Shop Now</a>
         </div>
-        <div class="md:w-1/2 mb-10 md:mb-0">
-            <div class="w-full h-96 bg-gray-200 rounded-lg"></div>
+
+        <!-- Right Image -->
+        <div class="lg:w-1/2 flex justify-center mt-12 lg:mt-0">
+            <div class="w-80 h-96 bg-gray-200 rounded-lg shadow-lg"></div>
         </div>
     </section>
 

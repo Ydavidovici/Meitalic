@@ -2,7 +2,66 @@
 @tailwind components;
 @tailwind utilities;
 
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+/* — Base theme & resets — */
+@layer base {
+    :root {
+        --color-primary:   #f5e4e1;   /* light rose */
+        --color-secondary: #fffaf7;   /* cream */
+        --color-accent:    #e3bfc3;   /* soft pink */
+        --color-text:      #333333;   /* dark gray */
+    }
+
+    body {
+        @apply bg-secondary
+        text-text
+        font-sans
+        leading-relaxed;
+    }
+
+    a {
+        @apply no-underline;
+    }
+}
+
+/* — Small reusable components — */
+@layer components {
+    /* Container for each section */
+    .section-wrapper {
+        @apply max-w-7xl mx-auto px-6;
+    }
+
+    /* Buttons */
+    .btn-secondary {
+        @apply bg-black
+        text-white
+        px-6 py-3
+        rounded-full
+        hover:bg-gray-800
+        transition;
+    }
+    .btn-primary {
+        @apply bg-accent
+        text-white
+        px-6 py-3
+        rounded-full
+        hover:bg-pink-400
+        transition;
+    }
+
+    /* Headings, cards, etc. */
+    .section-title {
+        @apply text-3xl md:text-4xl
+        font-semibold
+        text-center
+        mb-8;
+    }
+
+    .card {
+        @apply bg-white
+        p-6
+        rounded-lg
+        shadow
+        hover:shadow-md
+        transition;
+    }
 }
