@@ -1,5 +1,5 @@
 <header class="bg-white border-b border-primary">
-    <nav class="section-wrapper flex items-center justify-between py-6">
+    <div class="container flex items-center justify-between py-6 px-4 sm:px-6 lg:px-8">
         <!-- Logo -->
         <a href="{{ route('home') }}" class="no-underline">
             <img src="{{ asset('/images/logo-meitalic.png') }}"
@@ -7,7 +7,7 @@
                  class="h-8">
         </a>
 
-        <!-- Always-visible Nav -->
+        <!-- Navigation -->
         <ul class="flex items-center space-x-6">
             <li>
                 <x-nav-link :href="route('home')" :active="request()->routeIs('home')">
@@ -45,13 +45,12 @@
                 <li>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit"
-                                class="text-gray-500 hover:text-accent no-underline">
+                        <button type="submit" class="text-gray-500 hover:text-accent no-underline">
                             Logout
                         </button>
                     </form>
                 </li>
             @endguest
         </ul>
-    </nav>
+    </div>
 </header>

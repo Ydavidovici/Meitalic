@@ -2,44 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-    :root {
-        --color-primary:   #f5e4e1;
-        --color-secondary: #fffaf7;
-        --color-accent:    #e3bfc3;
-        --color-text:      #333333;
-    }
-
-    body {
-        @apply bg-secondary text-text font-sans leading-relaxed;
-    }
-
-    a { @apply no-underline; }
-}
-
 @layer components {
-    .section-wrapper { @apply max-w-7xl mx-auto px-6; }
-
-    /* Login & other black buttons now dark gray */
-    .btn-secondary {
-        @apply bg-text text-white px-6 py-3
-        rounded-full hover:bg-gray-800
-        transition;
+    .btn-primary {
+        @apply bg-accent text-white font-medium px-6 py-3 rounded-full hover:bg-pink-400 transition;
     }
 
-    .btn-primary {
-        @apply bg-accent text-white px-6 py-3
-        rounded-full hover:bg-pink-400
-        transition;
+    .btn-secondary {
+        @apply bg-text text-white font-medium px-6 py-3 rounded-full hover:bg-gray-800 transition;
     }
 
     .section-title {
-        @apply text-3xl md:text-4xl font-semibold
-        text-center mb-8;
+        @apply text-3xl md:text-4xl font-bold mb-8 text-text;
     }
 
     .card {
-        @apply bg-white p-6 rounded-lg shadow
-        hover:shadow-md transition;
+        @apply bg-white p-6 rounded-lg shadow hover:shadow-md transition;
     }
 }
