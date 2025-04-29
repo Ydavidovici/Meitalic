@@ -12,7 +12,7 @@
                     <h1 class="text-4xl sm:text-5xl font-bold text-text leading-tight">
                         Meitalic
                     </h1>
-                    <p class="text-lg text-neutral-700 max-w-xl mx-auto lg:mx-0">
+                    <p class="italic text-lg text-neutral-700 max-w-xl mx-auto lg:mx-0">
                         Where elegance meets skincare.
                     </p>
                 </div>
