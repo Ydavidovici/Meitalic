@@ -20,7 +20,9 @@
                 </x-nav-link>
             </li>
             <li>
-                <x-nav-link :href="route('faq')" :active="request()->routeIs('faq')">
+                <x-nav-link
+                    :href="route('home') . '#about'"
+                >
                     About
                 </x-nav-link>
             </li>

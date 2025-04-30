@@ -40,7 +40,7 @@
     </section>
 
     <!-- About -->
-    <section class="py-20">
+    <section id="about" class="py-20">
         <div class="container px-4 sm:px-6 lg:px-8">
             <div class="max-w-screen-md mx-auto text-center space-y-6">
                 <h2 class="section-title">About the Brand</h2>
