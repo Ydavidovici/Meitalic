@@ -11,16 +11,16 @@ class PromoCode extends Model
 
     protected $fillable = [
         'code',
-        'discount_amount',
-        'discount_percent',
+        'type',
+        'discount',
         'max_uses',
         'used_count',
         'expires_at',
+        'active',
     ];
 
-    public function isValid()
-    {
-        return (!$this->expires_at || $this->expires_at->isFuture())
-            && (!$this->max_uses || $this->used_count < $this->max_uses);
-    }
+    protected $casts = [
+        'expires_at' => 'datetime',
+        'active'     => 'boolean',
+    ];
 }
