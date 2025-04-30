@@ -8,7 +8,7 @@
         </a>
 
         <!-- Navigation -->
-        <ul class="flex items-center space-x-6">
+        <ul class="flex items-center space-x-6" x-data>
             <li>
                 <x-nav-link :href="route('home')" :active="request()->routeIs('home')">
                     Home
@@ -20,9 +20,7 @@
                 </x-nav-link>
             </li>
             <li>
-                <x-nav-link
-                    :href="route('home') . '#about'"
-                >
+                <x-nav-link :href="route('home') . '#about'">
                     About
                 </x-nav-link>
             </li>
@@ -32,18 +30,31 @@
                 </x-nav-link>
             </li>
 
-            @guest
+            <!-- Show Login & Register when NOT authenticated -->
+            <template x-if="!$store.auth.isAuthenticated">
                 <li>
                     <a href="{{ route('login') }}" class="btn-secondary">
                         Login
                     </a>
                 </li>
-            @else
+            </template>
+            <template x-if="!$store.auth.isAuthenticated">
+                <li>
+                    <a href="{{ route('register') }}" class="btn-secondary">
+                        Register
+                    </a>
+                </li>
+            </template>
+
+            <!-- Show Account & Logout when authenticated -->
+            <template x-if="$store.auth.isAuthenticated">
                 <li>
                     <x-nav-link :href="route('account.index')" :active="request()->routeIs('account.*')">
                         My Account
                     </x-nav-link>
                 </li>
+            </template>
+            <template x-if="$store.auth.isAuthenticated">
                 <li>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
@@ -52,7 +63,7 @@
                         </button>
                     </form>
                 </li>
-            @endguest
+            </template>
         </ul>
     </div>
 </header>

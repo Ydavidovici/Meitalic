@@ -1,7 +1,12 @@
 import './bootstrap';
 
-import Alpine from 'alpinejs'
+import Alpine from 'alpinejs';
 
-window.Alpine = Alpine
+window.Alpine = Alpine;
 
-Alpine.start()
+// Create a global Alpine store for auth
+Alpine.store('auth', {
+    isAuthenticated: window.isAuthenticated
+});
+
+Alpine.start();
