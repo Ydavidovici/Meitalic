@@ -18,4 +18,6 @@
     .card {
         @apply bg-white p-6 rounded-lg shadow hover:shadow-md transition;
     }
+
+
 }

@@ -8,7 +8,7 @@
     <title>@yield('title','Meitalic')</title>
     @vite(['resources/css/app.css','resources/js/app.js'])
 </head>
-<body class="font-sans antialiased text-text bg-gradient-to-br from-secondary via-primary">
+<body class="overflow-y-scroll font-sans antialiased text-text bg-gradient-to-br from-secondary via-primary">
 <div class="flex flex-col min-h-screen">
     @include('partials.header')
     <main class="flex-grow pt-16">
