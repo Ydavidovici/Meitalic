@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title','Welcome to Meitalic')
+@section('title','Meitalic Cosmecueticals')
 
 @section('content')
     <!-- Hero -->
