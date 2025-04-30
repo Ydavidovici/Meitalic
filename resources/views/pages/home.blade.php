@@ -31,13 +31,25 @@
             <div class="max-w-screen-lg mx-auto space-y-12 text-center">
                 <h2 class="section-title">Shop by Category</h2>
                 <div class="grid grid-cols-2 md:grid-cols-5 gap-6">
-                    @foreach(['Makeup','Lipstick','Skincare','Fragrance','Accessories'] as $cat)
-                        <div class="card">{{ $cat }}</div>
+                    @foreach([
+                        'Essential Line',
+                        'Rosacea Line',
+                        'Makeup Line',
+                        'Acne Line',
+                        'Starter Kits'
+                    ] as $cat)
+                        <a
+                            href="{{ route('products.index', ['category' => \Str::slug($cat)]) }}"
+                            class="card hover:shadow-lg transition"
+                        >
+                            {{ $cat }}
+                        </a>
                     @endforeach
                 </div>
             </div>
         </div>
     </section>
+
 
     <!-- About -->
     <section id="about" class="py-20">
