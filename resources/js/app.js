@@ -7,16 +7,40 @@ Alpine.store('auth', {
     isAuthenticated: window.isAuthenticated
 });
 
+// add modal support
 Alpine.store('dashboard', {
     devMetricsVisible: false,
+    activeModal: null,
+
     toggleDevMetrics() {
-        this.devMetricsVisible = !this.devMetricsVisible;
+        this.devMetricsVisible = ! this.devMetricsVisible;
+    },
+    openModal(name) {
+        this.activeModal = name;
+        window.dispatchEvent(new CustomEvent('open-modal', { detail: name }));
+    },
+    closeModal(name) {
+        if (this.activeModal === name) {
+            this.activeModal = null;
+            window.dispatchEvent(new CustomEvent('close-modal', { detail: name }));
+        }
     }
 });
 
 function adminDashboard() {
     return {
+        // from store
         devMetricsVisible: Alpine.store('dashboard').devMetricsVisible,
+
+        // KPI helpers
+        openKpi(name) {
+            Alpine.store('dashboard').openModal(name);
+        },
+        closeKpi(name) {
+            Alpine.store('dashboard').closeModal(name);
+        },
+
+        // existing order mgmt...
         selectedOrders: [],
         dateFilter: 'all',
         statusFilter: [],
@@ -61,5 +85,4 @@ function adminDashboard() {
 }
 
 Alpine.data('adminDashboard', adminDashboard);
-
 Alpine.start();
