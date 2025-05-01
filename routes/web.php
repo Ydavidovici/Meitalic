@@ -16,7 +16,6 @@ use App\Http\Controllers\{
     AccountController,
     AdminController,
     PromoCodeController,
-    UserController
 };
 
 // ───────────── Public Pages ────────────────────
@@ -58,13 +57,13 @@ require __DIR__.'/auth.php';
 // ───────────── Authenticated User Area ───────
 Route::middleware('auth')->group(function () {
     // Account & Orders
-    Route::get('/account',        [OrderController::class, 'index'])->name('account.index');
-    Route::get('/account/orders', [OrderController::class, 'orders'])->name('account.orders');
-    Route::get('/order/{id}',     [OrderController::class, 'show'])->name('order.show');
+    Route::get('/account',        [AccountController::class, 'index'])->name('account.index');
+    Route::get('/account/orders', [AccountController::class, 'orders'])->name('account.orders');
+    Route::get('/order/{id}',     [AccountController::class, 'show'])->name('order.show');
 
     // Profile Management
-    Route::get('/profile',  [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile',[ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile',    [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile',  [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // User Dashboard
@@ -75,44 +74,35 @@ Route::middleware('auth')->group(function () {
     // Consultations
     Route::prefix('consultations')->name('consultations.')->group(function () {
         Route::get('/',       [ConsultationController::class, 'index'])->name('index');
-        Route::get('/create', [ConsultationController::class, 'create'])->name('create');
+        Route::get('/create', [ConsultationController:: class, 'create'])->name('create');
         Route::post('/',      [ConsultationController::class, 'store'])->name('store');
     });
 
     // Admin Dashboard & Management
-    Route::prefix('admin')->group(function () {
-        // Dashboard & Orders
-        Route::get('/',        [AdminController::class, 'index'])->name('admin.dashboard');
-        Route::get('/orders',  [AdminController::class, 'orders'])->name('admin.orders');
+    Route::prefix('admin')
+        ->name('admin.')
+        ->group(function () {
 
-        // Product CRUD
-        Route::prefix('products')->group(function () {
-            Route::get('/',                [ProductController::class, 'index'])->name('admin.products.index');
-            Route::get('/create',          [ProductController::class, 'create'])->name('products.create');
-            Route::post('/',               [ProductController::class, 'store'])->name('products.store');
-            Route::get('/{product}/edit',  [ProductController::class, 'edit'])->name('products.edit');
-            Route::put('/{product}',       [ProductController::class, 'update'])->name('products.update');
-            Route::delete('/{product}',    [ProductController::class, 'destroy'])->name('products.destroy');
-        });
+            // Dashboard & Orders
+            Route::get('/',        [AdminController::class, 'index'])->name('dashboard');
+            Route::get('/orders',  [AdminController::class, 'orders'])->name('orders');
 
-        // Promo Codes CRUD
-        Route::prefix('promo')->name('promo.')->group(function () {
-            Route::get('/',               [PromoCodeController::class, 'index'])->name('index');
-            Route::get('/create',         [PromoCodeController::class, 'create'])->name('create');
-            Route::post('/',              [PromoCodeController::class, 'store'])->name('store');
-            Route::get('/{promo}/edit',   [PromoCodeController::class, 'edit'])->name('edit');
-            Route::put('/{promo}',        [PromoCodeController::class, 'update'])->name('update');
-            Route::delete('/{promo}',     [PromoCodeController::class, 'destroy'])->name('destroy');
-        });
+            Route::prefix('products')->name('products.')->group(function () {
+                Route::get('/',               [ProductController::class, 'index'])->name('index');
+                Route::get('/create',         [ProductController::class, 'create'])->name('create');
+                Route::post('/',              [ProductController::class, 'store'])->name('store');
+                Route::get('/{product}/edit', [ProductController::class, 'edit'])->name('edit');
+                Route::put('/{product}',      [ProductController::class, 'update'])->name('update');
+                Route::delete('/{product}',   [ProductController::class, 'destroy'])->name('destroy');
+            });
 
-        // User Management
-        Route::prefix('users')->name('users.')->group(function () {
-            Route::get('/',               [UserController::class, 'index'])->name('index');
-            Route::get('/create',         [UserController::class, 'create'])->name('create');
-            Route::post('/',              [UserController::class, 'store'])->name('store');
-            Route::get('/{user}/edit',    [UserController::class, 'edit'])->name('edit');
-            Route::put('/{user}',         [UserController::class, 'update'])->name('update');
-            Route::delete('/{user}',      [UserController::class, 'destroy'])->name('destroy');
+            Route::prefix('promo')->name('promo.')->group(function () {
+                Route::get('/',               [PromoCodeController::class, 'index'])->name('index');
+                Route::get('/create',         [PromoCodeController::class, 'create'])->name('create');
+                Route::post('/',              [PromoCodeController::class, 'store'])->name('store');
+                Route::get('/{promo}/edit',   [PromoCodeController::class, 'edit'])->name('edit');
+                Route::put('/{promo}',        [PromoCodeController::class, 'update'])->name('update');
+                Route::delete('/{promo}',     [PromoCodeController::class, 'destroy'])->name('destroy');
+            });
         });
     });
-});

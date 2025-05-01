@@ -17,7 +17,7 @@ class ProductsTest extends TestCase
         $admin = User::factory()->create(['is_admin' => true]);
         $this->actingAs($admin);
 
-        $response = $this->get(route('products.create'));
+        $response = $this->get(route('admin.products.create'));
         $response->assertStatus(200);
     }
 
@@ -27,7 +27,7 @@ class ProductsTest extends TestCase
         $user = User::factory()->create(['is_admin' => false]);
         $this->actingAs($user);
 
-        $response = $this->get(route('products.create'));
+        $response = $this->get(route('admin.products.create'));
         $response->assertStatus(403);
     }
 
@@ -39,17 +39,17 @@ class ProductsTest extends TestCase
 
         $data = [
             'name'        => 'Test Product',
-            'description' => 'This is a test product',
-            'price'       => 19.99,
             'brand'       => 'Test Brand',
             'category'    => 'Test Category',
+            'description' => 'This is a test product',
+            'price'       => 19.99,
             'inventory'   => 50,
             'sku'         => 'TEST-SKU-001',
         ];
 
+        $response = $this->post(route('admin.products.store'), $data);
+        $response->assertRedirect(route('admin.products.index'));
 
-        $response = $this->post(route('products.store'), $data);
-        $response->assertRedirect(route('products.index'));
         $this->assertDatabaseHas('products', [
             'name'  => 'Test Product',
             'brand' => 'Test Brand',
@@ -65,13 +65,14 @@ class ProductsTest extends TestCase
         $data = [
             'name'        => 'Test Product',
             'brand'       => 'Test Brand',
+            'category'    => 'Test Category',
             'description' => 'Test description',
             'price'       => 99.99,
             'image'       => 'http://example.com/image.png',
             'inventory'   => 50,
         ];
 
-        $response = $this->post(route('products.store'), $data);
+        $response = $this->post(route('admin.products.store'), $data);
         $response->assertStatus(403);
     }
 
@@ -83,7 +84,7 @@ class ProductsTest extends TestCase
 
         $product = Product::factory()->create();
 
-        $response = $this->get(route('products.edit', $product));
+        $response = $this->get(route('admin.products.edit', $product));
         $response->assertStatus(200);
     }
 
@@ -95,7 +96,7 @@ class ProductsTest extends TestCase
 
         $product = Product::factory()->create();
 
-        $response = $this->get(route('products.edit', $product));
+        $response = $this->get(route('admin.products.edit', $product));
         $response->assertStatus(403);
     }
 
@@ -121,8 +122,9 @@ class ProductsTest extends TestCase
             'inventory'   => $product->inventory,
         ];
 
-        $response = $this->put(route('products.update', $product), $updateData);
-        $response->assertRedirect(route('products.index'));
+        $response = $this->put(route('admin.products.update', $product), $updateData);
+        $response->assertRedirect(route('admin.products.index'));
+
         $this->assertDatabaseHas('products', [
             'id'    => $product->id,
             'name'  => 'Updated Name',
@@ -142,15 +144,15 @@ class ProductsTest extends TestCase
         ]);
 
         $updateData = [
-            'name'        => 'Updated Name',
-            'brand'       => 'Updated Brand',
+            'name'      => 'Updated Name',
+            'brand'     => 'Updated Brand',
             'description' => $product->description,
-            'price'       => $product->price,
-            'image'       => $product->image,
-            'inventory'   => $product->inventory,
+            'price'     => $product->price,
+            'image'     => $product->image,
+            'inventory' => $product->inventory,
         ];
 
-        $response = $this->put(route('products.update', $product), $updateData);
+        $response = $this->put(route('admin.products.update', $product), $updateData);
         $response->assertStatus(403);
     }
 
@@ -162,8 +164,9 @@ class ProductsTest extends TestCase
 
         $product = Product::factory()->create();
 
-        $response = $this->delete(route('products.destroy', $product));
-        $response->assertRedirect(route('products.index'));
+        $response = $this->delete(route('admin.products.destroy', $product));
+        $response->assertRedirect(route('admin.products.index'));
+
         $this->assertDatabaseMissing('products', [
             'id' => $product->id,
         ]);
@@ -177,7 +180,7 @@ class ProductsTest extends TestCase
 
         $product = Product::factory()->create();
 
-        $response = $this->delete(route('products.destroy', $product));
+        $response = $this->delete(route('admin.products.destroy', $product));
         $response->assertStatus(403);
     }
 }
