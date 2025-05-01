@@ -112,6 +112,6 @@ Route::middleware('auth')->group(function () {
                 Route::delete('{promo}',       [PromoCodeController::class,'destroy'])->name('destroy');
             });
 
-        }); 
+        });
 
 });

@@ -31,14 +31,14 @@
             </li>
 
             <!-- Show Login & Register when NOT authenticated -->
-            <template x-if="!$store.auth.isAuthenticated">
+            <template x-if="! $store.auth.isAuthenticated">
                 <li>
                     <a href="{{ route('login') }}" class="btn-secondary">
                         Login
                     </a>
                 </li>
             </template>
-            <template x-if="!$store.auth.isAuthenticated">
+            <template x-if="! $store.auth.isAuthenticated">
                 <li>
                     <a href="{{ route('register') }}" class="btn-secondary">
                         Register
@@ -46,10 +46,23 @@
                 </li>
             </template>
 
-            <!-- Show Account & Logout when authenticated -->
+            <!-- Show My Account & Logout when authenticated -->
             <template x-if="$store.auth.isAuthenticated">
                 <li>
-                    <x-nav-link :href="route('account.index')" :active="request()->routeIs('account.*')">
+                    @php
+                        $user = auth()->user();
+                        $accountUrl    = $user->is_admin
+                                         ? route('admin.dashboard')
+                                         : route('account.index');
+                        $accountActive = $user->is_admin
+                                         ? request()->routeIs('admin.dashboard')
+                                         : request()->routeIs('account.*');
+                    @endphp
+
+                    <x-nav-link
+                        :href="$accountUrl"
+                        :active="$accountActive"
+                    >
                         My Account
                     </x-nav-link>
                 </li>
