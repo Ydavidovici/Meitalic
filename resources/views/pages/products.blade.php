@@ -12,11 +12,18 @@
                     href="{{ route('products.show', $product->slug) }}"
                     class="block border rounded shadow hover:shadow-lg transition"
                 >
-                    <img
-                        src="{{ asset('storage/' . $product->image) }}"
-                        alt="{{ $product->name }}"
-                        class="w-full h-64 object-cover rounded-t"
-                    >
+                    @if($product->image_url)
+                        <img
+                            src="{{ $product->image_url }}"
+                            alt="{{ $product->name }}"
+                            class="w-full h-64 object-cover rounded-t"
+                        >
+                    @else
+                        <div class="w-full h-64 bg-gray-100 flex items-center justify-center text-gray-400 rounded-t">
+                            No Image
+                        </div>
+                    @endif
+
                     <div class="p-4">
                         <h3 class="text-lg font-semibold">{{ $product->name }}</h3>
                         <p class="text-sm text-gray-600 mt-2">

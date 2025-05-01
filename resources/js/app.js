@@ -3,18 +3,18 @@ import Alpine from 'alpinejs';
 
 window.Alpine = Alpine;
 
-// Auth store (unchanged)
+// — Auth store (unchanged) —
 Alpine.store('auth', {
     isAuthenticated: window.isAuthenticated
 });
 
-// Dashboard store: manages devMetricsVisible + modal events (unchanged)
+// — Dashboard store (unchanged) —
 Alpine.store('dashboard', {
     devMetricsVisible: false,
-    activeModal: null,
+    activeModal:      null,
 
     toggleDevMetrics() {
-        this.devMetricsVisible = ! this.devMetricsVisible;
+        this.devMetricsVisible = !this.devMetricsVisible;
     },
     openModal(name) {
         this.activeModal = name;
@@ -28,43 +28,29 @@ Alpine.store('dashboard', {
     }
 });
 
-// Main Alpine component for the admin dashboard
+// — Admin Alpine component (unchanged) —
 function adminDashboard() {
     return {
-        // reactive dev-metrics flag
         devMetricsVisible: Alpine.store('dashboard').devMetricsVisible,
-
-        // expose openModal/closeModal so @click="openModal(...)" works
-        openModal(name) {
-            Alpine.store('dashboard').openModal(name);
-        },
-        closeModal(name) {
-            Alpine.store('dashboard').closeModal(name);
-        },
-
-        // KPI helpers (still around if you use openKpi elsewhere)
-        openKpi(name) {
-            this.openModal(name);
-        },
-        closeKpi(name) {
-            this.closeModal(name);
-        },
-
-        // —— Order management ——
+        openModal(name)    { Alpine.store('dashboard').openModal(name) },
+        closeModal(name)   { Alpine.store('dashboard').closeModal(name) },
+        openKpi(name)      { this.openModal(name) },
+        closeKpi(name)     { this.closeModal(name) },
         selectedOrders: [],
-        dateFilter: 'all',
+        dateFilter:   'all',
         statusFilter: [],
 
-        matchesDate(orderRange) {
-            return this.dateFilter === 'all' || orderRange === this.dateFilter;
+        matchesDate(range) {
+            return this.dateFilter === 'all' || range === this.dateFilter;
         },
-        matchesStatus(orderStatus) {
-            return this.statusFilter.length === 0 || this.statusFilter.includes(orderStatus);
+        matchesStatus(status) {
+            return this.statusFilter.length === 0 || this.statusFilter.includes(status);
         },
-        toggleAll(event) {
-            const checked = event.target.checked;
+        toggleAll(e) {
+            const checked = e.target.checked;
             this.selectedOrders = checked
-                ? Array.from(document.querySelectorAll('tbody input[type="checkbox"]')).map(el => el.value)
+                ? Array.from(document.querySelectorAll('tbody input[type="checkbox"]'))
+                    .map(el => el.value)
                 : [];
         },
         singleMark(id, status) {
@@ -96,3 +82,44 @@ function adminDashboard() {
 
 Alpine.data('adminDashboard', adminDashboard);
 Alpine.start();
+
+document.addEventListener('DOMContentLoaded', () => {
+    ['filters-form','admin-filters-form'].forEach(formId => {
+        const form = document.getElementById(formId);
+        if (!form) return;
+
+        form.addEventListener('submit', async e => {
+            e.preventDefault();
+
+            const params = new URLSearchParams(new FormData(form));
+            const url    = formId === 'filters-form'
+                ? `/products?${params}`
+                : `/admin?${params}`;
+
+            const resp = await fetch(url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const html = await resp.text();
+
+            // parse the returned fragment
+            const parser = new DOMParser();
+            const doc    = parser.parseFromString(html, 'text/html');
+            const newGrid = doc.getElementById(formId === 'filters-form'
+                ? 'product-grid'
+                : 'admin-product-grid');
+
+            if (newGrid) {
+                // replace the old with the new
+                const oldGrid = document.getElementById(newGrid.id);
+                oldGrid.replaceWith(newGrid);
+
+                // re-hydrate Alpine on the freshly‐injected nodes
+                window.Alpine.initTree(newGrid);
+
+                // update the URL
+                history.pushState(null, '', url);
+            }
+        });
+    });
+});
+

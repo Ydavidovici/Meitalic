@@ -4,9 +4,17 @@
 
 @section('content')
 <div class="max-w-5xl mx-auto mt-16 grid grid-cols-1 md:grid-cols-2 gap-10">
-    <div>
-        <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-full rounded shadow">
-    </div>
+    @php
+        use Illuminate\Support\Str;
+    @endphp
+
+    <img
+        src="{{ Str::startsWith($product->image, ['http://','https://'])
+            ? $product->image
+            : asset('storage/'.$product->image)
+        }}"
+        alt="{{ $product->name }}"
+        class="w-full rounded shadow">
     <div>
         <h2 class="text-4xl font-bold mb-4">{{ $product->name }}</h2>
         <p class="text-xl text-pink-600 mb-6">${{ number_format($product->price, 2) }}</p>

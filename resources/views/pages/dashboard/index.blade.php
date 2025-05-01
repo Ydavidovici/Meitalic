@@ -1,4 +1,8 @@
 {{-- resources/views/pages/dashboard/index.blade.php --}}
+@php
+    use Illuminate\Support\Str;
+@endphp
+
 @extends('layouts.app')
 
 @section('title', 'Your Dashboard')
@@ -121,9 +125,14 @@
             <h3 class="font-bold mb-2">You Might Like</h3>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 @foreach($recommendations as $prod)
-                    <div class="border p-4 rounded">
-                        <img src="{{ $prod->thumbnail_url }}" alt="{{ $prod->name }}" class="w-full h-24 object-cover rounded">
-                        <h4 class="mt-2 text-sm font-semibold">{{ $prod->name }}</h4>
+                    <div class="h-40 bg-gray-100 rounded overflow-hidden mb-4">
+                        <img
+                            src="{{ Str::startsWith($prod->thumbnail_url, ['http://','https://'])
+                ? $prod->thumbnail_url
+                : asset('storage/'.$prod->thumbnail_url)
+            }}"
+                            alt="{{ $prod->name }}"
+                            class="w-full h-24 object-cover rounded">
                     </div>
                 @endforeach
             </div>

@@ -8,10 +8,30 @@ use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
-    // Public listing
     public function index(Request $request)
     {
-        $products = Product::all();
+        $q = Product::query();
+
+        if ($line = $request->query('line')) {
+            $q->where('brand', $line);
+        }
+        if ($cat = $request->query('category')) {
+            $q->where('category', $cat);
+        }
+
+        $allowed = ['price','name','updated_at'];
+        $sort    = in_array($request->query('sort'), $allowed)
+            ? $request->query('sort')
+            : 'name';
+        $dir     = $request->query('dir') === 'desc' ? 'desc' : 'asc';
+
+        $products = $q->orderBy($sort, $dir)
+            ->paginate(20);
+
+        if ($request->ajax()) {
+            return view('partials.product-grid', compact('products'));
+        }
+
         return view('pages.products', compact('products'));
     }
 
@@ -26,7 +46,7 @@ class ProductController extends Controller
     public function create()
     {
         $this->authorizeAdmin();
-        return view('pages.admin.products.create');
+        return view('admin.dashboard');
     }
 
     // Admin: store new
@@ -59,7 +79,7 @@ class ProductController extends Controller
         Product::create($data);
 
         return redirect()
-            ->route('admin.products.index')
+            ->route('admin.dashboard')
             ->with('success','Product created successfully.');
     }
 
@@ -101,7 +121,7 @@ class ProductController extends Controller
         $product->update($data);
 
         return redirect()
-            ->route('admin.products.index')
+            ->route('admin.dashboard')
             ->with('success','Product updated successfully.');
     }
 
@@ -112,7 +132,7 @@ class ProductController extends Controller
         $product->delete();
 
         return redirect()
-            ->route('admin.products.index')
+            ->route('admin.dashboard')
             ->with('success','Product deleted successfully.');
     }
 

@@ -76,15 +76,35 @@ class AdminController extends Controller
         // 8) Analytics HTML (stubbed out)
         $analyticsHtml = '';
 
-        // 9) All products (for inline inventory-adjust)
-        $products = Product::latest()->paginate(20);
+        // — 9) Filterable product list —
+        $q = Product::query();
+        if ($b = $request->query('brand')) {
+            $q->where('brand', $b);
+        }
+        if ($c = $request->query('category')) {
+            $q->where('category', $c);
+        }
+        $allowed = ['inventory','updated_at','name'];
+        $sort    = in_array($request->query('sort'), $allowed)
+            ? $request->query('sort')
+            : 'updated_at';
+        $dir     = $request->query('dir') === 'asc' ? 'asc' : 'desc';
+        $products = $q->orderBy($sort, $dir)
+            ->paginate(20);
+
+        $allBrands     = Product::select('brand')->distinct()->orderBy('brand')->pluck('brand');
+        $allCategories = Product::select('category')->distinct()->orderBy('category')->pluck('category');
+
+        if ($request->ajax()) {
+            return view('partials.admin.product-grid', compact('products', 'allBrands', 'allCategories'));
+        }
 
         return view('pages.admin.dashboard', compact(
             'kpis','counts','recentOrders',
             'lowStock','outOfStock','topSellers','topRevenue','slowMovers',
             'newCustomersToday','topCustomers',
             'activeCoupons','expiringCoupons','analyticsHtml',
-            'products'
+            'products', 'allBrands', 'allCategories'
         ));
     }
 
