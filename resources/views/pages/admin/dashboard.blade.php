@@ -109,43 +109,60 @@
         </div>
 
         {{-- 3. INVENTORY MANAGEMENT --}}
-        <div class="card mb-8">
-            <h3 class="font-bold mb-4 flex items-center justify-between">
-                <span>Inventory</span>
+        <div class="card mb-8 bg-white rounded shadow">
+            <div class="p-6">
+                {{-- 3.1 Section Header --}}
+                <h3 class="text-xl font-bold mb-4">Inventory</h3>
 
-                <form id="admin-filters-form" class="flex space-x-2">
-                    <select name="brand" class="border rounded p-2">
+                {{-- 3.2 Filters Bar --}}
+                <form id="admin-filters-form" class="flex flex-wrap items-center gap-4 mb-6">
+                    {{-- Search (optional) --}}
+                    <input
+                        type="text"
+                        name="q"
+                        placeholder="Search products…"
+                        value="{{ request('q') }}"
+                        class="flex-1 min-w-[12rem] border rounded px-3 py-2"
+                    >
+
+                    {{-- Brand --}}
+                    <select name="brand" class="w-48 border rounded px-3 py-2">
                         <option value="">All Brands</option>
                         @foreach($allBrands as $brand)
-                            <option value="{{ $brand }}" @selected(request('brand')==$brand)>{{ $brand }}</option>
+                            <option value="{{ $brand }}" @selected(request('brand') == $brand)>{{ $brand }}</option>
                         @endforeach
                     </select>
-                    <select name="category" class="border rounded p-2">
+
+                    {{-- Category --}}
+                    <select name="category" class="w-48 border rounded px-3 py-2">
                         <option value="">All Categories</option>
                         @foreach($allCategories as $cat)
-                            <option value="{{ $cat }}" @selected(request('category')==$cat)>{{ $cat }}</option>
+                            <option value="{{ $cat }}" @selected(request('category') == $cat)>{{ $cat }}</option>
                         @endforeach
                     </select>
-                    <select name="sort" class="border rounded p-2">
+
+                    {{-- Sort --}}
+                    <select name="sort" class="w-40 border rounded px-3 py-2">
                         <option value="updated_at" @selected(request('sort')=='updated_at')>Last Updated</option>
-                        <option value="inventory"  @selected(request('sort')=='inventory')>Stock</option>
-                        <option value="name"       @selected(request('sort')=='name')>Name</option>
+                        <option value="inventory"   @selected(request('sort')=='inventory')>Stock</option>
+                        <option value="name"        @selected(request('sort')=='name')>Name</option>
                     </select>
-                    <select name="dir" class="border rounded p-2">
+
+                    {{-- Direction --}}
+                    <select name="dir" class="w-32 border rounded px-3 py-2">
                         <option value="desc" @selected(request('dir')=='desc')>Desc</option>
                         <option value="asc"  @selected(request('dir')=='asc')>Asc</option>
                     </select>
-                    <button type="submit" class="btn-secondary">Apply</button>
+
+                    {{-- Apply Button --}}
+                    <button type="submit" class="btn-secondary ml-auto whitespace-nowrap">
+                        Apply
+                    </button>
                 </form>
-            </h3>
 
-            @if(session('success'))
-                <div class="p-3 mb-4 bg-green-100 text-green-700 rounded">
-                    {{ session('success') }}
-                </div>
-            @endif
-
-            @include('partials.admin.product-grid')
+                {{-- 3.3 Product Grid --}}
+                @include('partials.admin.product-grid')
+            </div>
         </div>
 
         {{-- Create Product Modal --}}
