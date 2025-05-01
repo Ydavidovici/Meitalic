@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
@@ -24,76 +25,98 @@ class ProductController extends Controller
     // Admin: show "create" form
     public function create()
     {
-        $this->authorize('admin-only');
+        $this->authorizeAdmin();
         return view('pages.admin.products.create');
     }
 
     // Admin: store new
     public function store(Request $request)
     {
-        $this->authorize('admin-only');
+        $this->authorizeAdmin();
 
-        $validated = $request->validate([
+        $data = $request->validate([
             'name'        => 'required|string|max:255',
             'brand'       => 'required|string|max:255',
             'category'    => 'required|string',
             'description' => 'required|string',
-            'price'       => 'required|numeric',
-            'image'       => 'nullable|string',
-            'inventory'   => 'required|integer',
-            'sku'         => 'required|string|max:255|unique:products,sku',
+            'price'       => 'required|numeric|min:0',
+            'inventory'   => 'required|integer|min:0',
+            'image'       => 'nullable|image|max:2048',
         ]);
 
-        Product::create($validated);
+        // auto-slug & SKU
+        $data['slug'] = Str::slug($data['name']);
+        // unique SKU: slug + 6-char random
+        $data['sku']  = $data['slug'] . '-' . Str::upper(Str::random(6));
+
+        // handle image upload
+        if ($request->hasFile('image')) {
+            $data['image'] = $request
+                ->file('image')
+                ->store('products','public');
+        }
+
+        Product::create($data);
 
         return redirect()
             ->route('admin.products.index')
-            ->with('success', 'Product created successfully.');
+            ->with('success','Product created successfully.');
     }
 
     // Admin: show "edit" form
     public function edit(Product $product)
     {
-        $this->authorize('admin-only');
+        $this->authorizeAdmin();
         return view('pages.admin.products.edit', compact('product'));
     }
 
     // Admin: apply update
     public function update(Request $request, Product $product)
     {
-        $this->authorize('admin-only');
+        $this->authorizeAdmin();
 
-        $validated = $request->validate([
+        $data = $request->validate([
             'name'        => 'required|string|max:255',
             'brand'       => 'required|string|max:255',
             'category'    => 'required|string',
             'description' => 'required|string',
-            'price'       => 'required|numeric',
-            'image'       => 'nullable|string',
-            'inventory'   => 'required|integer',
-            'sku'         => 'required|string|max:255|unique:products,sku,' . $product->id,
+            'price'       => 'required|numeric|min:0',
+            'inventory'   => 'required|integer|min:0',
+            'image'       => 'nullable|image|max:2048',
         ]);
 
-        $product->update($validated);
+        // if name changed, regenerate slug (optional)
+        if ($data['name'] !== $product->name) {
+            $data['slug'] = Str::slug($data['name']);
+            // keep existing SKU or regenerate?
+            // $data['sku'] = $data['slug'].'-'.Str::upper(Str::random(6));
+        }
+
+        if ($request->hasFile('image')) {
+            $data['image'] = $request
+                ->file('image')
+                ->store('products','public');
+        }
+
+        $product->update($data);
 
         return redirect()
             ->route('admin.products.index')
-            ->with('success', 'Product updated successfully.');
+            ->with('success','Product updated successfully.');
     }
 
     // Admin: delete
     public function destroy(Product $product)
     {
-        $this->authorize('admin-only');
+        $this->authorizeAdmin();
         $product->delete();
 
         return redirect()
             ->route('admin.products.index')
-            ->with('success', 'Product deleted successfully.');
+            ->with('success','Product deleted successfully.');
     }
 
-    // Simple gate for admin-only
-    protected function authorize(string $ability)
+    protected function authorizeAdmin()
     {
         if (! auth()->user()?->is_admin) {
             abort(403);

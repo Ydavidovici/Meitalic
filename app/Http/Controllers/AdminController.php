@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
@@ -16,9 +15,7 @@ class AdminController extends Controller
      */
     public function index(Request $request)
     {
-        if (! $request->user() || ! $request->user()->is_admin) {
-            abort(403);
-        }
+        abort_if(! $request->user()?->is_admin, 403);
 
         // 1) KPIs
         $kpis = [
@@ -41,37 +38,25 @@ class AdminController extends Controller
         $recentOrders = Order::latest()->take(10)->get();
 
         // 4) Inventory alerts
-        $threshold   = config('inventory.low_stock_threshold', 5);
-        $lowStock    = Product::where('inventory', '<=', $threshold)->get();
-        $outOfStock  = Product::where('inventory', 0)->get();
+        $threshold  = config('inventory.low_stock_threshold', 5);
+        $lowStock   = Product::where('inventory', '<=', $threshold)->get();
+        $outOfStock = Product::where('inventory', 0)->get();
 
         // 5) Product performance
         $topSellers = Product::select('products.*')
-            ->selectRaw('(
-                SELECT COALESCE(SUM(quantity), 0)
-                FROM order_items
-                WHERE order_items.product_id = products.id
-            ) AS sold')
+            ->selectRaw('(SELECT COALESCE(SUM(quantity),0) FROM order_items WHERE order_items.product_id=products.id) AS sold')
             ->orderByDesc('sold')
             ->limit(5)
             ->get();
 
         $topRevenue = Product::select('products.*')
-            ->selectRaw('(
-                SELECT COALESCE(SUM(quantity * price), 0)
-                FROM order_items
-                WHERE order_items.product_id = products.id
-            ) AS revenue')
+            ->selectRaw('(SELECT COALESCE(SUM(quantity*price),0) FROM order_items WHERE order_items.product_id=products.id) AS revenue')
             ->orderByDesc('revenue')
             ->limit(5)
             ->get();
 
         $slowMovers = Product::select('products.*')
-            ->selectRaw('(
-                SELECT COALESCE(SUM(quantity), 0)
-                FROM order_items
-                WHERE order_items.product_id = products.id
-            ) AS sold')
+            ->selectRaw('(SELECT COALESCE(SUM(quantity),0) FROM order_items WHERE order_items.product_id=products.id) AS sold')
             ->orderBy('sold')
             ->limit(5)
             ->get();
@@ -79,11 +64,7 @@ class AdminController extends Controller
         // 6) Customer insights
         $newCustomersToday = User::whereDate('created_at', today())->count();
         $topCustomers = User::select('users.*')
-            ->selectRaw('(
-                SELECT COALESCE(SUM(total), 0)
-                FROM orders
-                WHERE orders.user_id = users.id
-            ) AS lifetime_spend')
+            ->selectRaw('(SELECT COALESCE(SUM(total),0) FROM orders WHERE orders.user_id=users.id) AS lifetime_spend')
             ->orderByDesc('lifetime_spend')
             ->limit(5)
             ->get();
@@ -95,21 +76,34 @@ class AdminController extends Controller
         // 8) Analytics HTML (stubbed out)
         $analyticsHtml = '';
 
+        // 9) All products (for inline inventory-adjust)
+        $products = Product::latest()->paginate(20);
+
         return view('pages.admin.dashboard', compact(
-            'kpis',
-            'counts',
-            'recentOrders',
-            'lowStock',
-            'outOfStock',
-            'topSellers',
-            'topRevenue',
-            'slowMovers',
-            'newCustomersToday',
-            'topCustomers',
-            'activeCoupons',
-            'expiringCoupons',
-            'analyticsHtml'
+            'kpis','counts','recentOrders',
+            'lowStock','outOfStock','topSellers','topRevenue','slowMovers',
+            'newCustomersToday','topCustomers',
+            'activeCoupons','expiringCoupons','analyticsHtml',
+            'products'
         ));
+    }
+
+    /**
+     * Adjust a product’s inventory by a delta (positive or negative).
+     */
+    public function adjustInventory(Request $request, Product $product)
+    {
+        abort_if(! $request->user()?->is_admin, 403);
+
+        $data = $request->validate([
+            'delta' => 'required|integer',
+        ]);
+
+        $product->increment('inventory', $data['delta']);
+
+        return back()->with('product_success',
+            "Adjusted “{$product->name}” by {$data['delta']} units."
+        );
     }
 
     /**
@@ -117,9 +111,7 @@ class AdminController extends Controller
      */
     public function orders(Request $request)
     {
-        if (! $request->user() || ! $request->user()->is_admin) {
-            abort(403);
-        }
+        abort_if(! $request->user()?->is_admin, 403);
 
         $orders = Order::latest()->paginate(20);
 

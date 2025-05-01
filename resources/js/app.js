@@ -3,11 +3,12 @@ import Alpine from 'alpinejs';
 
 window.Alpine = Alpine;
 
+// Auth store (unchanged)
 Alpine.store('auth', {
     isAuthenticated: window.isAuthenticated
 });
 
-// add modal support
+// Dashboard store: manages devMetricsVisible + modal events (unchanged)
 Alpine.store('dashboard', {
     devMetricsVisible: false,
     activeModal: null,
@@ -27,20 +28,29 @@ Alpine.store('dashboard', {
     }
 });
 
+// Main Alpine component for the admin dashboard
 function adminDashboard() {
     return {
-        // from store
+        // reactive dev-metrics flag
         devMetricsVisible: Alpine.store('dashboard').devMetricsVisible,
 
-        // KPI helpers
-        openKpi(name) {
+        // expose openModal/closeModal so @click="openModal(...)" works
+        openModal(name) {
             Alpine.store('dashboard').openModal(name);
         },
-        closeKpi(name) {
+        closeModal(name) {
             Alpine.store('dashboard').closeModal(name);
         },
 
-        // existing order mgmt...
+        // KPI helpers (still around if you use openKpi elsewhere)
+        openKpi(name) {
+            this.openModal(name);
+        },
+        closeKpi(name) {
+            this.closeModal(name);
+        },
+
+        // —— Order management ——
         selectedOrders: [],
         dateFilter: 'all',
         statusFilter: [],

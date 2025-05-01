@@ -109,31 +109,137 @@
             </table>
         </div>
 
-        {{-- 3. INVENTORY ALERTS --}}
         <div class="card mb-8">
-            <h3 class="font-bold mb-4">Inventory Alerts</h3>
-            <ul class="space-y-1">
-                @foreach($lowStock as $prod)
-                    <li class="flex justify-between">
-                        <span>{{ $prod->name }} ({{ $prod->inventory }} left)</span>
-                        <a href="{{ route('admin.products.edit', $prod) }}" class="text-sm text-indigo-600 hover:underline">
-                            Restock
-                        </a>
-                    </li>
-                @endforeach
-                @foreach($outOfStock as $prod)
-                    <li class="flex justify-between text-red-600">
-                        <span>{{ $prod->name }} (Out of Stock)</span>
-                        <a href="{{ route('admin.products.edit', $prod) }}" class="text-sm text-indigo-600 hover:underline">
-                            Restock
-                        </a>
-                    </li>
-                @endforeach
-                @if($lowStock->isEmpty() && $outOfStock->isEmpty())
-                    <li class="text-gray-600">All products have sufficient stock.</li>
-                @endif
-            </ul>
+            <h3 class="font-bold mb-4">Inventory</h3>
+
+            @if(session('product_success'))
+                <div class="p-3 mb-4 bg-green-100 text-green-700 rounded">
+                    {{ session('product_success') }}
+                </div>
+            @endif
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                @forelse($products as $prod)
+                    <div class="card flex flex-col h-full">
+                        {{-- thumbnail --}}
+                        <div class="h-40 bg-gray-100 rounded overflow-hidden mb-4">
+                            @if($prod->image)
+                                <img src="{{ asset('storage/'.$prod->image) }}"
+                                     alt="{{ $prod->name }}"
+                                     class="w-full h-full object-cover">
+                            @else
+                                <div class="w-full h-full flex items-center justify-center text-gray-400">
+                                    No Image
+                                </div>
+                            @endif
+                        </div>
+
+                        {{-- details --}}
+                        <h4 class="font-semibold">{{ $prod->name }}</h4>
+                        <p class="text-gray-600 text-sm mb-2">Price: ${{ number_format($prod->price,2) }}</p>
+                        <p class="text-lg font-bold mb-4">Stock: {{ $prod->inventory }}</p>
+
+                        {{-- adjust controls --}}
+                        <div class="mt-auto space-y-2">
+                            <div class="flex space-x-2 justify-center">
+                                <form method="POST" action="{{ route('admin.products.adjust',$prod) }}">
+                                    @csrf @method('PATCH')
+                                    <input type="hidden" name="delta" value="-1">
+                                    <button type="submit" class="btn-secondary px-2">−1</button>
+                                </form>
+                                <form method="POST" action="{{ route('admin.products.adjust',$prod) }}">
+                                    @csrf @method('PATCH')
+                                    <input type="hidden" name="delta" value="1">
+                                    <button type="submit" class="btn-secondary px-2">+1</button>
+                                </form>
+                            </div>
+                            <form method="POST" action="{{ route('admin.products.adjust',$prod) }}" class="flex space-x-2">
+                                @csrf @method('PATCH')
+                                <input
+                                    type="number"
+                                    name="delta"
+                                    placeholder="+10 or -5"
+                                    class="w-full border rounded p-1"
+                                />
+                                <button type="submit" class="btn-secondary px-3">Apply</button>
+                            </form>
+                        </div>
+                    </div>
+                @empty
+                    <div class="col-span-full text-center py-12 text-gray-600">
+                        No products in inventory.
+                    </div>
+                @endforelse
+
+                {{-- “Add Product” card --}}
+                <div
+                    class="card flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 h-full"
+                    @click="openModal('inventory-create')"
+                >
+                    <span class="text-5xl text-gray-400">＋</span>
+                    <span class="mt-2 text-gray-500">Add Product</span>
+                </div>
+            </div>
+
+            {{-- pagination --}}
+            <div class="mt-6">
+                {{ $products->links() }}
+            </div>
         </div>
+
+        <x-modal name="inventory-create" maxWidth="lg">
+            <form
+                method="POST"
+                action="{{ route('admin.products.store') }}"
+                enctype="multipart/form-data"
+                class="p-6 space-y-4"
+            >
+                @csrf
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {{-- Name --}}
+                    <div>
+                        <x-input-label for="name" value="Name"/>
+                        <x-text-input id="name" name="name" class="mt-1 block w-full"/>
+                        <x-input-error :messages="$errors->get('name')" class="mt-1"/>
+                    </div>
+
+                    {{-- Price --}}
+                    <div>
+                        <x-input-label for="price" value="Price"/>
+                        <x-text-input id="price" name="price" class="mt-1 block w-full"/>
+                        <x-input-error :messages="$errors->get('price')" class="mt-1"/>
+                    </div>
+
+                    {{-- Inventory --}}
+                    <div>
+                        <x-input-label for="inventory" value="Starting Inventory"/>
+                        <x-text-input id="inventory" name="inventory" type="number" class="mt-1 block w-full"/>
+                        <x-input-error :messages="$errors->get('inventory')" class="mt-1"/>
+                    </div>
+
+                    {{-- Image Upload --}}
+                    <div>
+                        <x-input-label for="image" value="Product Image"/>
+                        <input
+                            id="image"
+                            name="image"
+                            type="file"
+                            accept="image/*"
+                            class="mt-1 block w-full border rounded p-1"
+                        />
+                        <x-input-error :messages="$errors->get('image')" class="mt-1"/>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-4">
+                    <x-secondary-button @click="$dispatch('close-modal','inventory-create')" type="button">
+                        Cancel
+                    </x-secondary-button>
+                    <x-primary-button>Create</x-primary-button>
+                </div>
+            </form>
+        </x-modal>
 
         {{-- 4. CUSTOMER INSIGHTS --}}
         <div class="card mb-8">
