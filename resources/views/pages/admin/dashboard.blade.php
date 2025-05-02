@@ -1,7 +1,5 @@
 {{-- resources/views/pages/admin/dashboard.blade.php --}}
-@php
-    use Illuminate\Support\Str;
-@endphp
+@php use Illuminate\Support\Str; @endphp
 
 @extends('layouts.app')
 
@@ -21,7 +19,7 @@
                 ['revenue-month',   'Revenue This Month','$'.number_format($kpis['revenue_month'],2)],
                 ['avg-order-value', 'Avg. Order Value',  '$'.number_format($kpis['avg_order_value'],2)],
             ] as [$key, $label, $value])
-                <div class="card cursor-pointer" @click="openKpi('{{ $key }}')">
+                <div class="card cursor-pointer" @click="openModal('{{ $key }}')">
                     <h4 class="font-semibold">{{ $label }}</h4>
                     <p class="text-3xl">{{ $value }}</p>
                 </div>
@@ -41,10 +39,8 @@
             <x-modal name="{{ $key }}" maxWidth="lg">
                 <div class="p-6">
                     <h3 class="text-2xl font-bold mb-4">{{ $label }} Details</h3>
-                    {{-- insert charts/tables here --}}
                     <p class="text-gray-600">More detailed breakdown…</p>
-                    <button class="btn-secondary mt-4"
-                            @click="$dispatch('close-modal','{{ $key }}')">
+                    <button class="btn-secondary mt-4" @click="$dispatch('close-modal','{{ $key }}')">
                         Close
                     </button>
                 </div>
@@ -56,12 +52,12 @@
             <h3 class="font-bold mb-4 flex justify-between items-center">
                 <span>Order Management</span>
                 <div class="space-x-2">
-                    <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded">
-                        Pending: {{ $counts['pending'] }}
-                    </span>
+                <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded">
+                    Pending: {{ $counts['pending'] }}
+                </span>
                     <span class="px-2 py-1 bg-red-100 text-red-700 rounded">
-                        Unfulfilled: {{ $counts['unfulfilled'] }}
-                    </span>
+                    Unfulfilled: {{ $counts['unfulfilled'] }}
+                </span>
                     <button @click="markBulk('shipped')" class="text-sm text-blue-600 hover:underline">
                         Mark Selected Shipped
                     </button>
@@ -89,9 +85,9 @@
                         <td>{{ $order->id }}</td>
                         <td>{{ optional($order->user)->name ?? 'Guest' }}</td>
                         <td>
-                            <span class="px-2 py-1 bg-gray-100 rounded text-sm">
-                                {{ ucfirst($order->status) }}
-                            </span>
+                    <span class="px-2 py-1 bg-gray-100 rounded text-sm">
+                        {{ ucfirst($order->status) }}
+                    </span>
                         </td>
                         <td>{{ $order->created_at->format('M j, Y') }}</td>
                         <td class="space-x-2">
@@ -110,101 +106,90 @@
 
         {{-- 3. INVENTORY MANAGEMENT --}}
         <div class="card mb-8 bg-white rounded shadow">
-            <div class="p-6">
-                {{-- 3.1 Section Header --}}
-                <h3 class="text-xl font-bold mb-4">Inventory</h3>
-
-                {{-- 3.2 Filters Bar --}}
-                <form id="admin-filters-form" class="flex flex-wrap items-center gap-4 mb-6">
-                    {{-- Search (optional) --}}
-                    <input
-                        type="text"
-                        name="q"
-                        placeholder="Search products…"
-                        value="{{ request('q') }}"
-                        class="flex-1 min-w-[12rem] border rounded px-3 py-2"
-                    >
-
-                    {{-- Brand --}}
-                    <select name="brand" class="w-48 border rounded px-3 py-2">
-                        <option value="">All Brands</option>
-                        @foreach($allBrands as $brand)
-                            <option value="{{ $brand }}" @selected(request('brand') == $brand)>{{ $brand }}</option>
-                        @endforeach
-                    </select>
-
-                    {{-- Category --}}
-                    <select name="category" class="w-48 border rounded px-3 py-2">
-                        <option value="">All Categories</option>
-                        @foreach($allCategories as $cat)
-                            <option value="{{ $cat }}" @selected(request('category') == $cat)>{{ $cat }}</option>
-                        @endforeach
-                    </select>
-
-                    {{-- Sort --}}
-                    <select name="sort" class="w-40 border rounded px-3 py-2">
-                        <option value="updated_at" @selected(request('sort')=='updated_at')>Last Updated</option>
-                        <option value="inventory"   @selected(request('sort')=='inventory')>Stock</option>
-                        <option value="name"        @selected(request('sort')=='name')>Name</option>
-                    </select>
-
-                    {{-- Direction --}}
-                    <select name="dir" class="w-32 border rounded px-3 py-2">
-                        <option value="desc" @selected(request('dir')=='desc')>Desc</option>
-                        <option value="asc"  @selected(request('dir')=='asc')>Asc</option>
-                    </select>
-
-                    {{-- Apply Button --}}
-                    <button type="submit" class="btn-secondary ml-auto whitespace-nowrap">
-                        Apply
-                    </button>
-                </form>
-
-                {{-- 3.3 Product Grid --}}
-                @include('partials.admin.product-grid')
+            <div class="p-6 flex items-center justify-between">
+                <h3 class="text-xl font-bold">Inventory</h3>
+                <button @click="openModal('inventory-create')" class="btn-primary whitespace-nowrap">
+                    + New Product
+                </button>
             </div>
+
+            {{-- filters form … --}}
+
+            {{-- product grid --}}
+            @include('partials.admin.product-grid')
         </div>
 
         {{-- Create Product Modal --}}
         <x-modal name="inventory-create" maxWidth="lg">
-            <form method="POST"
-                  action="{{ route('admin.products.store') }}"
-                  enctype="multipart/form-data"
-                  class="p-6 space-y-4">
+            <form
+                method="POST"
+                action="{{ route('admin.products.store') }}"
+                enctype="multipart/form-data"
+                class="p-6 space-y-4"
+                @submit.prevent="validateAndSubmit($el)"
+            >
                 @csrf
+
+                {{-- validation errors --}}
+                @if($errors->any())
+                    <div class="bg-red-100 text-red-700 p-3 rounded mb-4">
+                        <ul class="list-disc pl-5">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 <h3 class="text-2xl font-bold">Create New Product</h3>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {{-- Name --}}
                     <div>
                         <x-input-label for="name" value="Name"/>
-                        <x-text-input id="name" name="name" class="mt-1 block w-full"/>
-                        <x-input-error :messages="$errors->get('name')" class="mt-1"/>
+                        <x-text-input id="name" name="name" required class="mt-1 w-full"/>
                     </div>
+
+                    {{-- Brand --}}
                     <div>
                         <x-input-label for="brand" value="Brand"/>
-                        <x-text-input id="brand" name="brand" class="mt-1 block w-full"/>
-                        <x-input-error :messages="$errors->get('brand')" class="mt-1"/>
+                        <x-text-input id="brand" name="brand" required class="mt-1 w-full"/>
                     </div>
+
+                    {{-- Category --}}
                     <div>
                         <x-input-label for="category" value="Category"/>
-                        <x-text-input id="category" name="category" class="mt-1 block w-full"/>
-                        <x-input-error :messages="$errors->get('category')" class="mt-1"/>
+                        <x-text-input id="category" name="category" required class="mt-1 w-full"/>
                     </div>
+
+                    {{-- Price --}}
                     <div>
                         <x-input-label for="price" value="Price"/>
-                        <x-text-input id="price" name="price" type="number" step="0.01" class="mt-1 block w-full"/>
-                        <x-input-error :messages="$errors->get('price')" class="mt-1"/>
+                        <x-text-input id="price" name="price" type="number" step="0.01" required class="mt-1 w-full"/>
                     </div>
+
+                    {{-- Inventory --}}
                     <div>
                         <x-input-label for="inventory" value="Starting Inventory"/>
-                        <x-text-input id="inventory" name="inventory" type="number" class="mt-1 block w-full"/>
-                        <x-input-error :messages="$errors->get('inventory')" class="mt-1"/>
+                        <x-text-input id="inventory" name="inventory" type="number" required class="mt-1 w-full"/>
                     </div>
+
+                    {{-- Description --}}
+                    <div class="md:col-span-2">
+                        <x-input-label for="description" value="Description"/>
+                        <textarea
+                            id="description"
+                            name="description"
+                            required
+                            rows="4"
+                            class="mt-1 w-full border rounded p-2"
+                        >{{ old('description') }}</textarea>
+                    </div>
+
+                    {{-- Image --}}
                     <div>
                         <x-input-label for="image" value="Product Image"/>
-                        <input id="image" name="image" type="file" accept="image/*"
-                               class="mt-1 block w-full border rounded p-1"/>
-                        <x-input-error :messages="$errors->get('image')" class="mt-1"/>
+                        <input id="image" name="image" type="file" accept="image/*" class="mt-1 w-full border rounded p-1"/>
                     </div>
                 </div>
 
@@ -212,113 +197,160 @@
                     <x-secondary-button @click="$dispatch('close-modal','inventory-create')" type="button">
                         Cancel
                     </x-secondary-button>
-                    <x-primary-button>Create</x-primary-button>
+                    <x-primary-button type="submit">Create</x-primary-button>
                 </div>
             </form>
         </x-modal>
 
-        {{-- Edit Product Modals --}}
+        {{-- Edit & Delete Modals --}}
         @foreach($products as $prod)
             <x-modal name="product-edit-{{ $prod->id }}" maxWidth="lg">
-                <form method="POST"
-                      action="{{ route('admin.products.update', $prod) }}"
-                      enctype="multipart/form-data"
-                      class="p-6 space-y-4">
+                <form
+                    method="POST"
+                    action="{{ route('admin.products.update', $prod) }}"
+                    enctype="multipart/form-data"
+                    class="p-6 space-y-4"
+                    @submit.prevent="validateAndSubmit($el)"
+                >
                     @csrf
                     @method('PUT')
+
+                    {{-- validation errors --}}
+                    @if($errors->any())
+                        <div class="bg-red-100 text-red-700 p-3 rounded mb-4">
+                            <ul class="list-disc pl-5">
+                                @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
                     <h3 class="text-2xl font-bold">Edit {{ $prod->name }}</h3>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {{-- Name --}}
                         <div>
                             <x-input-label for="name-{{ $prod->id }}" value="Name"/>
-                            <x-text-input id="name-{{ $prod->id }}"
-                                          name="name"
-                                          value="{{ old('name', $prod->name) }}"
-                                          class="mt-1 block w-full"/>
-                            <x-input-error :messages="$errors->get('name')" class="mt-1"/>
+                            <x-text-input
+                                id="name-{{ $prod->id }}"
+                                name="name"
+                                value="{{ old('name',$prod->name) }}"
+                                required
+                                class="mt-1 w-full"
+                            />
                         </div>
 
                         {{-- Brand --}}
                         <div>
                             <x-input-label for="brand-{{ $prod->id }}" value="Brand"/>
-                            <x-text-input id="brand-{{ $prod->id }}"
-                                          name="brand"
-                                          value="{{ old('brand', $prod->brand) }}"
-                                          class="mt-1 block w-full"/>
-                            <x-input-error :messages="$errors->get('brand')" class="mt-1"/>
+                            <x-text-input
+                                id="brand-{{ $prod->id }}"
+                                name="brand"
+                                value="{{ old('brand',$prod->brand) }}"
+                                required
+                                class="mt-1 w-full"
+                            />
                         </div>
 
                         {{-- Category --}}
                         <div>
                             <x-input-label for="category-{{ $prod->id }}" value="Category"/>
-                            <x-text-input id="category-{{ $prod->id }}"
-                                          name="category"
-                                          value="{{ old('category', $prod->category) }}"
-                                          class="mt-1 block w-full"/>
-                            <x-input-error :messages="$errors->get('category')" class="mt-1"/>
+                            <x-text-input
+                                id="category-{{ $prod->id }}"
+                                name="category"
+                                value="{{ old('category',$prod->category) }}"
+                                required
+                                class="mt-1 w-full"
+                            />
                         </div>
 
                         {{-- Price --}}
                         <div>
                             <x-input-label for="price-{{ $prod->id }}" value="Price"/>
-                            <x-text-input id="price-{{ $prod->id }}"
-                                          name="price"
-                                          type="number" step="0.01"
-                                          value="{{ old('price', $prod->price) }}"
-                                          class="mt-1 block w-full"/>
-                            <x-input-error :messages="$errors->get('price')" class="mt-1"/>
+                            <x-text-input
+                                id="price-{{ $prod->id }}"
+                                name="price"
+                                type="number"
+                                step="0.01"
+                                value="{{ old('price',$prod->price) }}"
+                                required
+                                class="mt-1 w-full"
+                            />
                         </div>
 
                         {{-- Inventory --}}
                         <div>
                             <x-input-label for="inventory-{{ $prod->id }}" value="Inventory"/>
-                            <x-text-input id="inventory-{{ $prod->id }}"
-                                          name="inventory"
-                                          type="number"
-                                          value="{{ old('inventory', $prod->inventory) }}"
-                                          class="mt-1 block w-full"/>
-                            <x-input-error :messages="$errors->get('inventory')" class="mt-1"/>
+                            <x-text-input
+                                id="inventory-{{ $prod->id }}"
+                                name="inventory"
+                                type="number"
+                                value="{{ old('inventory',$prod->inventory) }}"
+                                required
+                                class="mt-1 w-full"
+                            />
                         </div>
 
                         {{-- Description --}}
                         <div class="md:col-span-2">
                             <x-input-label for="description-{{ $prod->id }}" value="Description"/>
-                            <textarea id="description-{{ $prod->id }}"
-                                      name="description"
-                                      rows="4"
-                                      class="mt-1 block w-full border rounded p-2">{{ old('description', $prod->description) }}</textarea>
-                            <x-input-error :messages="$errors->get('description')" class="mt-1"/>
+                            <textarea
+                                id="description-{{ $prod->id }}"
+                                name="description"
+                                required
+                                rows="4"
+                                class="mt-1 w-full border rounded p-2"
+                            >{{ old('description',$prod->description) }}</textarea>
                         </div>
 
-                        {{-- Image Preview & Upload --}}
+                        {{-- Image --}}
                         <div>
                             <x-input-label for="image-{{ $prod->id }}" value="Product Image"/>
                             @if($prod->image)
                                 <img
-                                    src="{{ Str::startsWith($prod->image, ['http://','https://'])
-                                     ? $prod->image
-                                     : asset('storage/'.$prod->image) }}"
+                                    src="{{ Str::startsWith($prod->image,['http://','https://']) ? $prod->image : asset('storage/'.$prod->image) }}"
                                     alt="{{ $prod->name }}"
                                     class="w-32 h-32 object-cover rounded mb-2"
                                 />
                             @endif
-                            <input id="image-{{ $prod->id }}"
-                                   name="image"
-                                   type="file"
-                                   accept="image/*"
-                                   class="mt-1 block w-full"/>
-                            <x-input-error :messages="$errors->get('image')" class="mt-1"/>
+                            <input
+                                id="image-{{ $prod->id }}"
+                                name="image"
+                                type="file"
+                                accept="image/*"
+                                class="mt-1 w-full"
+                            />
                         </div>
                     </div>
 
                     <div class="flex justify-end space-x-4">
-                        <x-secondary-button type="button"
-                                            @click="$dispatch('close-modal','product-edit-{{ $prod->id }}')">
+                        <button
+                            type="button"
+                            class="text-red-600 hover:underline"
+                            @click="if(confirm('Really delete “{{ $prod->name }}”?')) $refs[`deleteForm{{ $prod->id }}`].submit()"
+                        >
+                            Delete
+                        </button>
+                        <x-secondary-button
+                            type="button"
+                            @click="$dispatch('close-modal','product-edit-{{ $prod->id }}')"
+                        >
                             Cancel
                         </x-secondary-button>
-                        <x-primary-button>Save Changes</x-primary-button>
+                        <x-primary-button type="submit">Save Changes</x-primary-button>
                     </div>
+                </form>
+
+                {{-- hidden DELETE form --}}
+                <form
+                    x-ref="deleteForm{{ $prod->id }}"
+                    method="POST"
+                    action="{{ route('admin.products.destroy', $prod) }}"
+                    class="hidden"
+                >
+                    @csrf
+                    @method('DELETE')
                 </form>
             </x-modal>
         @endforeach
