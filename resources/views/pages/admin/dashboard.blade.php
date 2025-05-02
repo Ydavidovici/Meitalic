@@ -113,7 +113,74 @@
                 </button>
             </div>
 
-            {{-- filters form … --}}
+            {{-- 3.2 Filters Bar --}}
+            <form
+                id="admin-filters-form"
+                class="grid grid-cols-1 md:grid-cols-7 gap-4 px-6 mb-6 items-center"
+            >
+                {{-- Search spans 2 columns on md+ --}}
+                <input
+                    type="text"
+                    name="q"
+                    placeholder="Search products…"
+                    value="{{ request('q') }}"
+                    class="col-span-1 md:col-span-2 border rounded px-3 py-2 w-full"
+                />
+
+                {{-- Brand --}}
+                <select
+                    name="brand"
+                    class="border rounded px-3 py-2 w-full"
+                >
+                    <option value="">All Brands</option>
+                    @foreach($allBrands as $brand)
+                        <option value="{{ $brand }}" @selected(request('brand')==$brand)>
+                            {{ $brand }}
+                        </option>
+                    @endforeach
+                </select>
+
+                {{-- Category --}}
+                <select
+                    name="category"
+                    class="border rounded px-3 py-2 w-full"
+                >
+                    <option value="">All Categories</option>
+                    @foreach($allCategories as $cat)
+                        <option value="{{ $cat }}" @selected(request('category')==$cat)>
+                            {{ $cat }}
+                        </option>
+                    @endforeach
+                </select>
+
+                {{-- Sort --}}
+                <select
+                    name="sort"
+                    class="border rounded px-3 py-2 w-full"
+                >
+                    <option value="updated_at" @selected(request('sort')=='updated_at')>Last Updated</option>
+                    <option value="inventory"   @selected(request('sort')=='inventory')>Stock</option>
+                    <option value="name"        @selected(request('sort')=='name')>Name</option>
+                </select>
+
+                {{-- Direction --}}
+                <select
+                    name="dir"
+                    class="border rounded px-3 py-2 w-full"
+                >
+                    <option value="desc" @selected(request('dir')=='desc')>Desc</option>
+                    <option value="asc"  @selected(request('dir')=='asc')>Asc</option>
+                </select>
+
+                {{-- Apply button --}}
+                <button
+                    type="submit"
+                    class="btn-secondary whitespace-nowrap"
+                >
+                    Apply
+                </button>
+            </form>
+
 
             {{-- product grid --}}
             @include('partials.admin.product-grid')
