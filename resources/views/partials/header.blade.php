@@ -9,6 +9,7 @@
 
         <!-- Navigation -->
         <ul class="flex items-center space-x-6" x-data>
+            <!-- Static Links -->
             <li>
                 <x-nav-link :href="route('home')" :active="request()->routeIs('home')">
                     Home
@@ -81,6 +82,22 @@
                     </li>
                 </template>
             @endauth
+
+            <!-- Cart toggle button (always shown) -->
+            <li>
+                <button
+                    @click="Alpine.store('cart').toggle()"
+                    class="relative p-2 rounded-full hover:bg-gray-100 transition"
+                    aria-label="View cart"
+                >
+                    🛒
+                    <span
+                        x-text="$store.cart.count || ''"
+                        x-show="$store.cart.count > 0"
+                        class="absolute top-0 right-0 bg-red-500 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center"
+                    ></span>
+                </button>
+            </li>
         </ul>
     </div>
 </header>

@@ -26,14 +26,26 @@ class CartController extends Controller
     public function index(Request $request)
     {
         $cart = $this->getCart($request);
+        $items = $cart->cartItems()->with('product')->get();
 
+        if ($request->wantsJson()) {
+            return response()->json([
+                'items'     => $items,
+                'raw_total' => $cart->cartItems()->sum('total'),
+                'discount'  => $cart->discount,
+                'total'     => $cart->total,
+            ]);
+        }
+
+        // existing Blade view
         return view('cart.index', [
-            'items'     => $cart->cartItems()->with('product')->get(),
+            'items'     => $items,
             'total'     => $cart->total,
             'discount'  => $cart->discount ?? 0,
             'promoCode' => $cart->promo_code,
         ]);
     }
+
 
     public function add(Request $request)
     {

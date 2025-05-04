@@ -8,6 +8,46 @@ Alpine.store('auth', {
     isAuthenticated: window.isAuthenticated
 });
 
+Alpine.store('cart', {
+    open: false,
+    toggle() {
+        this.open = !this.open;
+    },
+    close() {
+        this.open = false;
+    }
+});
+
+function cartSidebar() {
+    return {
+        loading: true,
+        items: [],
+        subtotal: 0,
+
+        async load() {
+            this.loading = true;
+            let res = await fetch('/cart', { headers: { 'Accept': 'application/json' } });
+            if (!res.ok) { this.loading = false; return; }
+            let data = await res.json();
+            this.items = data.items;        // [{ id, quantity, price, product: {...} }, …]
+            this.subtotal = data.raw_total; // set in your controller below
+            this.loading = false;
+        },
+
+        async remove(itemId) {
+            await fetch(`/cart/remove/${itemId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                }
+            });
+            this.load(); // refresh
+        }
+    }
+}
+Alpine.data('cartSidebar', cartSidebar);
+
+
 // — Shared “dashboard” store for Jetstream <x-modal> events (unchanged) —
 Alpine.store('dashboard', {
     devMetricsVisible: false,

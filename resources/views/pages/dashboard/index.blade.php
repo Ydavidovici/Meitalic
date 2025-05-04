@@ -106,11 +106,18 @@
         </div>
 
         {{-- 5. Your Cart --}}
-        <div class="bg-white rounded shadow p-6">
+        <div class="bg-white rounded shadow p-6" x-data>
             <h3 class="font-bold mb-2">Your Cart</h3>
-            <a href="{{ url('/dashboard/cart') }}" class="text-indigo-600 hover:underline">
+            <button
+                @click="
+        $store.cart.open = true;
+        // force reload of items if sidebar already mounted
+        $nextTick(() => $root.__x.$data.$refs.cartSidebar.load());
+      "
+                class="text-indigo-600 hover:underline focus:outline-none"
+            >
                 View Current Cart
-            </a>
+            </button>
         </div>
 
         {{-- 6. Recommendations & Promotions --}}
