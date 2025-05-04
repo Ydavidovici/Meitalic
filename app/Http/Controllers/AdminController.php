@@ -226,4 +226,31 @@ class AdminController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    public function show(Order $order)
+    {
+        abort_if(! auth()->user()?->is_admin, 403);
+
+        $order->load('user','items');
+
+        // you can shape this array any way you like—here’s a simple pass‑through
+        return response()->json($order);
+    }
+
+    public function update(Request $request, Order $order)
+    {
+        abort_if(! auth()->user()?->is_admin, 403);
+
+        $data = $request->validate([
+            'status'           => 'required|in:pending,shipped,delivered,unfulfilled',
+            'total'            => 'required|numeric|min:0',
+            'shipping_address' => 'required|string',
+            'email'            => 'nullable|email',
+            'phone'            => 'nullable|string',
+        ]);
+
+        $order->update($data);
+
+        return response()->json(['success' => true]);
+    }
 }

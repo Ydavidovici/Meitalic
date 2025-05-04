@@ -87,14 +87,14 @@ Route::middleware('auth')->group(function () {
             // Admin Dashboard & Orders
             Route::get('/',          [AdminController::class,'index'])->name('dashboard');
             Route::get('/orders',    [AdminController::class,'orders'])->name('orders');
-
-            // single‐order status update
             Route::patch(
                 'orders/{order}/status',
                 [AdminController::class, 'updateOrderStatus']
             )->name('orders.updateStatus');
-
-            // bulk status update
+            Route::get('orders/{order}', [AdminController::class,'show'])
+                ->name('orders.show');
+            Route::patch('/orders/{order}', [AdminController::class,'update'])
+                ->name('orders.update');
             Route::post(
                 'orders/bulk-update',
                 [AdminController::class, 'bulkUpdateOrderStatus']

@@ -34,32 +34,26 @@ function adminDashboard() {
         devMetricsVisible: Alpine.store('dashboard').devMetricsVisible,
         openModal(name)    { Alpine.store('dashboard').openModal(name) },
         closeModal(name)   { Alpine.store('dashboard').closeModal(name) },
-        selectedOrders:    [],
-        dateFilter:        'all',
-        statusFilter:      [],
 
-        matchesDate(range) {
-            return this.dateFilter === 'all' || range === this.dateFilter;
-        },
-        matchesStatus(status) {
-            return this.statusFilter.length === 0 || this.statusFilter.includes(status);
-        },
-        toggleAll(e) {
-            const checked = e.target.checked;
-            this.selectedOrders = checked
-                ? Array.from(document.querySelectorAll('tbody input[type="checkbox"]')).map(el => el.value)
-                : [];
-        },
-        singleMark(id,status) {
-            fetch(`/admin/orders/${id}/status`, {
-                method:'PATCH',
-                headers:{
+        // for bulk actions
+        selectedOrders: [],
+
+        // for the order‑edit modal
+        selectedOrder: null,
+
+        // quick status‑patch
+        singleMark(id, status) {
+            return fetch(`/admin/orders/${id}/status`, {
+                method: 'PATCH',
+                headers: {
                     'Content-Type':'application/json',
-                    'X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
                 body: JSON.stringify({ status })
-            }).then(() => location.reload());
+            });
         },
+
+        // bulk status‑patch
         markBulk(status) {
             if (! this.selectedOrders.length) return;
             fetch('/admin/orders/bulk-update', {
@@ -70,10 +64,39 @@ function adminDashboard() {
                 },
                 body: JSON.stringify({ ids:this.selectedOrders, status })
             }).then(() => location.reload());
-        }
-    };
-}
+        },
 
+        // ← new: fetch an order and open modal
+        async openOrderEdit(id) {
+            const resp = await fetch(`/admin/orders/${id}`, {
+                headers: { 'Accept':'application/json' }
+            });
+            if (!resp.ok) return alert('Failed to load order');
+            this.selectedOrder = await resp.json();
+            this.openModal('order-edit');
+        },
+
+        updateOrder() {
+            fetch(`/admin/orders/${this.selectedOrder.id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document
+                        .querySelector('meta[name="csrf-token"]')
+                        .content
+                },
+                body: JSON.stringify({
+                    status:           this.selectedOrder.status,
+                    total:            this.selectedOrder.total,
+                    shipping_address: this.selectedOrder.shipping_address,
+                    email:            this.selectedOrder.email,
+                    phone:            this.selectedOrder.phone,
+                })
+            })
+                .then(() => location.reload());
+        }
+    }
+}
 Alpine.data('adminDashboard', adminDashboard);
 Alpine.start();
 

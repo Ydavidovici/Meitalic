@@ -52,12 +52,12 @@
             <h3 class="font-bold mb-4 flex justify-between items-center">
                 <span>Order Management</span>
                 <div class="space-x-2">
-            <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded">
-                Pending: {{ $counts['pending'] }}
-            </span>
+                    <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded">
+                        Pending: {{ $counts['pending'] }}
+                    </span>
                     <span class="px-2 py-1 bg-red-100 text-red-700 rounded">
-                Unfulfilled: {{ $counts['unfulfilled'] }}
-            </span>
+                        Unfulfilled: {{ $counts['unfulfilled'] }}
+                    </span>
                     <button @click="markBulk('shipped')" class="text-sm text-blue-600 hover:underline">
                         Mark Selected Shipped
                     </button>
@@ -77,7 +77,7 @@
                     @endforeach
                 </select>
 
-                <label for="order_number" class="font-medium">Order #:</label>
+                <label for="order_number" class="font-medium">Order #:</label>
                 <input
                     type="text"
                     name="order_number"
@@ -87,7 +87,7 @@
                     class="border rounded px-2 py-1"
                 />
 
-                <label for="min_amount" class="font-medium">Min $:</label>
+                <label for="min_amount" class="font-medium">Min $:</label>
                 <input
                     type="number"
                     name="min_amount"
@@ -97,7 +97,7 @@
                     class="border rounded px-2 py-1 w-20"
                 />
 
-                <label for="max_amount" class="font-medium">Max $:</label>
+                <label for="max_amount" class="font-medium">Max $:</label>
                 <input
                     type="number"
                     name="max_amount"
@@ -112,7 +112,6 @@
                 </button>
             </form>
 
-            {{-- replaceable grid --}}
             <div id="orders-grid">
                 <table class="w-full text-left border-collapse">
                     <thead class="bg-gray-100">
@@ -127,35 +126,145 @@
                     </thead>
                     <tbody>
                     @foreach($recentOrders as $order)
-                        <tr class="border-t" x-show="matchesStatus('{{ $order->status }}')">
-                            <td><input type="checkbox" value="{{ $order->id }}" x-model="selectedOrders"/></td>
+                        <tr class="border-t">
+                            <td>
+                                <input type="checkbox"
+                                       value="{{ $order->id }}"
+                                       x-model="selectedOrders"/>
+                            </td>
                             <td>{{ $order->id }}</td>
                             <td>{{ optional($order->user)->name ?? 'Guest' }}</td>
                             <td>
-                            <span class="px-2 py-1 bg-gray-100 rounded text-sm">
-                                {{ ucfirst($order->status) }}
-                            </span>
+                                <span class="px-2 py-1 bg-gray-100 rounded text-sm">
+                                    {{ ucfirst($order->status) }}
+                                </span>
                             </td>
                             <td>{{ $order->created_at->format('M j, Y') }}</td>
                             <td class="space-x-2">
-                                <button @click="singleMark({{ $order->id }}, 'shipped')" class="text-sm text-blue-600 hover:underline">
-                                    Mark Shipped
-                                </button>
-                                <button @click="singleMark({{ $order->id }}, 'delivered')" class="text-sm text-green-600 hover:underline">
-                                    Mark Delivered
-                                </button>
+                                <button
+                                    @click="singleMark({{ $order->id }}, 'shipped')"
+                                    class="text-sm text-blue-600 hover:underline"
+                                >Mark Shipped</button>
+
+                                <button
+                                    @click="singleMark({{ $order->id }}, 'delivered')"
+                                    class="text-sm text-green-600 hover:underline"
+                                >Mark Delivered</button>
+
+                                <!-- full‑edit -->
+                                <button
+                                    @click.stop="openOrderEdit({{ $order->id }})"
+                                    class="text-sm text-indigo-600 hover:underline"
+                                >Edit</button>
                             </td>
                         </tr>
                     @endforeach
                     </tbody>
                 </table>
 
-                {{-- pagination --}}
                 <div class="mt-4">
                     {{ $recentOrders->links() }}
                 </div>
             </div>
         </div>
+
+        {{-- 2.b) Order‑Edit Modal --}}
+        <x-modal name="order-edit" maxWidth="lg">
+            <div class="p-6" x-show="selectedOrder.id">
+                <h3 class="text-2xl font-bold mb-4">
+                    Edit Order #<span x-text="selectedOrder.id"></span>
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {{-- Status --}}
+                    <div>
+                        <label class="block font-medium">Status</label>
+                        <select
+                            x-model="selectedOrder.status"
+                            class="border rounded px-3 py-2 w-full"
+                        >
+                            <template x-for="st in ['pending','shipped','delivered','unfulfilled']" :key="st">
+                                <option :value="st" x-text="st.charAt(0).toUpperCase() + st.slice(1)"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    {{-- Date (read‑only) --}}
+                    <div>
+                        <label class="block font-medium">Date</label>
+                        <input
+                            type="text"
+                            readonly
+                            x-model="selectedOrder.created_at"
+                            class="border rounded px-3 py-2 w-full bg-gray-100"
+                        />
+                    </div>
+
+                    {{-- Customer (read‑only) --}}
+                    <div class="md:col-span-2">
+                        <label class="block font-medium">Customer</label>
+                        <input
+                            type="text"
+                            readonly
+                            x-model="selectedOrder.user?.name || 'Guest'"
+                            class="border rounded px-3 py-2 w-full bg-gray-100"
+                        />
+                    </div>
+
+                    {{-- Total --}}
+                    <div>
+                        <label class="block font-medium">Total</label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            x-model="selectedOrder.total"
+                            class="border rounded px-3 py-2 w-full"
+                        />
+                    </div>
+
+                    {{-- Shipping Address --}}
+                    <div class="md:col-span-2">
+                        <label class="block font-medium">Shipping Address</label>
+                        <textarea
+                            x-model="selectedOrder.shipping_address"
+                            rows="3"
+                            class="border rounded p-2 w-full"
+                        ></textarea>
+                    </div>
+
+                    {{-- Email --}}
+                    <div>
+                        <label class="block font-medium">Email</label>
+                        <input
+                            type="email"
+                            x-model="selectedOrder.email"
+                            class="border rounded px-3 py-2 w-full"
+                        />
+                    </div>
+
+                    {{-- Phone --}}
+                    <div>
+                        <label class="block font-medium">Phone</label>
+                        <input
+                            type="text"
+                            x-model="selectedOrder.phone"
+                            class="border rounded px-3 py-2 w-full"
+                        />
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end space-x-2">
+                    <button
+                        class="btn-secondary"
+                        @click="$dispatch('close-modal','order-edit')"
+                    >Cancel</button>
+                    <button
+                        class="btn-primary"
+                        @click="updateOrder()"
+                    >Save Changes</button>
+                </div>
+            </div>
+        </x-modal>
 
         {{-- 3. INVENTORY MANAGEMENT --}}
         <div class="card mb-8 bg-white rounded shadow">
