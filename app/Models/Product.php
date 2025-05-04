@@ -60,4 +60,17 @@ class Product extends Model
         // otherwise assume it's in storage/app/public
         return asset('storage/'.$this->image);
     }
+
+    /**
+     * Scope a query to search across name, brand, and category.
+     */
+    public function scopeSearch($query, string $term)
+    {
+        return $query->where(function ($q) use ($term) {
+            $q->where('name', 'like', "%{$term}%")
+                ->orWhere('brand', 'like', "%{$term}%")
+                ->orWhere('category', 'like', "%{$term}%");
+        });
+    }
+
 }

@@ -12,13 +12,20 @@ class ProductController extends Controller
     {
         $q = Product::query();
 
-        if ($line = $request->query('line')) {
-            $q->where('brand', $line);
-        }
-        if ($cat = $request->query('category')) {
-            $q->where('category', $cat);
+        // free‑text search across name/brand/category
+        if ($search = $request->query('search')) {
+            $q->search($search);
         }
 
+        // existing exact filters (brand/category)
+        if ($brand = $request->query('brand')) {
+            $q->where('brand', $brand);
+        }
+        if ($category = $request->query('category')) {
+            $q->where('category', $category);
+        }
+
+        // sorting
         $allowed = ['price','name','updated_at'];
         $sort    = in_array($request->query('sort'), $allowed)
             ? $request->query('sort')
@@ -26,7 +33,8 @@ class ProductController extends Controller
         $dir     = $request->query('dir') === 'desc' ? 'desc' : 'asc';
 
         $products = $q->orderBy($sort, $dir)
-            ->paginate(20);
+            ->paginate(20)
+            ->appends($request->only(['search','brand','category','sort','dir']));
 
         if ($request->ajax()) {
             return view('partials.product-grid', compact('products'));

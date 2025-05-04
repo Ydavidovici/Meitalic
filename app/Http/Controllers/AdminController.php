@@ -44,19 +44,19 @@ class AdminController extends Controller
 
         // 5) Product performance
         $topSellers = Product::select('products.*')
-            ->selectRaw('(SELECT COALESCE(SUM(quantity),0) FROM order_items WHERE order_items.product_id=products.id) AS sold')
+            ->selectRaw('(SELECT COALESCE(SUM(quantity),0) FROM order_items WHERE order_items.product_id = products.id) AS sold')
             ->orderByDesc('sold')
             ->limit(5)
             ->get();
 
         $topRevenue = Product::select('products.*')
-            ->selectRaw('(SELECT COALESCE(SUM(quantity*price),0) FROM order_items WHERE order_items.product_id=products.id) AS revenue')
+            ->selectRaw('(SELECT COALESCE(SUM(quantity * price),0) FROM order_items WHERE order_items.product_id = products.id) AS revenue')
             ->orderByDesc('revenue')
             ->limit(5)
             ->get();
 
         $slowMovers = Product::select('products.*')
-            ->selectRaw('(SELECT COALESCE(SUM(quantity),0) FROM order_items WHERE order_items.product_id=products.id) AS sold')
+            ->selectRaw('(SELECT COALESCE(SUM(quantity),0) FROM order_items WHERE order_items.product_id = products.id) AS sold')
             ->orderBy('sold')
             ->limit(5)
             ->get();
@@ -64,7 +64,7 @@ class AdminController extends Controller
         // 6) Customer insights
         $newCustomersToday = User::whereDate('created_at', today())->count();
         $topCustomers = User::select('users.*')
-            ->selectRaw('(SELECT COALESCE(SUM(total),0) FROM orders WHERE orders.user_id=users.id) AS lifetime_spend')
+            ->selectRaw('(SELECT COALESCE(SUM(total),0) FROM orders WHERE orders.user_id = users.id) AS lifetime_spend')
             ->orderByDesc('lifetime_spend')
             ->limit(5)
             ->get();
@@ -76,21 +76,33 @@ class AdminController extends Controller
         // 8) Analytics HTML (stubbed out)
         $analyticsHtml = '';
 
-        // — 9) Filterable product list —
+        // 9) Filterable product list
         $q = Product::query();
+
+        // 9.a) free‑text search via the “q” field
+        if ($term = $request->query('q')) {
+            $q->search($term);
+        }
+
+        // 9.b) exact filters
         if ($b = $request->query('brand')) {
             $q->where('brand', $b);
         }
         if ($c = $request->query('category')) {
             $q->where('category', $c);
         }
-        $allowed = ['inventory','updated_at','name'];
+
+        // sorting
+        $allowed = ['inventory', 'updated_at', 'name'];
         $sort    = in_array($request->query('sort'), $allowed)
             ? $request->query('sort')
             : 'updated_at';
         $dir     = $request->query('dir') === 'asc' ? 'asc' : 'desc';
+
+        // paginate & preserve filters
         $products = $q->orderBy($sort, $dir)
-            ->paginate(20);
+            ->paginate(20)
+            ->appends($request->only(['q', 'brand', 'category', 'sort', 'dir']));
 
         $allBrands     = Product::select('brand')->distinct()->orderBy('brand')->pluck('brand');
         $allCategories = Product::select('category')->distinct()->orderBy('category')->pluck('category');
@@ -100,11 +112,22 @@ class AdminController extends Controller
         }
 
         return view('pages.admin.dashboard', compact(
-            'kpis','counts','recentOrders',
-            'lowStock','outOfStock','topSellers','topRevenue','slowMovers',
-            'newCustomersToday','topCustomers',
-            'activeCoupons','expiringCoupons','analyticsHtml',
-            'products', 'allBrands', 'allCategories'
+            'kpis',
+            'counts',
+            'recentOrders',
+            'lowStock',
+            'outOfStock',
+            'topSellers',
+            'topRevenue',
+            'slowMovers',
+            'newCustomersToday',
+            'topCustomers',
+            'activeCoupons',
+            'expiringCoupons',
+            'analyticsHtml',
+            'products',
+            'allBrands',
+            'allCategories'
         ));
     }
 
@@ -121,7 +144,8 @@ class AdminController extends Controller
 
         $product->increment('inventory', $data['delta']);
 
-        return back()->with('product_success',
+        return back()->with(
+            'product_success',
             "Adjusted “{$product->name}” by {$data['delta']} units."
         );
     }
