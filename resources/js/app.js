@@ -91,27 +91,26 @@ window.validateAndSubmit = function(formEl) {
     formEl.submit();
 };
 
-// — AJAX filters —
 document.addEventListener('DOMContentLoaded', () => {
-    ['filters-form','admin-filters-form'].forEach(formId => {
-        const form = document.getElementById(formId);
-        if (! form) return;
+    ['filters-form','admin-filters-form']
+        .forEach(formId => {
+            const form = document.getElementById(formId);
+            if (! form) return;
 
-        form.addEventListener('submit', async e => {
-            e.preventDefault();
-            const params = new URLSearchParams(new FormData(form));
-            const url    = formId === 'filters-form' ? `/products?${params}` : `/admin?${params}`;
-            const resp   = await fetch(url, { headers:{ 'X-Requested-With':'XMLHttpRequest' } });
-            const html   = await resp.text();
-            const parser = new DOMParser();
-            const doc    = parser.parseFromString(html,'text/html');
-            const newGrid= doc.getElementById(formId==='filters-form'?'product-grid':'admin-product-grid');
-            if (newGrid) {
-                const old = document.getElementById(newGrid.id);
-                old.replaceWith(newGrid);
-                window.Alpine.initTree(newGrid);
-                history.pushState(null,'',url);
-            }
+            form.addEventListener('submit', async e => {
+                e.preventDefault();
+                const params   = new URLSearchParams(new FormData(form));
+                const url      = `/admin?${params.toString()}`;
+                const resp     = await fetch(url, { headers: { 'X-Requested-With':'XMLHttpRequest' } });
+                const html     = await resp.text();
+                const doc      = new DOMParser().parseFromString(html, 'text/html');
+                const gridId   = 'admin-product-grid';
+                const newGrid  = doc.getElementById(gridId);
+                if (newGrid) {
+                    document.getElementById(gridId).replaceWith(newGrid);
+                    window.Alpine.initTree(newGrid);
+                    history.pushState(null, '', url);
+                }
+            });
         });
-    });
 });

@@ -34,8 +34,36 @@ class AdminController extends Controller
             'unfulfilled' => Order::where('status', 'unfulfilled')->count(),
         ];
 
-        // 3) Recent orders
-        $recentOrders = Order::latest()->take(10)->get();
+        // 3) Recent orders with status, amount & order‑number filters
+        $orderQ = Order::query();
+
+        if ($status = $request->query('status')) {
+            if ($status !== 'all') {
+                $orderQ->where('status', $status);
+            }
+        }
+        if (! is_null($min = $request->query('min_amount'))) {
+            $orderQ->where('total', '>=', $min);
+        }
+        if (! is_null($max = $request->query('max_amount'))) {
+            $orderQ->where('total', '<=', $max);
+        }
+        if ($num = $request->query('order_number')) {
+            $orderQ->where('id', $num);
+        }
+
+        $recentOrders = $orderQ
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->only([
+                'status',
+                'min_amount',
+                'max_amount',
+                'order_number',
+            ]));
+
+        $allStatuses = ['all','pending','shipped','delivered','unfulfilled'];
+
 
         // 4) Inventory alerts
         $threshold  = config('inventory.low_stock_threshold', 5);
@@ -115,6 +143,7 @@ class AdminController extends Controller
             'kpis',
             'counts',
             'recentOrders',
+            'allStatuses',
             'lowStock',
             'outOfStock',
             'topSellers',
@@ -160,5 +189,41 @@ class AdminController extends Controller
         $orders = Order::latest()->paginate(20);
 
         return view('pages.admin.orders', compact('orders'));
+    }
+
+    /**
+     * Update a single order’s status via AJAX.
+     */
+    public function updateOrderStatus(Request $request, Order $order)
+    {
+        abort_if(! $request->user()?->is_admin, 403);
+
+        $data = $request->validate([
+            'status' => 'required|in:pending,shipped,delivered,unfulfilled',
+        ]);
+
+        $order->update(['status' => $data['status']]);
+
+        // Return a simple JSON success response
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Bulk‐update statuses for multiple orders via AJAX.
+     */
+    public function bulkUpdateOrderStatus(Request $request)
+    {
+        abort_if(! $request->user()?->is_admin, 403);
+
+        $data = $request->validate([
+            'ids'    => 'required|array',
+            'ids.*'  => 'integer|exists:orders,id',
+            'status' => 'required|in:pending,shipped,delivered,unfulfilled',
+        ]);
+
+        Order::whereIn('id', $data['ids'])
+            ->update(['status' => $data['status']]);
+
+        return response()->json(['success' => true]);
     }
 }

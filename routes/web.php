@@ -88,6 +88,18 @@ Route::middleware('auth')->group(function () {
             Route::get('/',          [AdminController::class,'index'])->name('dashboard');
             Route::get('/orders',    [AdminController::class,'orders'])->name('orders');
 
+            // single‐order status update
+            Route::patch(
+                'orders/{order}/status',
+                [AdminController::class, 'updateOrderStatus']
+            )->name('orders.updateStatus');
+
+            // bulk status update
+            Route::post(
+                'orders/bulk-update',
+                [AdminController::class, 'bulkUpdateOrderStatus']
+            )->name('orders.bulkUpdate');
+
             // Inventory adjustment (inline delta)
             Route::patch(
                 'products/{product}/adjust',

@@ -10,7 +10,7 @@ use Tests\TestCase;
 class ProductsTest extends TestCase
 {
     use RefreshDatabase;
-    
+
     /** @test */
     public function admin_can_create_a_product()
     {

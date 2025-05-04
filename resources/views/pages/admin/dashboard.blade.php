@@ -52,12 +52,12 @@
             <h3 class="font-bold mb-4 flex justify-between items-center">
                 <span>Order Management</span>
                 <div class="space-x-2">
-                <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded">
-                    Pending: {{ $counts['pending'] }}
-                </span>
+            <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded">
+                Pending: {{ $counts['pending'] }}
+            </span>
                     <span class="px-2 py-1 bg-red-100 text-red-700 rounded">
-                    Unfulfilled: {{ $counts['unfulfilled'] }}
-                </span>
+                Unfulfilled: {{ $counts['unfulfilled'] }}
+            </span>
                     <button @click="markBulk('shipped')" class="text-sm text-blue-600 hover:underline">
                         Mark Selected Shipped
                     </button>
@@ -66,42 +66,95 @@
                     </button>
                 </div>
             </h3>
-            <table class="w-full text-left border-collapse">
-                <thead class="bg-gray-100">
-                <tr>
-                    <th><input type="checkbox" @click="toggleAll"/></th>
-                    <th>#</th>
-                    <th>Customer</th>
-                    <th>Status</th>
-                    <th>Date</th>
-                    <th>Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                @foreach($recentOrders as $order)
-                    <tr class="border-t"
-                        x-show="matchesDate('{{ $order->filterDate }}') && matchesStatus('{{ $order->status }}')">
-                        <td><input type="checkbox" value="{{ $order->id }}" x-model="selectedOrders"/></td>
-                        <td>{{ $order->id }}</td>
-                        <td>{{ optional($order->user)->name ?? 'Guest' }}</td>
-                        <td>
-                    <span class="px-2 py-1 bg-gray-100 rounded text-sm">
-                        {{ ucfirst($order->status) }}
-                    </span>
-                        </td>
-                        <td>{{ $order->created_at->format('M j, Y') }}</td>
-                        <td class="space-x-2">
-                            <button @click="singleMark({{ $order->id }}, 'shipped')" class="text-sm text-blue-600 hover:underline">
-                                Mark Shipped
-                            </button>
-                            <button @click="singleMark({{ $order->id }}, 'delivered')" class="text-sm text-green-600 hover:underline">
-                                Mark Delivered
-                            </button>
-                        </td>
+
+            <form id="orders-filters-form" class="mb-4 flex flex-wrap items-center space-x-2">
+                <label for="status" class="font-medium">Status:</label>
+                <select name="status" id="status" class="border rounded px-2 py-1">
+                    @foreach($allStatuses as $st)
+                        <option value="{{ $st }}" @selected(request('status','all') === $st)>
+                            {{ ucfirst($st) }}
+                        </option>
+                    @endforeach
+                </select>
+
+                <label for="order_number" class="font-medium">Order #:</label>
+                <input
+                    type="text"
+                    name="order_number"
+                    id="order_number"
+                    value="{{ request('order_number') }}"
+                    placeholder="e.g. 1234"
+                    class="border rounded px-2 py-1"
+                />
+
+                <label for="min_amount" class="font-medium">Min $:</label>
+                <input
+                    type="number"
+                    name="min_amount"
+                    id="min_amount"
+                    step="0.01"
+                    value="{{ request('min_amount') }}"
+                    class="border rounded px-2 py-1 w-20"
+                />
+
+                <label for="max_amount" class="font-medium">Max $:</label>
+                <input
+                    type="number"
+                    name="max_amount"
+                    id="max_amount"
+                    step="0.01"
+                    value="{{ request('max_amount') }}"
+                    class="border rounded px-2 py-1 w-20"
+                />
+
+                <button type="submit" class="btn-secondary whitespace-nowrap">
+                    Filter
+                </button>
+            </form>
+
+            {{-- replaceable grid --}}
+            <div id="orders-grid">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-gray-100">
+                    <tr>
+                        <th><input type="checkbox" @click="toggleAll"/></th>
+                        <th>#</th>
+                        <th>Customer</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Actions</th>
                     </tr>
-                @endforeach
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                    @foreach($recentOrders as $order)
+                        <tr class="border-t" x-show="matchesStatus('{{ $order->status }}')">
+                            <td><input type="checkbox" value="{{ $order->id }}" x-model="selectedOrders"/></td>
+                            <td>{{ $order->id }}</td>
+                            <td>{{ optional($order->user)->name ?? 'Guest' }}</td>
+                            <td>
+                            <span class="px-2 py-1 bg-gray-100 rounded text-sm">
+                                {{ ucfirst($order->status) }}
+                            </span>
+                            </td>
+                            <td>{{ $order->created_at->format('M j, Y') }}</td>
+                            <td class="space-x-2">
+                                <button @click="singleMark({{ $order->id }}, 'shipped')" class="text-sm text-blue-600 hover:underline">
+                                    Mark Shipped
+                                </button>
+                                <button @click="singleMark({{ $order->id }}, 'delivered')" class="text-sm text-green-600 hover:underline">
+                                    Mark Delivered
+                                </button>
+                            </td>
+                        </tr>
+                    @endforeach
+                    </tbody>
+                </table>
+
+                {{-- pagination --}}
+                <div class="mt-4">
+                    {{ $recentOrders->links() }}
+                </div>
+            </div>
         </div>
 
         {{-- 3. INVENTORY MANAGEMENT --}}
