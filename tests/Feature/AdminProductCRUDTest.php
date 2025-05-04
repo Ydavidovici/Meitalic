@@ -27,12 +27,12 @@ class AdminProductCrudTest extends TestCase
     {
         // Arrange: make a product
         $product = Product::factory()->create([
-            'name'      => 'Iusto fugit inventore',
-            'brand'     => 'OrigBrand',
-            'category'  => 'OrigCat',
-            'description'=>'OrigDesc',
-            'price'     => 10.00,
-            'inventory' => 5,
+            'name'        => 'Iusto fugit inventore',
+            'brand'       => 'OrigBrand',
+            'category'    => 'OrigCat',
+            'description' => 'OrigDesc',
+            'price'       => 10.00,
+            'inventory'   => 5,
         ]);
 
         // Act: update it
@@ -47,8 +47,8 @@ class AdminProductCrudTest extends TestCase
                 'inventory'   => 12,
             ]);
 
-        // Assert: redirected back to product index
-        $response->assertRedirect(route('admin.products.index'));
+        // Assert: redirected back to admin dashboard
+        $response->assertRedirect(route('admin.dashboard'));
 
         // And database has new values
         $this->assertDatabaseHas('products', [
@@ -76,10 +76,11 @@ class AdminProductCrudTest extends TestCase
                 'inventory'   => 3,
             ]);
 
-        $create->assertRedirect(route('admin.products.index'));
+        // Assert: redirected back to admin dashboard
+        $create->assertRedirect(route('admin.dashboard'));
 
         // Assert: it exists
-        $prod = Product::where('name','Test Product')->first();
+        $prod = Product::where('name', 'Test Product')->first();
         $this->assertNotNull($prod);
 
         // Act: delete it
@@ -87,7 +88,8 @@ class AdminProductCrudTest extends TestCase
             ->actingAs($this->admin)
             ->delete(route('admin.products.destroy', $prod));
 
-        $delete->assertRedirect(route('admin.products.index'));
+        // Assert: redirected back to admin dashboard
+        $delete->assertRedirect(route('admin.dashboard'));
 
         // Assert: it's gone
         $this->assertDatabaseMissing('products', ['id' => $prod->id]);
