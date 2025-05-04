@@ -36,6 +36,9 @@ Route::post('/stripe/webhook',    [PaymentController::class,'handleWebhook'])->n
 // ───────────── Checkout & Orders ───────────
 Route::get('/checkout',           [CheckoutController::class,'checkout'])
     ->name('checkout.index');
+Route::get('/checkout',               [CheckoutController::class,'checkout'])->name('checkout.index');
+Route::post('/checkout/apply-promo',  [CheckoutController::class,'applyPromo'])->name('checkout.applyPromo');
+Route::post('/checkout/place-order',  [CheckoutController::class,'placeOrder'])->name('checkout.placeOrder');
 Route::post('/checkout',          [CheckoutController::class,'create'])->name('checkout.create');
 Route::get('/checkout/success',   [CheckoutController::class,'success'])->name('checkout.success');
 Route::post('/order/place',       [OrderController::class,   'placeOrder'])->name('order.place');

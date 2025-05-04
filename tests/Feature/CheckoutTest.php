@@ -3,121 +3,151 @@
 namespace Tests\Feature;
 
 use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Models\User;
 use App\Models\Product;
 use App\Models\PromoCode;
-use App\Models\Cart;
-use App\Models\CartItem;
-use App\Models\User;
-use Illuminate\Support\Facades\Session;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Stripe\Checkout\Session as StripeSession;
+use Stripe\Stripe;
 
 class CheckoutTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
-    public function empty_cart_redirects_to_cart_index_with_error()
+    protected function setUp(): void
     {
-        $response = $this->post(route('checkout.create'));
+        parent::setUp();
 
-        $response->assertRedirect(route('cart.index'))
-            ->assertSessionHas('error', 'Your cart is empty.');
+        // Prevent real Stripe API calls
+        Stripe::setApiKey('sk_test_...');
+        // Mock StripeSession::create to return a dummy object
+        \Mockery::mock('overload:' . StripeSession::class)
+            ->shouldReceive('create')
+            ->andReturn((object)[
+                'id'  => 'cs_test_123',
+                'url' => 'https://checkout.stripe.test/session/123',
+            ]);
     }
 
     /** @test */
-    public function promo_code_applies_discount_correctly()
+    public function apply_promo_rejects_invalid_code()
     {
-        $product = Product::factory()->create(['price' => 100]);
+        // put one item into session cart
+        $this->withSession([
+            'cart' => [
+                ['product_id'=>1,'name'=>'Foo','price'=>10.00,'quantity'=>2],
+            ]
+        ])->postJson(route('checkout.applyPromo'), ['code'=>'NOPE'])
+            ->assertStatus(422)
+            ->assertJson(['error'=>'That promo code is invalid.']);
+    }
 
-        PromoCode::factory()->create([
-            'code' => 'SAVE20',
-            'discount' => 20,
-            'type' => 'fixed',
-            'active' => true,
+    /** @test */
+    public function apply_promo_returns_correct_discount_for_fixed_code()
+    {
+        PromoCode::create([
+            'code'       => 'SAVE5',
+            'type'       => 'fixed',
+            'discount'   => 5.00,
+            'max_uses'   => null,
+            'used_count' => 0,
+            'expires_at' => now()->addDay(),
+            'active'     => true,
         ]);
 
-        $this->post(route('cart.add'), [
+        $this->withSession([
+            'cart' => [
+                ['product_id'=>1,'name'=>'Foo','price'=>20.00,'quantity'=>1],
+                ['product_id'=>2,'name'=>'Bar','price'=>10.00,'quantity'=>2],
+            ]
+        ])->postJson(route('checkout.applyPromo'), ['code'=>'SAVE5'])
+            ->assertOk()
+            ->assertJson([
+                'subtotal' => 40.00,   // 20 + (10×2)
+                'discount' => 5.00,    // fixed
+                'tax'      => 0.0,     // assuming tax_rate=0
+                'total'    => 35.00,
+            ]);
+    }
+
+    /** @test */
+    public function place_order_returns_error_when_cart_empty()
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)
+            ->postJson(route('checkout.placeOrder'), [
+                'shipping_address' => '123 Lane',
+                'email'            => 'a@b.com',
+                'phone'            => null,
+            ])
+            ->assertStatus(422)
+            ->assertJson(['error' => 'Your cart is empty.']);
+    }
+
+    /** @test */
+    public function place_order_creates_order_and_returns_session()
+    {
+        $user    = User::factory()->create();
+        $product = Product::factory()->create(['price'=>15.50]);
+
+        // define the cart item
+        $cartItem = [
             'product_id' => $product->id,
-            'quantity' => 1,
+            'name'       => $product->name,
+            'price'      => 15.50,
+            'quantity'   => 2,
+        ];
+
+        // seed a valid promo
+        PromoCode::create([
+            'code'       => 'PERC10',
+            'type'       => 'percent',
+            'discount'   => 10,  // 10%
+            'max_uses'   => null,
+            'used_count' => 0,
+            'expires_at' => now()->addDay(),
+            'active'     => true,
         ]);
 
-        $response = $this->post(route('cart.applyPromo'), [
-            'code' => 'SAVE20',
+        $this->actingAs($user)
+            ->withSession([
+                'cart'  => [$cartItem],
+                'promo' => ['code'=>'PERC10','discount'=>3.10], // 10% of 31.00
+            ])
+            ->postJson(route('checkout.placeOrder'), [
+                'shipping_address' => '456 Road Ave',
+                'email'            => 'test@ex.com',
+                'phone'            => '123-456-7890',
+            ])
+            ->assertOk()
+            ->assertJsonStructure([
+                'checkout_session_id',
+                'checkout_url',
+                'order_id',
+            ]);
+
+        // assert order was persisted
+        $this->assertDatabaseHas('orders', [
+            'user_id'          => $user->id,
+            'shipping_address' => '456 Road Ave',
+            'email'            => 'test@ex.com',
+            'total'            => 31.00 - 3.10, // no tax
+            'status'           => 'pending',
         ]);
 
-        $response->assertRedirect();
-        $response->assertSessionHas('success', 'Promo code applied!');
-
-        $sessionId = session()->get('cart_session_id');
-        $cart = Cart::where('session_id', $sessionId)->first();
-
-        $this->assertNotNull($cart);
-        $this->assertEquals(80, $cart->total);
-        $this->assertEquals(20, $cart->discount);
-    }
-
-    /** @test */
-    public function stripe_checkout_session_is_created()
-    {
-        $product = Product::factory()->create(['price' => 50]);
-
-        $this->post(route('cart.add'), ['product_id' => $product->id, 'quantity' => 1]);
-
-        $sessionId = session()->get('cart_session_id');
-        session(['cart_session_id' => $sessionId]);
-
-        // 🧠 Instead of mocking Stripe, just verify redirect works
-        $response = $this->post(route('checkout.create'));
-
-        $this->assertTrue($response->isRedirect());
-        $this->assertStringContainsString('http', $response->headers->get('Location'));
-    }
-
-
-    /** @test */
-    public function cart_is_cleared_after_checkout_success()
-    {
-        $product = Product::factory()->create(['price' => 30]);
-        $this->post(route('cart.add'), ['product_id' => $product->id]);
-
-        $sessionId = session()->get('cart_session_id');
-        $cart = Cart::where('session_id', $sessionId)->first();
-
-        $this->assertNotNull($cart);
-        $this->assertCount(1, $cart->cartItems);
-
-        $response = $this->get(route('checkout.success'));
-
-        $response->assertStatus(200);
-        $response->assertViewIs('checkout.success');
-
-        $cart->refresh();
-        $this->assertCount(0, $cart->cartItems);
-    }
-
-    /** @test */
-    public function authenticated_user_can_checkout()
-    {
-        $user = \App\Models\User::factory()->create();
-        $product = \App\Models\Product::factory()->create(['price' => 60]);
-
-        $this->actingAs($user);
-        $this->post(route('cart.add'), [
+        // assert the order items were created
+        $this->assertDatabaseHas('order_items', [
+            'order_id'   => 1,
             'product_id' => $product->id,
-            'quantity' => 1,
+            'quantity'   => 2,
+            'price'      => 15.50,
+            'total'      => 31.00,
         ]);
 
-        // Just call the real route and assert redirect happened
-        $response = $this->post(route('checkout.create'));
-
-        $this->assertTrue($response->isRedirect());
-        $this->assertStringContainsString('http', $response->headers->get('Location'));
-
-        // Check the user cart was created correctly
-        $cart = \App\Models\Cart::where('user_id', $user->id)->first();
-
-        $this->assertNotNull($cart);
-        $this->assertEquals(60, $cart->total);
+        // assert promo use count incremented
+        $this->assertDatabaseHas('promo_codes', [
+            'code'       => 'PERC10',
+            'used_count' => 1,
+        ]);
     }
 }

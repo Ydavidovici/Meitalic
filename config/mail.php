@@ -113,4 +113,14 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Administrator Email Address
+    |--------------------------------------------------------------------------
+    |
+    | This address will get a copy of every new order.
+    |
+    */
+    'admin_address' => env('ADMIN_EMAIL'),
+
 ];
