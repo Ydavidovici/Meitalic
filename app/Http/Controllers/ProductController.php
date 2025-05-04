@@ -8,16 +8,18 @@ use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
+    // app/Http/Controllers/ProductController.php
+
     public function index(Request $request)
     {
         $q = Product::query();
 
-        // free‑text search across name/brand/category
+        // — 1. free‑text search —
         if ($search = $request->query('search')) {
             $q->search($search);
         }
 
-        // existing exact filters (brand/category)
+        // — 2. exact filters —
         if ($brand = $request->query('brand')) {
             $q->where('brand', $brand);
         }
@@ -25,22 +27,28 @@ class ProductController extends Controller
             $q->where('category', $category);
         }
 
-        // sorting
+        // — 3. sorting —
         $allowed = ['price','name','updated_at'];
         $sort    = in_array($request->query('sort'), $allowed)
             ? $request->query('sort')
             : 'name';
         $dir     = $request->query('dir') === 'desc' ? 'desc' : 'asc';
 
+        // — 4. lists for the filter dropdowns —
+        $allBrands     = Product::select('brand')->distinct()->orderBy('brand')->pluck('brand');
+        $allCategories = Product::select('category')->distinct()->orderBy('category')->pluck('category');
+
+        // — 5. pagination & preserve query —
         $products = $q->orderBy($sort, $dir)
             ->paginate(20)
             ->appends($request->only(['search','brand','category','sort','dir']));
 
+        // — 6. AJAX support (optional) —
         if ($request->ajax()) {
             return view('partials.product-grid', compact('products'));
         }
 
-        return view('pages.products', compact('products'));
+        return view('pages.products', compact('products','allBrands','allCategories'));
     }
 
     // Public detail

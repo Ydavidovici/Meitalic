@@ -1,13 +1,14 @@
+{{-- resources/views/pages/home.blade.php --}}
 @extends('layouts.app')
 
-@section('title','Meitalic Cosmecueticals')
+@section('title','Meitalic Cosmeceuticals')
 
 @section('content')
     <!-- Hero -->
     <section class="w-full bg-gradient-to-br from-secondary via-primary pt-20 pb-12">
         <div class="container px-4 sm:px-6 lg:px-8">
             <div class="max-w-screen-lg mx-auto text-center lg:text-left">
-                <!-- Text wrapper: move this up -->
+                <!-- Text wrapper -->
                 <div class="space-y-4 transform -translate-y-8">
                     <h1 class="text-4xl sm:text-5xl font-bold text-text leading-tight">
                         Meitalic
@@ -17,7 +18,7 @@
                     </p>
                 </div>
 
-                <!-- Button stays where it is -->
+                <!-- Shop Now (plain all‑products link) -->
                 <a href="{{ route('products.index') }}" class="btn-primary w-max">
                     Shop Now
                 </a>
@@ -39,7 +40,7 @@
                         'Starter Kits'
                     ] as $cat)
                         <a
-                            href="{{ route('products.index', ['category' => \Str::slug($cat)]) }}"
+                            href="{{ route('products.index', ['category' => $cat]) }}"
                             class="card hover:shadow-lg transition"
                         >
                             {{ $cat }}
@@ -49,7 +50,6 @@
             </div>
         </div>
     </section>
-
 
     <!-- About -->
     <section id="about" class="py-20">
@@ -94,8 +94,11 @@
                 <h2 class="section-title">Join Our Newsletter</h2>
                 <p class="text-neutral-600">Get 10% off your first order</p>
                 <form class="flex flex-col md:flex-row justify-center items-center gap-4 max-w-md mx-auto">
-                    <input type="email" placeholder="Email address"
-                           class="w-full md:w-auto px-6 py-3 border rounded focus:outline-none focus:ring-2 focus:ring-accent">
+                    <input
+                        type="email"
+                        placeholder="Email address"
+                        class="w-full md:w-auto px-6 py-3 border rounded focus:outline-none focus:ring-2 focus:ring-accent"
+                    >
                     <button type="submit" class="btn-primary">Subscribe</button>
                 </form>
             </div>
