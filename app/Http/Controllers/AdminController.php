@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;      // ← Make sure this import is present
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
@@ -34,9 +35,8 @@ class AdminController extends Controller
             'unfulfilled' => Order::where('status', 'unfulfilled')->count(),
         ];
 
-        // 3) Recent orders with status, amount & order‑number filters
+        // 3) Recent orders with filters
         $orderQ = Order::query();
-
         if ($status = $request->query('status')) {
             if ($status !== 'all') {
                 $orderQ->where('status', $status);
@@ -51,18 +51,12 @@ class AdminController extends Controller
         if ($num = $request->query('order_number')) {
             $orderQ->where('id', $num);
         }
-
         $recentOrders = $orderQ
             ->orderBy('created_at', 'desc')
             ->paginate(10)
-            ->appends($request->only([
-                'status',
-                'min_amount',
-                'max_amount',
-                'order_number',
-            ]));
+            ->appends($request->only(['status','min_amount','max_amount','order_number']));
 
-        $allStatuses = ['all','pending','shipped','delivered','unfulfilled'];
+        $allStatuses = ['all','pending','shipped','delivered','unfulfilled','canceled','returned'];
 
 
         // 4) Inventory alerts
@@ -192,57 +186,50 @@ class AdminController extends Controller
     }
 
     /**
-     * Update a single order’s status via AJAX.
+     * Fetch a single order for the “Edit” modal.
      */
-    public function updateOrderStatus(Request $request, Order $order)
-    {
-        abort_if(! $request->user()?->is_admin, 403);
-
-        $data = $request->validate([
-            'status' => 'required|in:pending,shipped,delivered,unfulfilled',
-        ]);
-
-        $order->update(['status' => $data['status']]);
-
-        // Return a simple JSON success response
-        return response()->json(['success' => true]);
-    }
-
-    /**
-     * Bulk‐update statuses for multiple orders via AJAX.
-     */
-    public function bulkUpdateOrderStatus(Request $request)
-    {
-        abort_if(! $request->user()?->is_admin, 403);
-
-        $data = $request->validate([
-            'ids'    => 'required|array',
-            'ids.*'  => 'integer|exists:orders,id',
-            'status' => 'required|in:pending,shipped,delivered,unfulfilled',
-        ]);
-
-        Order::whereIn('id', $data['ids'])
-            ->update(['status' => $data['status']]);
-
-        return response()->json(['success' => true]);
-    }
-
     public function show(Order $order)
     {
         abort_if(! auth()->user()?->is_admin, 403);
-
         $order->load('user','items');
-
-        // you can shape this array any way you like—here’s a simple pass‑through
         return response()->json($order);
     }
 
+    /** AJAX toggle */
+    public function updateOrderStatus(Request $request, Order $order)
+    {
+        $data = $request->validate([
+            'status' => ['required', Rule::in([
+                'pending','shipped','delivered','unfulfilled','canceled','returned'
+            ])],
+        ]);
+
+        $order->update(['status' => $data['status']]);
+        return response()->json(['success' => true]);
+    }
+
+    /** Bulk status patch */
+    public function bulkUpdateOrderStatus(Request $request)
+    {
+        $data = $request->validate([
+            'ids'    => 'required|array',
+            'ids.*'  => 'integer|exists:orders,id',
+            'status' => ['required', Rule::in([
+                'pending','shipped','delivered','unfulfilled','canceled','returned'
+            ])],
+        ]);
+
+        Order::whereIn('id', $data['ids'])->update(['status' => $data['status']]);
+        return response()->json(['success' => true]);
+    }
+
+    /** Full‐edit in modal */
     public function update(Request $request, Order $order)
     {
-        abort_if(! auth()->user()?->is_admin, 403);
-
         $data = $request->validate([
-            'status'           => 'required|in:pending,shipped,delivered,unfulfilled',
+            'status'           => ['required', Rule::in([
+                'pending','shipped','delivered','unfulfilled','canceled','returned'
+            ])],
             'total'            => 'required|numeric|min:0',
             'shipping_address' => 'required|string',
             'email'            => 'nullable|email',
@@ -250,7 +237,6 @@ class AdminController extends Controller
         ]);
 
         $order->update($data);
-
         return response()->json(['success' => true]);
     }
 }

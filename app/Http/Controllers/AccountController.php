@@ -65,6 +65,17 @@ class AccountController extends Controller
         return view('pages.dashboard.orders', compact('orders'));
     }
 
+    public function show(Request $request, Order $order)
+    {
+        $this->authorize('view', $order);
+
+        $html = view('pages.dashboard.partials.order-modal', [
+            'order' => $order->load('orderItems.product','payment'),
+        ])->render();
+
+        return response()->json(['html' => $html]);
+    }
+
     /**
      * Show current cart.
      */
@@ -72,5 +83,36 @@ class AccountController extends Controller
     {
         $cart = session('cart', []);
         return view('pages.dashboard.cart', compact('cart'));
+    }
+
+    public function ordersJson(Request $request)
+    {
+        $orders = $request->user()
+            ->orders()
+            ->with('orderItems.product','payment')
+            ->latest()
+            ->get();
+
+        return response()->json($orders);
+    }
+
+    /**
+     * Cancel an order (user action).
+     */
+    public function cancel(Request $request, Order $order)
+    {
+        $this->authorize('update', $order);
+        $order->update(['status' => 'canceled']);
+        return response()->json($order);
+    }
+
+    /**
+     * Return an order (user action).
+     */
+    public function return(Request $request, Order $order)
+    {
+        $this->authorize('update', $order);
+        $order->update(['status' => 'returned']);
+        return response()->json($order);
     }
 }

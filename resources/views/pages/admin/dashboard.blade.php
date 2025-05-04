@@ -172,7 +172,7 @@
         <x-modal name="order-edit" maxWidth="lg">
             <div class="p-6" x-show="selectedOrder.id">
                 <h3 class="text-2xl font-bold mb-4">
-                    Edit Order #<span x-text="selectedOrder.id"></span>
+                    Edit Order #<span x-text="selectedOrder.id"></span>
                 </h3>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -183,7 +183,7 @@
                             x-model="selectedOrder.status"
                             class="border rounded px-3 py-2 w-full"
                         >
-                            <template x-for="st in ['pending','shipped','delivered','unfulfilled']" :key="st">
+                            <template x-for="st in ['pending','shipped','delivered','unfulfilled', 'canceled', 'returned']" :key="st">
                                 <option :value="st" x-text="st.charAt(0).toUpperCase() + st.slice(1)"></option>
                             </template>
                         </select>

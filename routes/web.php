@@ -84,46 +84,35 @@ Route::middleware('auth')->group(function () {
         ->name('admin.')
         ->group(function () {
 
-            // Admin Dashboard & Orders
-            Route::get('/',          [AdminController::class,'index'])->name('dashboard');
-            Route::get('/orders',    [AdminController::class,'orders'])->name('orders');
-            Route::patch(
-                'orders/{order}/status',
-                [AdminController::class, 'updateOrderStatus']
-            )->name('orders.updateStatus');
-            Route::get('orders/{order}', [AdminController::class,'show'])
-                ->name('orders.show');
-            Route::patch('/orders/{order}', [AdminController::class,'update'])
-                ->name('orders.update');
-            Route::post(
-                'orders/bulk-update',
-                [AdminController::class, 'bulkUpdateOrderStatus']
-            )->name('orders.bulkUpdate');
+            // Dashboard
+            Route::get('/',                         [AdminController::class,'index'])->name('dashboard');
+            Route::get('/orders',                   [AdminController::class,'orders'])->name('orders');
+            Route::get('/orders/{order}',           [AdminController::class,'show'])->name('orders.show');            // ← show()
+            Route::patch('/orders/{order}/status',  [AdminController::class,'updateOrderStatus'])->name('orders.updateStatus');
+            Route::patch('/orders/{order}',         [AdminController::class,'update'])->name('orders.update');            // full-edit
+            Route::post('/orders/bulk-update',      [AdminController::class,'bulkUpdateOrderStatus'])->name('orders.bulkUpdate');
 
-            // Inventory adjustment (inline delta)
-            Route::patch(
-                'products/{product}/adjust',
-                [AdminController::class,'adjustInventory']
-            )->name('products.adjust');
+            // Inventory adjustment
+            Route::patch('/products/{product}/adjust', [AdminController::class,'adjustInventory'])->name('products.adjust');
 
-            // Product CRUD under /admin/products
-            Route::get('products',               [ProductController::class,'index'])->name('products.index');
-            Route::get('products/create',        [ProductController::class,'create'])->name('products.create');
-            Route::post('products',              [ProductController::class,'store'])->name('products.store');
-            Route::get('products/{product}/edit',[ProductController::class,'edit'])->name('products.edit');
-            Route::put('products/{product}',     [ProductController::class,'update'])->name('products.update');
-            Route::delete('products/{product}',  [ProductController::class,'destroy'])->name('products.destroy');
+            // Product CRUD
+            Route::resource('products', ProductController::class)->names([
+                'index'   => 'products.index',
+                'create'  => 'products.create',
+                'store'   => 'products.store',
+                'edit'    => 'products.edit',
+                'update'  => 'products.update',
+                'destroy' => 'products.destroy',
+            ]);
 
-            // Promo CRUD under /admin/promo
-            Route::prefix('promo')->name('promo.')->group(function () {
-                Route::get('/',                 [PromoCodeController::class,'index'])->name('index');
-                Route::get('create',           [PromoCodeController::class,'create'])->name('create');
-                Route::post('/',               [PromoCodeController::class,'store'])->name('store');
-                Route::get('{promo}/edit',     [PromoCodeController::class,'edit'])->name('edit');
-                Route::put('{promo}',          [PromoCodeController::class,'update'])->name('update');
-                Route::delete('{promo}',       [PromoCodeController::class,'destroy'])->name('destroy');
-            });
-
+            // Promo CRUD
+            Route::resource('promo', PromoCodeController::class)->names([
+                'index'   => 'promo.index',
+                'create'  => 'promo.create',
+                'store'   => 'promo.store',
+                'edit'    => 'promo.edit',
+                'update'  => 'promo.update',
+                'destroy' => 'promo.destroy',
+            ]);
         });
-
 });

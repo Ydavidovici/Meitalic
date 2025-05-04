@@ -1,6 +1,7 @@
 {{-- resources/views/pages/dashboard/index.blade.php --}}
 @php
     use Illuminate\Support\Str;
+    use App\Models\Order;
 @endphp
 
 @extends('layouts.app')
@@ -33,9 +34,13 @@
                 @foreach($recentOrders as $order)
                     <li class="flex justify-between items-center">
                         <div>
-                            <a href="{{ route('order.show', $order) }}" class="text-indigo-600 hover:underline">
+                            <button
+                                @click="$store.dashboard.showOrder({{ $order->id }})"
+                                class="text-indigo-600 hover:underline"
+                                type="button"
+                            >
                                 Order #{{ $order->id }}
-                            </a>
+                            </button>
                             <span class="ml-2 px-2 py-1 bg-gray-100 rounded text-sm">
                                 {{ ucfirst($order->status) }}
                             </span>
@@ -45,7 +50,10 @@
                                 <span class="text-sm text-gray-500">
                                     Est. Delivery: {{ $order->estimated_delivery->format('M j') }}
                                 </span>
-                                <a href="{{ route('order.track', $order) }}" class="text-sm text-blue-600 hover:underline">
+                                <a
+                                    href="{{ route('order.track', $order) }}"
+                                    class="text-sm text-blue-600 hover:underline"
+                                >
                                     Track shipment
                                 </a>
                             @endif
@@ -67,9 +75,9 @@
                 </select>
                 <select x-model="status" class="border rounded p-2">
                     <option value="">Any Status</option>
-                    <option value="pending">Pending</option>
-                    <option value="shipped">Shipped</option>
-                    <option value="delivered">Delivered</option>
+                    @foreach(Order::STATUSES as $st)
+                        <option value="{{ $st }}">{{ ucfirst($st) }}</option>
+                    @endforeach
                 </select>
             </div>
             <table class="w-full text-left border-collapse">
@@ -92,9 +100,13 @@
                         <td class="px-4 py-2">${{ number_format($order->total,2) }}</td>
                         <td class="px-4 py-2">{{ ucfirst($order->status) }}</td>
                         <td class="px-4 py-2">
-                            <a href="{{ route('order.show', $order) }}" class="text-sm text-indigo-600 hover:underline">
+                            <button
+                                @click="$store.dashboard.showOrder({{ $order->id }})"
+                                class="text-sm text-indigo-600 hover:underline"
+                                type="button"
+                            >
                                 View Order
-                            </a>
+                            </button>
                         </td>
                     </tr>
                 @endforeach
@@ -107,7 +119,9 @@
         <div class="bg-white rounded shadow overflow-hidden">
             <h3 class="bg-gray-100 px-6 py-3 font-bold">Account & Profile</h3>
             <div class="p-6 space-y-2">
-                <a href="{{ route('profile.edit') }}" class="text-indigo-600 hover:underline">Edit Personal Info</a><br>
+                <a href="{{ route('profile.edit') }}" class="text-indigo-600 hover:underline">
+                    Edit Personal Info
+                </a><br>
                 {{-- addresses removed since not implemented --}}
             </div>
         </div>
@@ -128,11 +142,12 @@
                     <div class="h-40 bg-gray-100 rounded overflow-hidden mb-4">
                         <img
                             src="{{ Str::startsWith($prod->thumbnail_url, ['http://','https://'])
-                ? $prod->thumbnail_url
-                : asset('storage/'.$prod->thumbnail_url)
-            }}"
+                                    ? $prod->thumbnail_url
+                                    : asset('storage/'.$prod->thumbnail_url)
+                                }}"
                             alt="{{ $prod->name }}"
-                            class="w-full h-24 object-cover rounded">
+                            class="w-full h-24 object-cover rounded"
+                        >
                     </div>
                 @endforeach
             </div>
@@ -141,7 +156,11 @@
             @forelse($activePromos as $promo)
                 <div class="mb-1">
                     <strong>{{ $promo->code }}</strong> — {{ $promo->description }}
-                    <button @click="applyPromo('{{ $promo->code }}')" class="ml-2 text-sm text-blue-600 hover:underline">
+                    <button
+                        @click="applyPromo('{{ $promo->code }}')"
+                        class="ml-2 text-sm text-blue-600 hover:underline"
+                        type="button"
+                    >
                         Apply
                     </button>
                 </div>
@@ -156,5 +175,24 @@
             <a href="{{ route('faq') }}" class="ml-4 text-indigo-600 hover:underline">View FAQ</a>
         </div>
 
+    </div>
+
+    {{-- Order Details Modal --}}
+    <div
+        x-show="$store.dashboard.activeModal === 'order'"
+        x-cloak
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
+        <div class="bg-white rounded-lg overflow-auto max-w-2xl w-full mx-4 p-6 relative">
+            {{-- Close button --}}
+            <button
+                @click="$store.dashboard.closeModal('order')"
+                class="absolute top-3 right-3 text-gray-600 hover:text-gray-900 text-2xl leading-none"
+                type="button"
+            >&times;</button>
+
+            {{-- Injected order HTML --}}
+            <template x-html="$store.dashboard.orderHtml"></template>
+        </div>
     </div>
 @endsection
