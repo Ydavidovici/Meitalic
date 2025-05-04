@@ -3,15 +3,18 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
 use Stripe\Stripe;
 use Stripe\Checkout\Session as StripeSession;
+
+use App\Models\Cart;
+use App\Models\CartItem;
+use App\Models\PromoCode;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\PromoCode;
-use App\Models\Payment;
-use App\Mail\OrderPlaced;
 use App\Mail\Receipt;
+use App\Mail\OrderPlaced;
 
 class CheckoutController extends Controller
 {
@@ -20,35 +23,40 @@ class CheckoutController extends Controller
      */
     public function checkout(Request $request)
     {
-        $cart = session('cart', []);
-        if (empty($cart)) {
-            return redirect()->route('cart.index')->with('error','Your cart is empty.');
+        $cart    = $this->getCart($request);
+        $items   = $cart->cartItems()->with('product')->get();
+        $subtotal = $cart->cartItems()->sum('total');
+        $discount = $cart->discount ?? 0;
+        $tax      = round(($subtotal - $discount) * config('cart.tax_rate', 0), 2);
+        $total    = $cart->total;
+
+        if ($items->isEmpty()) {
+            return redirect()
+                ->route('cart.index')
+                ->with('error', 'Your cart is empty.');
         }
 
-        // compute subtotal here if you like, or let frontend do it
-        return view('checkout.index', compact('cart'));
+        return view('pages.checkout.index', compact('items','subtotal','discount','tax','total'));
     }
 
     /**
-     * AJAX endpoint: apply a promo code to the current cart/session.
+     * AJAX endpoint: apply a promo code to the current DB cart.
      */
     public function applyPromo(Request $request)
     {
-        $code = strtoupper(trim($request->input('code','')));
-        if (! $code) {
-            return response()->json(['subtotal'=>0,'discount'=>0,'tax'=>0,'total'=>0]);
+        $cart    = $this->getCart($request);
+        $items   = $cart->cartItems()->get();
+        $subtotal = $items->sum(fn($i) => $i->price * $i->quantity);
+
+        if ($items->isEmpty()) {
+            return response()->json(['error' => 'Your cart is empty.'], 422);
         }
 
-        $cart = session('cart', []);
-        if (empty($cart)) {
-            return response()->json(['error'=>'Your cart is empty.'], 422);
-        }
+        $code  = strtoupper(trim($request->input('code','')));
+        $promo = PromoCode::where('code', $code)
+            ->where('active', true)
+            ->first();
 
-        // calculate subtotal
-        $subtotal = collect($cart)->sum(fn($i)=> $i['price'] * $i['quantity']);
-
-        // lookup promo
-        $promo = PromoCode::where('code',$code)->where('active',true)->first();
         if (! $promo) {
             return response()->json(['error'=>'That promo code is invalid.'], 422);
         }
@@ -59,24 +67,25 @@ class CheckoutController extends Controller
             return response()->json(['error'=>'That promo is fully redeemed.'], 422);
         }
 
-        // compute discount
-        if ($promo->type === 'percent') {
-            $discount = round($subtotal * ($promo->discount/100),2);
-        } else {
-            $discount = min($promo->discount, $subtotal);
-        }
+        $discount = $promo->type === 'percent'
+            ? round($subtotal * ($promo->discount/100), 2)
+            : min($promo->discount, $subtotal);
 
-        $tax   = round(($subtotal - $discount) * config('cart.tax_rate',0),2);
-        $total = round($subtotal - $discount + $tax,2);
+        $tax   = round(($subtotal - $discount) * config('cart.tax_rate', 0), 2);
+        $total = round($subtotal - $discount + $tax, 2);
 
-        // store applied promo in session
-        session(['promo'=>['code'=>$code,'discount'=>$discount]]);
+        // store on Cart
+        $cart->promo_code = $promo->code;
+        $cart->discount   = $discount;
+        $cart->total      = $subtotal - $discount;
+        $cart->save();
 
         return response()->json(compact('subtotal','discount','tax','total'));
     }
 
     /**
-     * Place the order: validate (including promo), create Stripe session, persist Order + Items.
+     * Place the order: validate (including promo), create Stripe session,
+     * persist Order + Items, clear cart, send emails.
      */
     public function placeOrder(Request $request)
     {
@@ -86,55 +95,38 @@ class CheckoutController extends Controller
             'phone'           =>'nullable|string',
         ]);
 
-        $cart = session('cart', []);
-        if (empty($cart)) {
+        $cart    = $this->getCart($request);
+        $items   = $cart->cartItems()->with('product')->get();
+        $subtotal = $items->sum(fn($i) => $i->price * $i->quantity);
+        $discount = $cart->discount  ?? 0;
+        $code     = $cart->promo_code;
+
+        if ($items->isEmpty()) {
             return response()->json(['error'=>'Your cart is empty.'], 422);
         }
 
-        // recalculate subtotal
-        $subtotal = collect($cart)->sum(fn($i)=> $i['price'] * $i['quantity']);
+        $tax   = round(($subtotal - $discount) * config('cart.tax_rate', 0), 2);
+        $total = round($subtotal - $discount + $tax, 2);
 
-        // pull promo from session if set
-        $promoSess = session('promo', null);
-        $discount  = $promoSess['discount'] ?? 0;
-        $code      = $promoSess['code']     ?? null;
-
-        // if they passed a promo code manually, re-validate it here
-        if ($code) {
-            $promo = PromoCode::where('code',$code)->where('active',true)->first();
-            if (! $promo
-                || ($promo->expires_at && now()->gt($promo->expires_at))
-                || ($promo->max_uses && $promo->used_count >= $promo->max_uses)
-            ) {
-                return response()->json(['error'=>'Promo code failed, please re‑enter or clear it.'], 422);
-            }
-        }
-
-        $tax   = round(($subtotal - $discount) * config('cart.tax_rate',0),2);
-        $total = round($subtotal - $discount + $tax,2);
-
-        // --- Create Stripe Checkout Session ---
+        // Create Stripe session
         Stripe::setApiKey(config('services.stripe.secret'));
-        $lineItems = [];
-        foreach ($cart as $item) {
-            $lineItems[] = [
-                'price_data' => [
-                    'currency'     => 'usd',
-                    'product_data' => ['name'=>$item['name']],
-                    'unit_amount'  => intval($item['price'] * 100),
-                ],
-                'quantity'   => $item['quantity'],
-            ];
-        }
-        // add negative line item for discount if any
+        $lineItems = $items->map(fn($i) => [
+            'price_data' => [
+                'currency'     => 'usd',
+                'product_data' => ['name' => $i->product->name],
+                'unit_amount'  => intval($i->price * 100),
+            ],
+            'quantity'   => $i->quantity,
+        ])->toArray();
+
         if ($discount > 0) {
             $lineItems[] = [
                 'price_data' => [
                     'currency'     => 'usd',
-                    'product_data' => ['name'=>"Promo: {$code}"],
+                    'product_data' => ['name' => "Promo: {$code}"],
                     'unit_amount'  => intval(-1 * $discount * 100),
                 ],
-                'quantity'   => 1,
+                'quantity' => 1,
             ];
         }
 
@@ -152,44 +144,41 @@ class CheckoutController extends Controller
             ],
         ]);
 
-        // persist an Order with status “pending”
-        $order = Order::create(array_merge($data, [
-            'total'            => $total,
-            'status'           => 'pending',
+        // Persist Order
+        $order = Order::create([
             'user_id'          => auth()->id(),
             'shipping_address' => $data['shipping_address'],
             'email'            => $data['email'],
             'phone'            => $data['phone'],
+            'total'            => $total,
+            'status'           => 'pending',
             'meta'             => json_encode(['stripe_session'=>$session->id]),
-        ]));
+        ]);
 
-        // persist items
-        foreach ($cart as $item) {
+        // Persist Items
+        foreach ($items as $i) {
             $order->orderItems()->create([
-                'product_id' => $item['product_id'],
-                'name'       => $item['name'],
-                'quantity'   => $item['quantity'],
-                'price'      => $item['price'],
-                'total'      => $item['price'] * $item['quantity'],
+                'product_id' => $i->product_id,
+                'name'       => $i->product->name,
+                'quantity'   => $i->quantity,
+                'price'      => $i->price,
+                'total'      => $i->price * $i->quantity,
             ]);
         }
 
-        // increment promo use‐count
-        if (!empty($promo)) {
-            $promo->increment('used_count');
+        // Increment promo usage
+        if ($code) {
+            PromoCode::where('code', $code)->increment('used_count');
         }
 
-        // clear session cart & promo
-        session()->forget(['cart','promo']);
+        // Clear cart
+        CartItem::where('cart_id', $cart->id)->delete();
+        $cart->update(['promo_code'=>null,'discount'=>0,'total'=>0]);
 
-        // 1) send **receipt** to customer
-        Mail::to($order->email)
-            ->queue(new Receipt($order));
-
-        // 2) send **new‑order notification** to admin
+        // Emails
+        Mail::to($order->email)->queue(new Receipt($order));
         if ($admin = config('mail.admin_address')) {
-            Mail::to($admin)
-                ->queue(new OrderPlaced($order));
+            Mail::to($admin)->queue(new OrderPlaced($order));
         }
 
         return response()->json([
@@ -202,8 +191,23 @@ class CheckoutController extends Controller
     /**
      * Thank you / success page after Stripe redirect.
      */
-    public function success(Request $request)
+    public function success()
     {
-        return view('checkout.success');
+        return view('pages.checkout.success');
+    }
+
+    /**
+     * Mirror of CartController::getCart()
+     */
+    private function getCart(Request $request): Cart
+    {
+        if (auth()->check()) {
+            return Cart::firstOrCreate(['user_id' => auth()->id()]);
+        }
+
+        $sessionId = $request->session()->get('cart_session_id', Str::uuid());
+        $request->session()->put('cart_session_id', $sessionId);
+
+        return Cart::firstOrCreate(['session_id' => $sessionId]);
     }
 }
