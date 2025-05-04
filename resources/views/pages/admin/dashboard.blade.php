@@ -170,98 +170,82 @@
 
         {{-- 2.b) Order‑Edit Modal --}}
         <x-modal name="order-edit" maxWidth="lg">
-            <div class="p-6" x-show="selectedOrder.id">
+            <div class="p-6" x-show="selectedOrder">
                 <h3 class="text-2xl font-bold mb-4">
                     Edit Order #<span x-text="selectedOrder.id"></span>
                 </h3>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {{-- Status --}}
+                {{-- basic fields --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div>
                         <label class="block font-medium">Status</label>
-                        <select
-                            x-model="selectedOrder.status"
-                            class="border rounded px-3 py-2 w-full"
-                        >
-                            <template x-for="st in ['pending','shipped','delivered','unfulfilled', 'canceled', 'returned']" :key="st">
+                        <select x-model="selectedOrder.status" class="border rounded px-3 py-2 w-full">
+                            <template x-for="st in ['pending','shipped','delivered','unfulfilled','canceled','returned']" :key="st">
                                 <option :value="st" x-text="st.charAt(0).toUpperCase() + st.slice(1)"></option>
                             </template>
                         </select>
                     </div>
-
-                    {{-- Date (read‑only) --}}
                     <div>
                         <label class="block font-medium">Date</label>
-                        <input
-                            type="text"
-                            readonly
-                            x-model="selectedOrder.created_at"
-                            class="border rounded px-3 py-2 w-full bg-gray-100"
-                        />
+                        <input type="text" readonly x-model="selectedOrder.created_at" class="border rounded px-3 py-2 w-full bg-gray-100"/>
                     </div>
-
-                    {{-- Customer (read‑only) --}}
                     <div class="md:col-span-2">
                         <label class="block font-medium">Customer</label>
-                        <input
-                            type="text"
-                            readonly
-                            x-model="selectedOrder.user?.name || 'Guest'"
-                            class="border rounded px-3 py-2 w-full bg-gray-100"
-                        />
+                        <input type="text" readonly x-model="selectedOrder.user?.name ?? 'Guest'" class="border rounded px-3 py-2 w-full bg-gray-100"/>
                     </div>
-
-                    {{-- Total --}}
                     <div>
-                        <label class="block font-medium">Total</label>
-                        <input
-                            type="number"
-                            step="0.01"
-                            x-model="selectedOrder.total"
-                            class="border rounded px-3 py-2 w-full"
-                        />
-                    </div>
-
-                    {{-- Shipping Address --}}
-                    <div class="md:col-span-2">
                         <label class="block font-medium">Shipping Address</label>
-                        <textarea
-                            x-model="selectedOrder.shipping_address"
-                            rows="3"
-                            class="border rounded p-2 w-full"
-                        ></textarea>
+                        <textarea x-model="selectedOrder.shipping_address" rows="2" class="border rounded p-2 w-full"></textarea>
                     </div>
-
-                    {{-- Email --}}
                     <div>
                         <label class="block font-medium">Email</label>
-                        <input
-                            type="email"
-                            x-model="selectedOrder.email"
-                            class="border rounded px-3 py-2 w-full"
-                        />
+                        <input type="email" x-model="selectedOrder.email" class="border rounded px-3 py-2 w-full"/>
                     </div>
-
-                    {{-- Phone --}}
                     <div>
                         <label class="block font-medium">Phone</label>
-                        <input
-                            type="text"
-                            x-model="selectedOrder.phone"
-                            class="border rounded px-3 py-2 w-full"
-                        />
+                        <input type="text" x-model="selectedOrder.phone" class="border rounded px-3 py-2 w-full"/>
                     </div>
                 </div>
 
-                <div class="mt-6 flex justify-end space-x-2">
-                    <button
-                        class="btn-secondary"
-                        @click="$dispatch('close-modal','order-edit')"
-                    >Cancel</button>
-                    <button
-                        class="btn-primary"
-                        @click="updateOrder()"
-                    >Save Changes</button>
+                {{-- line‑items editor --}}
+                <h4 class="font-semibold mb-2">Items</h4>
+                <table class="w-full mb-6 border-collapse">
+                    <thead class="bg-gray-100">
+                    <tr>
+                        <th class="px-2 py-1 text-left">Product</th>
+                        <th class="px-2 py-1 text-left">Qty</th>
+                        <th class="px-2 py-1 text-left">Price</th>
+                        <th class="px-2 py-1 text-left">Line Total</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <template x-for="item in selectedOrder.items" :key="item.id">
+                        <tr class="border-t">
+                            <td class="px-2 py-1" x-text="item.name"></td>
+                            <td class="px-2 py-1">
+                                <input type="number" min="1" x-model.number="item.quantity" class="w-16 border rounded px-1"/>
+                            </td>
+                            <td class="px-2 py-1">
+                                <input type="number" step="0.01" min="0" x-model.number="item.price" class="w-20 border rounded px-1"/>
+                            </td>
+                            <td class="px-2 py-1">
+                                $<span x-text="(item.quantity * item.price).toFixed(2)"></span>
+                            </td>
+                        </tr>
+                    </template>
+                    </tbody>
+                </table>
+
+                {{-- order‑level total (you can optionally recalc from above) --}}
+                <div class="mb-6">
+                    <label class="font-medium">Order Total</label>
+                    <input type="number" step="0.01" x-model="selectedOrder.total" class="border rounded px-3 py-2 w-32"/>
+                </div>
+
+                {{-- save/cancel --}}
+                <div class="flex justify-end space-x-2">
+                    <button class="btn-secondary" @click="$dispatch('close-modal','order-edit')">Cancel</button>
+                    <button class="btn-primary" @click="updateOrder()">Save Changes</button>
                 </div>
             </div>
         </x-modal>
