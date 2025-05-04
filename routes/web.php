@@ -62,6 +62,19 @@ Route::middleware('auth')->group(function () {
     Route::get('/account/orders',  [AccountController::class,'orders'])->name('account.orders');
     Route::get('/order/{id}',      [AccountController::class,'show'])->name('order.show');
 
+    Route::get('/dashboard', [AccountController::class,'index'])
+        ->name('dashboard');
+
+    // Fetch one order as JSON for the modal
+    Route::get('/order/{order}', [AccountController::class,'show'])
+        ->name('order.show');
+
+    // User actions
+    Route::patch('/order/{order}/cancel', [AccountController::class,'cancel'])
+        ->name('order.cancel');
+    Route::patch('/order/{order}/return', [AccountController::class,'return'])
+        ->name('order.return');
+
     // Profile
     Route::get('/profile',         [ProfileController::class,'edit'])->name('profile.edit');
     Route::patch('/profile',       [ProfileController::class,'update'])->name('profile.update');
@@ -91,6 +104,8 @@ Route::middleware('auth')->group(function () {
             Route::patch('/orders/{order}/status',  [AdminController::class,'updateOrderStatus'])->name('orders.updateStatus');
             Route::patch('/orders/{order}',         [AdminController::class,'update'])->name('orders.update');            // full-edit
             Route::post('/orders/bulk-update',      [AdminController::class,'bulkUpdateOrderStatus'])->name('orders.bulkUpdate');
+            Route::patch('/account/orders/{order}/cancel',[AccountController::class,'cancel'])->name('account.orders.cancel');
+            Route::patch('/account/orders/{order}/return',[AccountController::class,'return'])->name('account.orders.return');
 
             // Inventory adjustment
             Route::patch('/products/{product}/adjust', [AdminController::class,'adjustInventory'])->name('products.adjust');
