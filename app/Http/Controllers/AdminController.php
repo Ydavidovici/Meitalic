@@ -92,8 +92,8 @@ class AdminController extends Controller
             ->get();
 
         // 7) Marketing & promotions
-        $activeCoupons   = PromoCode::where('active', true)->get();
-        $expiringCoupons = PromoCode::whereBetween('expires_at', [now(), now()->addDays(7)])->get();
+        $activePromos   = PromoCode::where('active', true)->get();
+        $expiringPromos = PromoCode::whereBetween('expires_at', [now(), now()->addDays(7)])->get();
 
         // 8) Analytics HTML (stubbed out)
         $analyticsHtml = '';
@@ -145,8 +145,8 @@ class AdminController extends Controller
             'slowMovers',
             'newCustomersToday',
             'topCustomers',
-            'activeCoupons',
-            'expiringCoupons',
+            'activePromos',
+            'expiringPromos',
             'analyticsHtml',
             'products',
             'allBrands',

@@ -6,6 +6,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="tax-rate" content="{{ config('cart.tax_rate', 0) }}">
     <title>@yield('title','Meitalic')</title>
 
     {{-- expose auth state before scripts --}}
@@ -88,9 +89,21 @@
 
             {{-- Footer --}}
             <footer class="border-t px-6 py-4">
-                <div class="flex justify-between mb-4">
+                <div class="flex justify-between mb-2">
                     <span class="font-medium">Subtotal:</span>
                     <span class="font-medium">$<span x-text="subtotal.toFixed(2)"></span></span>
+                </div>
+                <div class="flex justify-between mb-2">
+                    <span class="font-medium">Discount:</span>
+                    <span class="font-medium">− $<span x-text="discount.toFixed(2)"></span></span>
+                </div>
+                <div class="flex justify-between mb-2">
+                    <span class="font-medium">Tax:</span>
+                    <span class="font-medium">$<span x-text="tax.toFixed(2)"></span></span>
+                </div>
+                <div class="flex justify-between mb-4">
+                    <span class="font-semibold">Total:</span>
+                    <span class="font-semibold">$<span x-text="total.toFixed(2)"></span></span>
                 </div>
                 <a
                     href="{{ route('checkout.index') }}"
@@ -102,11 +115,6 @@
         </aside>
     </div>
     {{-- END CART OVERLAY & SIDEBAR --}}
-
-    <main class="flex-grow pt-16">
-        @yield('content')
-    </main>
-
 
     <main class="flex-grow pt-16">
         @yield('content')

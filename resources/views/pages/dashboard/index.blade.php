@@ -139,21 +139,6 @@
                 @endforeach
             </div>
 
-            <h3 class="font-bold mt-6 mb-2">Active Promo Codes</h3>
-            @forelse($activePromos as $promo)
-                <div class="mb-1">
-                    <strong>{{ $promo->code }}</strong> — {{ $promo->description }}
-                    <button
-                        @click="applyPromo('{{ $promo->code }}')"
-                        class="ml-2 text-sm text-blue-600 hover:underline"
-                        type="button"
-                    >Apply</button>
-                </div>
-            @empty
-                <p class="text-gray-600">No promotions available.</p>
-            @endforelse
-        </div>
-
         {{-- 7. Support & Contact --}}
         <div class="text-center">
             <a href="{{ route('contact') }}" class="btn-primary">Contact Support</a>

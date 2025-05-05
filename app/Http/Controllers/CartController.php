@@ -30,10 +30,11 @@ class CartController extends Controller
 
         if ($request->wantsJson()) {
             return response()->json([
-                'items'     => $items,
-                'raw_total' => $cart->cartItems()->sum('total'),
-                'discount'  => $cart->discount,
-                'total'     => $cart->total,
+                'items'    => $items,
+                'subtotal' => $cart->cartItems()->sum('total'),
+                'discount' => $cart->discount,
+                'tax'      => round(($cart->cartItems()->sum('total') - $cart->discount) * config('cart.tax_rate',0), 2),
+                'total'    => $cart->total,
             ]);
         }
 

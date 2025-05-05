@@ -582,8 +582,292 @@
 
         {{-- 5. PROMOTIONS --}}
         <div class="card mb-8">
-            <!-- promotions unchanged… -->
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-lg">Promo Codes</h3>
+                <button @click="openModal('promo-create')" class="btn-primary">
+                    + New Promo
+                </button>
+            </div>
+
+            <div class="space-y-2">
+                @forelse($activePromos as $promo)
+                    <div class="flex items-center justify-between border p-4 rounded">
+                        <div>
+                            <span class="font-mono">{{ $promo->code }}</span>
+                            @if($promo->type==='percent')
+                                — {{ $promo->discount }}%
+                            @else
+                                — ${{ number_format($promo->discount,2) }}
+                            @endif
+                            @if($promo->expires_at)
+                                <span class="text-sm text-gray-500">
+                            (expires {{ $promo->expires_at->format('M j, Y') }})
+                        </span>
+                            @endif
+                        </div>
+                        <div class="space-x-2">
+                            <button
+                                @click="openModal('promo-edit-{{ $promo->id }}')"
+                                class="text-indigo-600 hover:underline text-sm"
+                            >
+                                Edit
+                            </button>
+                            <form
+                                action="{{ route('admin.promo.destroy',$promo) }}"
+                                method="POST"
+                                class="inline"
+                                onsubmit="return confirm('Delete promo {{ $promo->code }}?');"
+                            >
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-red-600 hover:underline text-sm">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                @empty
+                    <p class="text-gray-600">No promo codes defined.</p>
+                @endforelse
+            </div>
         </div>
+
+        {{-- Create Promo Modal --}}
+        <x-modal name="promo-create" maxWidth="md">
+            <form
+                method="POST"
+                action="{{ route('admin.promo.store') }}"
+                class="p-6 space-y-4"
+                @submit.prevent="validateAndSubmit($el)"
+            >
+                @csrf
+                <h3 class="text-xl font-bold mb-4">New Promo Code</h3>
+
+                {{-- Code --}}
+                <div>
+                    <label class="block font-medium">Code</label>
+                    <input
+                        name="code"
+                        value="{{ old('code') }}"
+                        required
+                        class="w-full border rounded px-3 py-2"
+                    >
+                    @error('code') <p class="text-red-600">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- Type --}}
+                <div>
+                    <label class="block font-medium">Type</label>
+                    <select
+                        name="type"
+                        required
+                        class="w-full border rounded px-3 py-2"
+                    >
+                        <option value="fixed"   @selected(old('type')=='fixed')>Fixed</option>
+                        <option value="percent" @selected(old('type')=='percent')>Percent</option>
+                    </select>
+                    @error('type') <p class="text-red-600">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- Discount --}}
+                <div>
+                    <label class="block font-medium">
+                        Discount
+                        @if(old('type')==='percent')
+                            <span class="text-sm text-gray-500">(% value)</span>
+                        @endif
+                    </label>
+                    <div class="relative">
+                        <input
+                            name="discount"
+                            type="text"
+                            inputmode="decimal"
+                            value="{{ old('discount') }}"
+                            required
+                            class="w-full border rounded px-3 py-2 {{ old('type')==='percent' ? 'pr-8' : '' }}"
+                        >
+                        @if(old('type')==='percent')
+                            <span class="absolute inset-y-0 right-3 flex items-center text-gray-500">%</span>
+                        @endif
+                    </div>
+                    @error('discount') <p class="text-red-600">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- Max Uses --}}
+                <div>
+                    <label class="block font-medium">Max Uses <span class="text-sm text-gray-500">(leave blank for unlimited)</span></label>
+                    <input
+                        name="max_uses"
+                        type="text"
+                        inputmode="numeric"
+                        pattern="\d*"
+                        value="{{ old('max_uses') }}"
+                        class="w-full border rounded px-3 py-2"
+                    >
+                    @error('max_uses') <p class="text-red-600">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- Expires At --}}
+                <div>
+                    <label class="block font-medium">Expires At</label>
+                    <input
+                        name="expires_at"
+                        type="date"
+                        value="{{ old('expires_at') }}"
+                        class="w-full border rounded px-3 py-2"
+                    >
+                    @error('expires_at') <p class="text-red-600">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- Active --}}
+                <div class="flex items-center">
+                    <label class="inline-flex items-center">
+                        <input
+                            type="checkbox"
+                            name="active"
+                            value="1"
+                            @checked(old('active', true))
+                            class="form-checkbox"
+                        >
+                        <span class="ml-2">Active</span>
+                    </label>
+                </div>
+
+                {{-- Buttons --}}
+                <div class="flex justify-end space-x-4">
+                    <button
+                        type="button"
+                        @click="$dispatch('close-modal','promo-create')"
+                        class="btn-secondary"
+                    >
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn-primary">Create Promo</button>
+                </div>
+            </form>
+        </x-modal>
+
+        {{-- Edit Promo Modals --}}
+        @foreach($activePromos as $promo)
+            <x-modal name="promo-edit-{{ $promo->id }}" maxWidth="md">
+                <form
+                    method="POST"
+                    action="{{ route('admin.promo.update', $promo) }}"
+                    class="p-6 space-y-4"
+                    @submit.prevent="validateAndSubmit($el)"
+                >
+                    @csrf
+                    @method('PUT')
+                    <h3 class="text-xl font-bold mb-4">Edit Promo “{{ $promo->code }}”</h3>
+
+                    {{-- Code --}}
+                    <div>
+                        <label class="block font-medium">Code</label>
+                        <input
+                            name="code"
+                            value="{{ old('code', $promo->code) }}"
+                            required
+                            class="w-full border rounded px-3 py-2"
+                        >
+                        @error('code') <p class="text-red-600">{{ $message }}</p> @enderror
+                    </div>
+
+                    {{-- Type --}}
+                    <div>
+                        <label class="block font-medium">Type</label>
+                        <select
+                            name="type"
+                            required
+                            class="w-full border rounded px-3 py-2"
+                        >
+                            <option value="fixed"   @selected(old('type',$promo->type)=='fixed')>Fixed</option>
+                            <option value="percent" @selected(old('type',$promo->type)=='percent')>Percent</option>
+                        </select>
+                        @error('type') <p class="text-red-600">{{ $message }}</p> @enderror
+                    </div>
+
+                    {{-- Discount --}}
+                    <div>
+                        <label class="block font-medium">Discount</label>
+                        <input
+                            name="discount"
+                            type="number"
+                            step="0.01"
+                            value="{{ old('discount', $promo->discount) }}"
+                            required
+                            class="w-full border rounded px-3 py-2"
+                        >
+                        @error('discount') <p class="text-red-600">{{ $message }}</p> @enderror
+                    </div>
+
+                    {{-- Max Uses --}}
+                    <div>
+                        <label class="block font-medium">Max Uses</label>
+                        <input
+                            name="max_uses"
+                            type="number"
+                            min="1"
+                            value="{{ old('max_uses', $promo->max_uses) }}"
+                            class="w-full border rounded px-3 py-2"
+                        >
+                        @error('max_uses') <p class="text-red-600">{{ $message }}</p> @enderror
+                    </div>
+
+                    {{-- Used Count --}}
+                    <div>
+                        <label class="block font-medium">Used Count</label>
+                        <input
+                            name="used_count"
+                            type="number"
+                            min="0"
+                            value="{{ old('used_count', $promo->used_count) }}"
+                            required
+                            class="w-full border rounded px-3 py-2"
+                        >
+                        @error('used_count') <p class="text-red-600">{{ $message }}</p> @enderror
+                    </div>
+
+                    {{-- Expires At --}}
+                    <div>
+                        <label class="block font-medium">Expires At</label>
+                        <input
+                            name="expires_at"
+                            type="date"
+                            value="{{ old('expires_at', optional($promo->expires_at)->format('Y-m-d')) }}"
+                            class="w-full border rounded px-3 py-2"
+                        >
+                        @error('expires_at') <p class="text-red-600">{{ $message }}</p> @enderror
+                    </div>
+
+                    {{-- Active --}}
+                    <div class="flex items-center">
+                        <label class="inline-flex items-center">
+                            <input
+                                type="checkbox"
+                                name="active"
+                                value="1"
+                                @checked(old('active', $promo->active))
+                                class="form-checkbox"
+                            >
+                            <span class="ml-2">Active</span>
+                        </label>
+                    </div>
+
+                    {{-- Buttons --}}
+                    <div class="flex justify-end space-x-4">
+                        <button
+                            type="button"
+                            @click="$dispatch('close-modal','promo-edit-{{ $promo->id }}')"
+                            class="btn-secondary"
+                        >
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </x-modal>
+        @endforeach
+
 
         {{-- 6. DEV METRICS --}}
         <div x-show="devMetricsVisible" class="card mb-8">

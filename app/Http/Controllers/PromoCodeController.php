@@ -7,10 +7,10 @@ use Illuminate\Http\Request;
 
 class PromoCodeController extends Controller
 {
-    // Store new promo code
+    /** POST /admin/promo */
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $data = $request->validate([
             'code'       => 'required|string|unique:promo_codes,code',
             'type'       => 'required|in:fixed,percent',
             'discount'   => 'required|numeric|min:0',
@@ -19,36 +19,37 @@ class PromoCodeController extends Controller
             'active'     => 'boolean',
         ]);
 
-        PromoCode::create($validated);
+        PromoCode::create($data);
 
         return redirect()->route('admin.dashboard')
-            ->with('success', 'Promo code created successfully.');
+            ->with('success','Promo code created!');
     }
 
-    // Update promo code
+    /** PUT  /admin/promo/{promo} */
     public function update(Request $request, PromoCode $promo)
     {
-        $validated = $request->validate([
-            'code'       => 'required|string|unique:promo_codes,code,' . $promo->id,
-            'type'       => 'required|in:fixed,percent',
-            'discount'   => 'required|numeric|min:0',
-            'max_uses'   => 'nullable|integer|min:1',
-            'expires_at' => 'nullable|date',
-            'active'     => 'boolean',
+        $data = $request->validate([
+            'code'        => 'required|string|unique:promo_codes,code,' . $promo->id,
+            'type'        => 'required|in:fixed,percent',
+            'discount'    => 'required|numeric|min:0',
+            'max_uses'    => 'nullable|integer|min:1',
+            'used_count'  => 'required|integer|min:0',
+            'expires_at'  => 'nullable|date',
+            'active'      => 'boolean',
         ]);
 
-        $promo->update($validated);
+        $promo->update($data);
 
         return redirect()->route('admin.dashboard')
-            ->with('success', 'Promo code updated successfully.');
+            ->with('success','Promo code updated!');
     }
 
-    // Delete promo code
+    /** DELETE /admin/promo/{promo} */
     public function destroy(PromoCode $promo)
     {
         $promo->delete();
 
         return redirect()->route('admin.dashboard')
-            ->with('success', 'Promo code deleted.');
+            ->with('success','Promo code deleted.');
     }
 }

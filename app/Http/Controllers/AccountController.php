@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\Product;
-use App\Models\PromoCode;
 
 class AccountController extends Controller
 {
@@ -16,62 +15,59 @@ class AccountController extends Controller
     {
         $user = $request->user();
 
-        // 1) At-a-glance metrics
+        // 1) At‑a‑glance metrics
         $totalOrders = Order::where('user_id', $user->id)->count();
         $yearlySpend = Order::where('user_id', $user->id)
             ->whereYear('created_at', now()->year)
             ->sum('total');
-        $storeCredit = 0;
+        $storeCredit = 0; // if you have a store credit system
 
-        // 2) Recent & upcoming orders
+        // 2) Recent & upcoming orders (just list most recent 5)
         $recentOrders = Order::where('user_id', $user->id)
             ->latest()
             ->take(5)
             ->get();
 
-        // 3) Full order history
+        // 3) Full order history (paginated)
         $allOrders = Order::where('user_id', $user->id)
             ->latest()
             ->paginate(10);
 
-        // 4) Recommendations & promotions
+        // 4) Recommendations
         $recommendations = Product::where('active', true)
+            ->inRandomOrder()
             ->take(8)
             ->get();
 
-        $activePromos = PromoCode::where('active', true)->get();
+        // **Note: no promo codes passed to users!**
 
-        return view('pages.dashboard.index', compact(
-            'totalOrders',
-            'yearlySpend',
-            'storeCredit',
-            'recentOrders',
-            'allOrders',
-            'recommendations',
-            'activePromos'
-        ));
+        return view('pages.dashboard.index', [
+            'totalOrders'    => $totalOrders,
+            'yearlySpend'    => $yearlySpend,
+            'storeCredit'    => $storeCredit,
+            'recentOrders'   => $recentOrders,
+            'allOrders'      => $allOrders,
+            'recommendations'=> $recommendations,
+        ]);
     }
 
-    public function show($id)
+    /**
+     * Return one order as JSON for the “view order” modal.
+     */
+    public function show(Order $order)
     {
-        // Only allow the owner to fetch it:
-        $order = Order::with('orderItems.product')
-            ->where('user_id', auth()->id())
-            ->findOrFail($id);
+        $this->authorize('view', $order);  // or ensure user owns it
+
+        $order->load('orderItems.product');
 
         return response()->json([
             'id'               => $order->id,
-            'user_id'          => $order->user_id,
+            'status'           => $order->status,
             'shipping_address' => $order->shipping_address,
             'email'            => $order->email,
             'phone'            => $order->phone,
             'total'            => (float) $order->total,
-            'status'           => $order->status,
-            // if you have arbitrary JSON on meta:
-            'meta'             => $order->meta ? json_decode($order->meta, true) : null,
-            // ISO8601 strings, null‑safe via optional()
-            'created_at'       => optional($order->created_at)->toIso8601String(),
-            'updated_at'       => optional($order->updated_at)->toIso8601String(),
+            'created_at'       => $order->created_at->toIso8601String(),
             'items'            => $order->orderItems->map(function($i) {
                 return [
                     'id'       => $i->id,
@@ -83,21 +79,28 @@ class AccountController extends Controller
         ]);
     }
 
-
+    /**
+     * Cancel an order.
+     */
     public function cancel(Order $order)
     {
+        $this->authorize('update', $order);
         $order->update(['status' => 'canceled']);
         return response()->json(['status' => 'canceled']);
     }
 
+    /**
+     * Return an order.
+     */
     public function return(Order $order)
     {
+        $this->authorize('update', $order);
         $order->update(['status' => 'returned']);
         return response()->json(['status' => 'returned']);
     }
 
     /**
-     * Show current cart.
+     * Show a simple cart summary page (optional).
      */
     public function cart(Request $request)
     {
@@ -106,16 +109,16 @@ class AccountController extends Controller
     }
 
     /**
-     * (Optional) Dump all orders as JSON.
+     * (Optional) JSON endpoint listing all orders.
      */
-    public function ordersJson(Request $request)
+    public function orders(Request $request)
     {
         $orders = $request->user()
             ->orders()
-            ->with('orderItems.product', 'payment')
+            ->with('orderItems.product')
             ->latest()
-            ->get();
+            ->paginate(10);
 
-        return response()->json($orders);
+        return view('pages.dashboard.orders', compact('orders'));
     }
 }

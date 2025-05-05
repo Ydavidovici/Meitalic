@@ -3,6 +3,11 @@ import Alpine from 'alpinejs';
 
 window.Alpine = Alpine;
 
+// — read tax rate from meta tag —
+const TAX_RATE = parseFloat(
+    document.querySelector('meta[name="tax-rate"]').content
+) || 0;
+
 // — Auth store (unchanged) —
 Alpine.store('auth', {
     isAuthenticated: window.isAuthenticated
@@ -17,9 +22,12 @@ Alpine.store('cart', {
 
 function cartSidebar() {
     return {
-        loading: true,
-        items: [],
+        loading:  true,
+        items:    [],
         subtotal: 0,
+        discount: 0,
+        tax:      0,
+        total:    0,
 
         async init() {
             await this.load();
@@ -28,11 +36,29 @@ function cartSidebar() {
         async load() {
             this.loading = true;
             let res = await fetch('/cart', { headers:{ 'Accept':'application/json' } });
-            if (!res.ok) { this.loading = false; return }
+            if (!res.ok) {
+                this.loading = false;
+                return;
+            }
             let data = await res.json();
-            this.items    = data.items;
-            this.subtotal = data.raw_total;
-            this.loading  = false;
+
+            // 1) coerce string → number
+            this.items = data.items.map(i => ({
+                ...i,
+                price:    parseFloat(i.price),
+                quantity: parseInt(i.quantity, 10)
+            }));
+
+            // 2) recompute
+            this.subtotal = this.items.reduce(
+                (sum, i) => sum + i.price * i.quantity,
+                0
+            );
+            this.discount = parseFloat(data.discount || 0);
+            this.tax      = +((this.subtotal - this.discount) * TAX_RATE).toFixed(2);
+            this.total    = +(this.subtotal - this.discount + this.tax).toFixed(2);
+
+            this.loading = false;
         },
 
         async remove(itemId) {
@@ -50,9 +76,9 @@ Alpine.data('cartSidebar', cartSidebar);
 Alpine.store('dashboard', {
     devMetricsVisible: false,
     activeModal:       null,
-    toggleDevMetrics() { this.devMetricsVisible = !this.devMetricsVisible },
+    toggleDevMetrics() { this.devMetricsVisible = ! this.devMetricsVisible },
     openModal(name)    { this.activeModal = name; window.dispatchEvent(new CustomEvent('open-modal',{detail:name})) },
-    closeModal(name)   { if (this.activeModal===name){ this.activeModal=null; window.dispatchEvent(new CustomEvent('close-modal',{detail:name})) } }
+    closeModal(name)   { if (this.activeModal === name) { this.activeModal = null; window.dispatchEvent(new CustomEvent('close-modal',{detail:name})); } }
 });
 
 // — Admin dashboard component (unchanged) —
@@ -84,7 +110,7 @@ function adminDashboard() {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
                 body: JSON.stringify({ids:this.selectedOrders,status})
-            }).then(()=>location.reload());
+            }).then(() => location.reload());
         },
 
         async openOrderEdit(id) {
@@ -110,12 +136,12 @@ function adminDashboard() {
                     phone:            this.selectedOrder.phone,
                 })
             })
-                .then(res=>{
+                .then(res => {
                     if (!res.ok) throw new Error('Update failed');
                     this.closeModal('order-edit');
                     location.reload();
                 })
-                .catch(e=>{
+                .catch(e => {
                     console.error(e);
                     alert('Failed to save changes');
                 });
@@ -127,8 +153,10 @@ Alpine.data('adminDashboard', adminDashboard);
 // — User dashboard component (unchanged) —
 function userDashboard() {
     return {
-        dateRange: 'all', status: '',
-        modalOpen: false, selectedOrder: null,
+        dateRange: 'all',
+        status:    '',
+        modalOpen: false,
+        selectedOrder: null,
 
         async openOrder(id) {
             try {
@@ -137,7 +165,7 @@ function userDashboard() {
                 this.selectedOrder = await res.json();
                 this.modalOpen     = true;
             } catch(e) {
-                alert('Failed to load order: '+e.message);
+                alert('Failed to load order: ' + e.message);
             }
         },
 
@@ -187,15 +215,15 @@ window.validateAndSubmit = formEl => {
     formEl.submit();
 };
 
-document.addEventListener('DOMContentLoaded',()=>{
-    ['filters-form','admin-filters-form'].forEach(id=>{
+document.addEventListener('DOMContentLoaded', () => {
+    ['filters-form','admin-filters-form'].forEach(id => {
         let form = document.getElementById(id);
         if (!form) return;
-        form.addEventListener('submit',async e=>{
+        form.addEventListener('submit', async e => {
             e.preventDefault();
             const params = new URLSearchParams(new FormData(form));
             const url    = `/admin?${params}`;
-            const resp   = await fetch(url,{headers:{'X-Requested-With':'XMLHttpRequest'}});
+            const resp   = await fetch(url, {headers:{'X-Requested-With':'XMLHttpRequest'}});
             const html   = await resp.text();
             const doc    = new DOMParser().parseFromString(html,'text/html');
             const grid   = doc.getElementById('admin-product-grid');
@@ -208,32 +236,45 @@ document.addEventListener('DOMContentLoaded',()=>{
     });
 });
 
-// — **NEW** Checkout page component —
+// — Checkout page component (with JS‐side math) —
 function checkoutPage() {
     return {
-        items: [], subtotal: 0, discount: 0, tax: 0, total: 0,
-        promoCode: '', promoError:'', orderError:'', loading:false,
-        form: { shipping_address:'', email:'', phone:'' },
+        items:    [],
+        subtotal: 0,
+        discount: 0,
+        tax:      0,
+        total:    0,
+        promoCode: '',
+        promoError:'',
+        orderError:'',
+        loading:   false,
+        form:      { shipping_address:'', email:'', phone:'' },
 
         async init() {
             await this.loadCart();
         },
 
         async loadCart() {
-            let res = await fetch('/cart',{headers:{'Accept':'application/json'}});
+            let res  = await fetch('/cart',{headers:{'Accept':'application/json'}});
             if (!res.ok) return;
             let json = await res.json();
-            this.items    = json.items;
-            this.subtotal = json.raw_total;
-            this.discount = json.discount||0;
-            this.tax      = json.tax||0;
-            this.total    = json.total||this.subtotal;
+
+            // coerce + compute
+            this.items    = json.items.map(i => ({
+                ...i,
+                price:    parseFloat(i.price),
+                quantity: parseInt(i.quantity,10)
+            }));
+            this.subtotal = this.items.reduce((sum,i) => sum + i.price*i.quantity, 0);
+            this.discount = parseFloat(json.discount || 0);
+            this.tax      = +((this.subtotal - this.discount) * TAX_RATE).toFixed(2);
+            this.total    = +(this.subtotal - this.discount + this.tax).toFixed(2);
         },
 
         async remove(id) {
             await fetch(`/cart/remove/${id}`,{
                 method:'DELETE',
-                headers:{'X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content}
+                headers:{ 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
             });
             await this.loadCart();
         },
@@ -245,24 +286,25 @@ function checkoutPage() {
                 headers:{
                     'Content-Type':'application/json',
                     'Accept':'application/json',
-                    'X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
-                body: JSON.stringify({code:this.promoCode})
+                body: JSON.stringify({ code:this.promoCode })
             });
             let json = await res.json();
             if (!res.ok) {
                 this.promoError = json.error;
                 return;
             }
-            this.subtotal = json.subtotal;
-            this.discount = json.discount;
-            this.tax      = json.tax;
-            this.total    = json.total;
+            // use returned subtotal/discount then recalc tax + total
+            this.subtotal = parseFloat(json.subtotal);
+            this.discount = parseFloat(json.discount);
+            this.tax      = +((this.subtotal - this.discount) * TAX_RATE).toFixed(2);
+            this.total    = +(this.subtotal - this.discount + this.tax).toFixed(2);
         },
 
         async placeOrder() {
             this.orderError = '';
-            this.loading = true;
+            this.loading    = true;
             let res = await fetch('/checkout/place-order',{
                 method:'POST',
                 headers:{
