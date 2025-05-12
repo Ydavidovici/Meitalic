@@ -91,14 +91,24 @@ function adminDashboard() {
         selectedOrder:  null,
 
         singleMark(id,status) {
-            return fetch(`/admin/orders/${id}/status`, {
+            fetch(`/admin/orders/${id}/status`, {
                 method:'PATCH',
                 headers:{
                     'Content-Type':'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
                 body: JSON.stringify({status})
-            });
+            })
+                .then(res => {
+                    if (!res.ok) throw new Error('Update failed');
+                    // either reload the entire page:
+                    location.reload();
+                    // — or (for a smoother UX) update just that row’s status in the DOM instead
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('Failed to update order status');
+                });
         },
 
         markBulk(status) {
