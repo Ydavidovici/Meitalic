@@ -16,6 +16,7 @@ use App\Http\Controllers\{
     AccountController,
     AdminController,
     PromoCodeController,
+    NewsletterController,
 };
 
 // ───────────── Public Pages ────────────────
@@ -115,5 +116,11 @@ Route::middleware('auth')->group(function () {
         Route::post   ('promo',         [PromoCodeController::class,'store'])->name('promo.store');
         Route::put    ('promo/{promo}', [PromoCodeController::class,'update'])->name('promo.update');
         Route::delete ('promo/{promo}', [PromoCodeController::class,'destroy'])->name('promo.destroy');
+
+        // Newsletter
+        Route::get ('newsletter',      [NewsletterController::class,'form'])
+            ->name('newsletter.form');
+        Route::post('newsletter/send', [NewsletterController::class,'send'])
+            ->name('newsletter.send');
     });
 });

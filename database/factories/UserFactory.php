@@ -11,16 +11,8 @@ use Illuminate\Support\Str;
  */
 class UserFactory extends Factory
 {
-    /**
-     * The current password being used by the factory.
-     */
     protected static ?string $password;
 
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
@@ -30,16 +22,43 @@ class UserFactory extends Factory
             'password'          => static::$password ??= Hash::make('password'),
             'remember_token'    => Str::random(10),
             'is_admin'          => false,
+            'is_subscribed'     => false,
+            'subscribed_at'     => null,
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
     public function unverified(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn (array $attrs) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    /**
+     * Seed a “site admin” user.
+     */
+    public function admin(): static
+    {
+        return $this->state(fn (array $attrs) => [
+            'name'               => 'Site Admin',
+            'email'              => 'admin@meitalic.test',
+            'password'           => Hash::make('AdminPass123'),
+            'is_admin'           => true,
+            'email_verified_at'  => now(),
+        ]);
+    }
+
+    /**
+     * Seed a “regular” user with a known email+password.
+     */
+    public function regular(): static
+    {
+        return $this->state(fn (array $attrs) => [
+            'name'               => 'Regular User',
+            'email'              => 'user@meitalic.test',
+            'password'           => static::$password ??= Hash::make('UserPass123'),
+            'is_admin'           => false,
+            'email_verified_at'  => now(),
         ]);
     }
 }

@@ -16,10 +16,12 @@ class DatabaseSeeder extends Seeder
             OrderItemSeeder::class,
             PaymentSeeder::class,
             ConsultationSeeder::class,
-            AdminUserSeeder::class,
             PromoCodeSeeder::class,
             CartSeeder::class,
-            CartItemSeeder::class
+            CartItemSeeder::class,
         ]);
+
+        \App\Models\User::factory()->regular()->create();
+        \App\Models\User::factory()->admin()->create();
     }
 }
