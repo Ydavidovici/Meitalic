@@ -101,7 +101,7 @@ class AdminController extends Controller
         // 9) Filterable product list
         $q = Product::query();
 
-        // 9.a) free‑text search via the “q” field
+        // 9.a) free‑text search via “q”
         if ($term = $request->query('q')) {
             $q->search($term);
         }
@@ -114,23 +114,34 @@ class AdminController extends Controller
             $q->where('category', $c);
         }
 
-        // sorting
-        $allowed = ['inventory', 'updated_at', 'name'];
-        $sort    = in_array($request->query('sort'), $allowed)
-            ? $request->query('sort')
-            : 'updated_at';
+        // 🔥 9.c) featured filter
+        if (! is_null($request->query('featured'))) {
+            // only accept “0” or “1”
+            $val = (int) $request->query('featured');
+            if (in_array($val, [0,1], true)) {
+                $q->where('is_featured', $val === 1);
+            }
+        }
+
+        // 9.d) sorting
+        $allowed = ['inventory','updated_at','name'];
+        $sort    = in_array($request->query('sort'), $allowed) ? $request->query('sort') : 'updated_at';
         $dir     = $request->query('dir') === 'asc' ? 'asc' : 'desc';
 
-        // paginate & preserve filters
-        $products = $q->orderBy($sort, $dir)
+        // 9.e) paginate & preserve **all** filters
+        $products = $q->orderBy($sort,$dir)
             ->paginate(20)
-            ->appends($request->only(['q', 'brand', 'category', 'sort', 'dir']));
+            ->appends($request->only([
+                'q','brand','category','featured','sort','dir'
+            ]));
 
         $allBrands     = Product::select('brand')->distinct()->orderBy('brand')->pluck('brand');
         $allCategories = Product::select('category')->distinct()->orderBy('category')->pluck('category');
 
         if ($request->ajax()) {
-            return view('partials.admin.product-grid', compact('products', 'allBrands', 'allCategories'));
+            return view('partials.admin.product-grid', compact(
+                'products','allBrands','allCategories'
+            ));
         }
 
         return view('pages.admin.dashboard', compact(

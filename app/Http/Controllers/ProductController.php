@@ -8,8 +8,7 @@ use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
-    // app/Http/Controllers/ProductController.php
-
+    // Public listing
     public function index(Request $request)
     {
         $q = Product::query();
@@ -27,6 +26,15 @@ class ProductController extends Controller
             $q->where('category', $category);
         }
 
+        // — 2.b) featured filter —
+        if (! is_null($request->query('featured'))) {
+            // allow only 0 or 1
+            $val = (int) $request->query('featured');
+            if (in_array($val, [0,1], true)) {
+                $q->where('is_featured', $val === 1);
+            }
+        }
+
         // — 3. sorting —
         $allowed = ['price','name','updated_at'];
         $sort    = in_array($request->query('sort'), $allowed)
@@ -34,21 +42,26 @@ class ProductController extends Controller
             : 'name';
         $dir     = $request->query('dir') === 'desc' ? 'desc' : 'asc';
 
-        // — 4. lists for the filter dropdowns —
+        // — 4. dropdown data —
         $allBrands     = Product::select('brand')->distinct()->orderBy('brand')->pluck('brand');
         $allCategories = Product::select('category')->distinct()->orderBy('category')->pluck('category');
 
-        // — 5. pagination & preserve query —
+        // — 5. paginate & preserve query —
         $products = $q->orderBy($sort, $dir)
             ->paginate(20)
-            ->appends($request->only(['search','brand','category','sort','dir']));
+            ->appends(
+                $request->only([
+                    'search','brand','category','featured','sort','dir'
+                ])
+            );
 
-        // — 6. AJAX support (optional) —
         if ($request->ajax()) {
             return view('partials.product-grid', compact('products'));
         }
 
-        return view('pages.products', compact('products','allBrands','allCategories'));
+        return view('pages.products', compact(
+            'products','allBrands','allCategories'
+        ));
     }
 
     // Public detail
@@ -71,25 +84,23 @@ class ProductController extends Controller
         $this->authorizeAdmin();
 
         $data = $request->validate([
-            'name'        => 'required|string|max:255',
-            'brand'       => 'required|string|max:255',
-            'category'    => 'required|string',
-            'description' => 'required|string',
-            'price'       => 'required|numeric|min:0',
-            'inventory'   => 'required|integer|min:0',
-            'image'       => 'nullable|image|max:2048',
+            'name'         => 'required|string|max:255',
+            'brand'        => 'required|string|max:255',
+            'category'     => 'required|string',
+            'description'  => 'required|string',
+            'price'        => 'required|numeric|min:0',
+            'inventory'    => 'required|integer|min:0',
+            'image'        => 'nullable|image|max:2048',
+            'is_featured'  => 'sometimes|boolean',
         ]);
 
-        // auto-slug & SKU
-        $data['slug'] = Str::slug($data['name']);
-        // unique SKU: slug + 6-char random
-        $data['sku']  = $data['slug'] . '-' . Str::upper(Str::random(6));
+        // auto‑slug & SKU
+        $data['slug']        = Str::slug($data['name']);
+        $data['sku']         = $data['slug'].'-'.Str::upper(Str::random(6));
+        $data['is_featured'] = $request->has('is_featured');
 
-        // handle image upload
         if ($request->hasFile('image')) {
-            $data['image'] = $request
-                ->file('image')
-                ->store('products','public');
+            $data['image'] = $request->file('image')->store('products','public');
         }
 
         Product::create($data);
@@ -112,26 +123,24 @@ class ProductController extends Controller
         $this->authorizeAdmin();
 
         $data = $request->validate([
-            'name'        => 'required|string|max:255',
-            'brand'       => 'required|string|max:255',
-            'category'    => 'required|string',
-            'description' => 'required|string',
-            'price'       => 'required|numeric|min:0',
-            'inventory'   => 'required|integer|min:0',
-            'image'       => 'nullable|image|max:2048',
+            'name'         => 'required|string|max:255',
+            'brand'        => 'required|string|max:255',
+            'category'     => 'required|string',
+            'description'  => 'required|string',
+            'price'        => 'required|numeric|min:0',
+            'inventory'    => 'required|integer|min:0',
+            'image'        => 'nullable|image|max:2048',
+            'is_featured'  => 'sometimes|boolean',
         ]);
 
-        // if name changed, regenerate slug (optional)
         if ($data['name'] !== $product->name) {
             $data['slug'] = Str::slug($data['name']);
-            // keep existing SKU or regenerate?
-            // $data['sku'] = $data['slug'].'-'.Str::upper(Str::random(6));
         }
 
+        $data['is_featured'] = $request->has('is_featured');
+
         if ($request->hasFile('image')) {
-            $data['image'] = $request
-                ->file('image')
-                ->store('products','public');
+            $data['image'] = $request->file('image')->store('products','public');
         }
 
         $product->update($data);

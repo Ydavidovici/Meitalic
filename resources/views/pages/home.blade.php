@@ -1,4 +1,3 @@
-{{-- resources/views/pages/home.blade.php --}}
 @extends('layouts.app')
 
 @section('title','Meitalic Cosmeceuticals')
@@ -8,7 +7,6 @@
     <section class="w-full bg-gradient-to-br from-secondary via-primary pt-20 pb-12">
         <div class="container px-4 sm:px-6 lg:px-8">
             <div class="max-w-screen-lg mx-auto text-center lg:text-left">
-                <!-- Text wrapper -->
                 <div class="space-y-4 transform -translate-y-8">
                     <h1 class="text-4xl sm:text-5xl font-bold text-text leading-tight">
                         Meitalic
@@ -17,14 +15,40 @@
                         Where elegance meets skincare.
                     </p>
                 </div>
-
-                <!-- Shop Now (plain all‑products link) -->
                 <a href="{{ route('products.index') }}" class="btn-primary w-max">
                     Shop Now
                 </a>
             </div>
         </div>
     </section>
+
+    <!-- Featured Products -->
+    @if($featuredProducts->count())
+        <section class="py-12 bg-white">
+            <div class="container px-4 sm:px-6 lg:px-8">
+                <h2 class="text-2xl font-bold mb-6">Featured Products</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                    @foreach($featuredProducts as $product)
+                        <div class="card hover:shadow-lg transition">
+                            <a href="{{ route('products.show', $product->slug) }}">
+                                @if($product->image)
+                                    <img
+                                        src="{{ Str::startsWith($product->image, ['http://','https://']) ? $product->image : asset('storage/'.$product->image) }}"
+                                        alt="{{ $product->name }}"
+                                        class="w-full h-48 object-cover rounded-t"
+                                    />
+                                @endif
+                                <div class="p-4">
+                                    <h3 class="font-semibold text-lg">{{ $product->name }}</h3>
+                                    <p class="text-gray-600">${{ number_format($product->price,2) }}</p>
+                                </div>
+                            </a>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+    @endif
 
     <!-- Categories -->
     <section class="py-20">

@@ -20,6 +20,7 @@ class CreateProductsTable extends Migration
             $table->string('sku')->unique();
             $table->json('options')->nullable();
             $table->boolean('active')->default(true);
+            $table->boolean('is_featured')->default(false);
             $table->integer('inventory');
             $table->timestamps();
         });

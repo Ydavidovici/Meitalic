@@ -8,7 +8,12 @@ class HomeController extends Controller
 {
     public function index()
     {
-        $featuredProducts = Product::take(5)->get();
+        // grab 5 random featured products
+        $featuredProducts = Product::featured()
+            ->inRandomOrder()
+            ->take(5)
+            ->get();
+
         return view('pages.home', compact('featuredProducts'));
     }
 }

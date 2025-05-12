@@ -13,19 +13,18 @@ class OrderItemFactory extends Factory
 
     public function definition(): array
     {
-        $product = Product::factory()->create();
+        $product  = Product::factory()->create();
         $quantity = $this->faker->numberBetween(1, 5);
-        $price = $product->price;
 
         return [
             'order_id'   => Order::factory(),
             'product_id' => $product->id,
             'name'       => $product->name,
-            'price'      => $price,
+            'price'      => $product->price,
             'quantity'   => $quantity,
-            'total'      => $price * $quantity,
+            'total'      => $product->price * $quantity,
             'sku'        => $product->sku,
-            'options'    => $product->options,
+            'options'    => json_encode($product->options),
         ];
     }
 }

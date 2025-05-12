@@ -229,18 +229,29 @@ document.addEventListener('DOMContentLoaded', () => {
     ['filters-form','admin-filters-form'].forEach(id => {
         let form = document.getElementById(id);
         if (!form) return;
+
         form.addEventListener('submit', async e => {
             e.preventDefault();
+
             const params = new URLSearchParams(new FormData(form));
             const url    = `/admin?${params}`;
-            const resp   = await fetch(url, {headers:{'X-Requested-With':'XMLHttpRequest'}});
-            const html   = await resp.text();
-            const doc    = new DOMParser().parseFromString(html,'text/html');
-            const grid   = doc.getElementById('admin-product-grid');
-            if (grid) {
-                document.getElementById('admin-product-grid').replaceWith(grid);
-                window.Alpine.initTree(grid);
-                history.pushState(null,'',url);
+            const resp   = await fetch(url, {
+                headers: { 'X-Requested-With':'XMLHttpRequest' }
+            });
+            const html = await resp.text();
+            const doc  = new DOMParser().parseFromString(html, 'text/html');
+
+            // ← swap the entire section (grid + its modals)
+            const section = doc.getElementById('admin-product-section');
+            if (section) {
+                const old = document.getElementById('admin-product-section');
+                old.replaceWith(section);
+
+                // re‑init Alpine on the new bits
+                window.Alpine.initTree(section);
+
+                // push the new URL
+                history.pushState(null, '', url);
             }
         });
     });
