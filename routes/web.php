@@ -31,9 +31,7 @@ Route::get('/products/{slug}', [ProductController::class,'show'])->name('product
 Route::get('/brands',       [BrandController::class, 'index'])->name('brands.index');
 Route::get('/brands/{brand}', [BrandController::class, 'show'])->name('brands.show');
 
-// ───────────── Stripe Webhook ──────────────
-Route::post('/stripe/webhook', [PaymentController::class,'handleWebhook'])
-    ->name('stripe.webhook');
+Route::post('/stripe/webhook', [PaymentController::class, 'handleWebhook']);
 
 // ───────────── Checkout & Orders ───────────
 Route::get('/checkout',           [CheckoutController::class,'checkout'])
@@ -44,6 +42,8 @@ Route::post('/checkout/place-order',[CheckoutController::class,'placeOrder'])
     ->name('checkout.placeOrder');
 Route::post('/checkout',          [CheckoutController::class,'create'])
     ->name('checkout.create');
+Route::post('/checkout/payment-intent', [CheckoutController::class,'paymentIntent'])
+    ->name('checkout.paymentIntent');
 Route::get('/checkout/success',   [CheckoutController::class,'success'])
     ->name('checkout.success');
 

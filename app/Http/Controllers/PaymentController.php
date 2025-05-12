@@ -14,14 +14,16 @@ class PaymentController extends Controller
     // Endpoint for Stripe to send webhook events
     public function handleWebhook(Request $request)
     {
-        $payload = $request->getContent();
-        $sigHeader = $request->header('Stripe-Signature');
-        $endpointSecret = config('services.stripe.webhook_secret');
+        $payload    = $request->getContent();
+        $sigHeader  = $request->header('Stripe-Signature');
+        $secret     = config('services.stripe.webhook_secret'); // set this in .env
 
         try {
-            $event = Webhook::constructEvent($payload, $sigHeader, $endpointSecret);
-        } catch (\Exception $e) {
-            return response('Webhook Error: ' . $e->getMessage(), Response::HTTP_BAD_REQUEST);
+            $event = \Stripe\Webhook::constructEvent($payload, $sigHeader, $secret);
+        } catch (\UnexpectedValueException $e) {
+            return response('Invalid payload', 400);
+        } catch (\Stripe\Exception\SignatureVerificationException $e) {
+            return response('Invalid signature', 400);
         }
 
         // Handle the event type
