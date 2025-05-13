@@ -192,12 +192,9 @@ function userDashboard() {
             rating: 1,
             body: ''
         },
-        // Make sure your dashboard view includes:
-        // <meta name="reviews-store-route" content="{{ route('dashboard.reviews.store') }}">
         get modalAction() {
-            return document
-                .querySelector('meta[name="reviews-store-route"]')
-                .content;
+            const m = document.querySelector('meta[name="reviews-store-route"]');
+            return m ? m.content : '';
         },
         get modalTitle() {
             return 'Leave a Review';
@@ -216,28 +213,33 @@ function userDashboard() {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document
-                        .querySelector('meta[name="csrf-token"]')
-                        .content
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 }
             });
             if (!res.ok) return alert('Cancel failed');
             if (this.selectedOrder) this.selectedOrder.status = 'canceled';
         },
-
         async returnOrder(id) {
             const res = await fetch(`/order/${id}/return`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document
-                        .querySelector('meta[name="csrf-token"]')
-                        .content
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 }
             });
             if (!res.ok) return alert('Return failed');
             if (this.selectedOrder) this.selectedOrder.status = 'returned';
-        }
+        },
+
+        isProfileModalOpen: false,
+        profileForm: window.profileData || {},
+
+        openProfileModal() {
+            this.isProfileModalOpen = true;
+        },
+        closeProfileModal() {
+            this.isProfileModalOpen = false;
+        },
     };
 }
 

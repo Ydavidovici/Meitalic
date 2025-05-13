@@ -49,6 +49,9 @@ class AccountController extends Controller
             'recentOrders'   => $recentOrders,
             'allOrders'      => $allOrders,
             'recommendations'=> $recommendations,
+            'profileData'     => $user->only(['name','email']),
+            'user'           => $user,
+
         ]);
     }
 
