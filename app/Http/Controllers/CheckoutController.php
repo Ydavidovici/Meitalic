@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\DB;
 use Stripe\Stripe;
 use Stripe\PaymentIntent;
 use App\Models\Cart;
@@ -12,8 +13,10 @@ use App\Models\CartItem;
 use App\Models\PromoCode;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Mail\Receipt;
-use App\Mail\OrderPlaced;
+use App\Http\Controllers\PaymentController;
+use App\Mail\ReviewRequestMailable;
+use App\Mail\OrderConfirmationMailable;
+use App\Mail\AdminOrderNotificationMail;
 
 class CheckoutController extends Controller
 {
@@ -24,18 +27,18 @@ class CheckoutController extends Controller
     {
         $cart     = $this->getCart($request);
         $items    = $cart->cartItems()->with('product')->get();
-        $subtotal = $items->sum(fn($i)=> $i->total);
+        $subtotal = $items->sum(fn($i) => $i->total);
         $discount = $cart->discount ?? 0;
-        $tax      = round(($subtotal - $discount) * config('cart.tax_rate',0),2);
-        $total    = round($subtotal - $discount + $tax,2);
+        $tax      = round(($subtotal - $discount) * config('cart.tax_rate', 0), 2);
+        $total    = round($subtotal - $discount + $tax, 2);
 
         if ($items->isEmpty()) {
             return redirect()
                 ->route('cart.index')
-                ->with('error','Your cart is empty.');
+                ->with('error', 'Your cart is empty.');
         }
 
-        return view('pages.checkout.index', compact('items','subtotal','discount','tax','total'));
+        return view('pages.checkout.index', compact('items', 'subtotal', 'discount', 'tax', 'total'));
     }
 
     /**
@@ -43,31 +46,35 @@ class CheckoutController extends Controller
      */
     public function paymentIntent(Request $request)
     {
-        $cart     = $this->getCart($request);
-        $items    = $cart->cartItems()->get();
+        $cart  = $this->getCart($request);
+        $items = $cart->cartItems()->get();
+
         if ($items->isEmpty()) {
-            return response()->json(['error'=>'Your cart is empty'], 422);
+            return response()->json(['error' => 'Your cart is empty'], 422);
         }
 
-        $subtotal = $items->sum(fn($i)=> $i->price * $i->quantity);
+        // all values here are in cents
+        $subtotal = $items->sum(fn($i) => $i->price * $i->quantity);
         $discount = $cart->discount ?? 0;
-        $tax      = round(($subtotal - $discount) * config('cart.tax_rate',0),2);
-        $amount   = intval(($subtotal - $discount + $tax) * 100); // cents
+        $tax      = round(($subtotal - $discount) * config('cart.tax_rate', 0), 2);
+
+        // total cents to charge
+        $amountCents = (int) round($subtotal - $discount + $tax);
 
         Stripe::setApiKey(config('services.stripe.secret'));
         $intent = PaymentIntent::create([
-            'amount'   => $amount,
+            'amount'   => $amountCents,
             'currency' => 'usd',
             'metadata' => [
-                'cart_id'    => $cart->id,
-                'discount'   => $discount,
-                'user_id'    => auth()->id(),
+                'cart_id'  => $cart->id,
+                'discount' => $discount,
+                'user_id'  => auth()->id(),
             ],
         ]);
 
         return response()->json([
             'clientSecret' => $intent->client_secret,
-            'amount'       => $amount/100,
+            'amount'       => $amountCents / 100, // e.g. 90 cents → 0.90 dollars
         ]);
     }
 
@@ -78,71 +85,124 @@ class CheckoutController extends Controller
     public function placeOrder(Request $request)
     {
         $data = $request->validate([
-            'shipping_address'=>'required|string',
-            'email'           =>'required|email',
-            'phone'           =>'nullable|string',
-            'payment_intent'  =>'required|string',
+            'shipping_address' => 'required|string',
+            'email'            => 'required|email',
+            'phone'            => 'nullable|string',
+            'payment_intent'   => 'required|string',
         ]);
 
-        // Verify with Stripe
         Stripe::setApiKey(config('services.stripe.secret'));
-        $pi = PaymentIntent::retrieve($data['payment_intent']);
-        if ($pi->status !== 'succeeded') {
-            return response()->json(['error'=>'Payment not successful'], 422);
+
+        // ── JSON/AJAX flow: confirm an existing PaymentIntent ──
+        if ($request->expectsJson()) {
+            $pi = PaymentIntent::retrieve($data['payment_intent']);
+            if ($pi->status !== 'succeeded') {
+                return response()->json(['error' => 'Payment not successful'], 422);
+            }
+            $stripePaymentId = $data['payment_intent'];
+        }
+        // ── Non‑AJAX/full‑flow: create a new PaymentIntent ──
+        else {
+            $cart     = $this->getCart($request);
+            $items    = $cart->cartItems()->get();
+            $subtotal = $items->sum(fn($i) => $i->price * $i->quantity);
+            $discount = $cart->discount ?? 0;
+            $tax      = round(($subtotal - $discount) * config('cart.tax_rate', 0), 2);
+            $amountCents = intval(($subtotal - $discount + $tax) * 100);
+
+            $intent = PaymentIntent::create([
+                'amount'   => $amountCents,
+                'currency' => 'usd',
+                'metadata' => [
+                    'cart_id'  => $cart->id,
+                    'discount' => $discount,
+                    'user_id'  => auth()->id(),
+                ],
+            ]);
+
+            $stripePaymentId = $intent->id;
         }
 
-        // Now everything else almost same as before:
-        $cart     = $this->getCart($request);
-        $items    = $cart->cartItems()->with('product')->get();
-        $subtotal = $items->sum(fn($i)=> $i->price * $i->quantity);
-        $discount = $cart->discount ?? 0;
-        $tax      = round(($subtotal - $discount) * config('cart.tax_rate',0),2);
-        $total    = round($subtotal - $discount + $tax,2);
-        $code     = $cart->promo_code;
+        // ── Gather/re‑use cart, items & totals ──
+        $cart     ??= $this->getCart($request);
+        $items    ??= $cart->cartItems()->with('product')->get();
+        $subtotal ??= $items->sum(fn($i) => $i->price * $i->quantity);
+        $discount ??= $cart->discount ?? 0;
+        $tax      ??= round(($subtotal - $discount) * config('cart.tax_rate', 0), 2);
+        $total     = round($subtotal - $discount + $tax, 2);
+        $code      = $cart->promo_code;
+        $amount    = $request->expectsJson()
+            ? intval(($subtotal - $discount + $tax) * 100)
+            : $amountCents;
 
-        // Persist Order
-        $order = Order::create([
-            'user_id'          => auth()->id(),
-            'shipping_address' => $data['shipping_address'],
-            'email'            => $data['email'],
-            'phone'            => $data['phone'],
-            'total'            => $total,
-            'status'           => 'paid',
-            'meta'             => json_encode(['payment_intent'=>$data['payment_intent']]),
-        ]);
+        $order = null;
 
-        // Persist each item
-        foreach ($items as $i) {
-            $order->orderItems()->create([
-                'product_id' => $i->product_id,
-                'name'       => $i->product->name,
-                'quantity'   => $i->quantity,
-                'price'      => $i->price,
-                'total'      => $i->price * $i->quantity,
+        DB::transaction(function() use (
+            $data, $cart, $items, $subtotal,
+            $discount, $tax, $total, $code, $amount,
+            $stripePaymentId,
+            & $order
+        ) {
+            // 1) Create the order into that outer variable
+            $order = Order::create([
+                'user_id'          => auth()->id(),
+                'shipping_address' => $data['shipping_address'],
+                'email'            => $data['email'],
+                'phone'            => $data['phone'] ?? null,
+                'total'            => $total,
+                'status'           => 'paid',
+                'meta'             => json_encode(['payment_intent' => $data['payment_intent']]),
+            ]);
+
+            // 2) Record the payment
+            app(PaymentController::class)->recordPayment(
+                $order,
+                $stripePaymentId,
+                $amount
+            );
+
+            // 3) Persist line items
+            foreach ($items as $i) {
+                $order->orderItems()->create([
+                    'product_id' => $i->product_id,
+                    'name'       => $i->product->name,
+                    'quantity'   => $i->quantity,
+                    'price'      => $i->price,
+                    'total'      => $i->price * $i->quantity,
+                ]);
+            }
+
+            // 4) Promo usage
+            if ($code) {
+                PromoCode::where('code', $code)->increment('used_count');
+            }
+
+            // 5) Clear the cart
+            CartItem::where('cart_id', $cart->id)->delete();
+            $cart->update(['promo_code' => null, 'discount' => 0, 'total' => 0]);
+
+            // 6) Emails
+            Mail::to($order->email)
+                ->queue(new OrderConfirmationMailable($order));
+            if ($admin = config('mail.admin_address')) {
+                Mail::to($admin)
+                    ->queue(new AdminOrderNotificationMail($order));
+            }
+            Mail::to($order->email)
+                ->later(now()->addDays(7), new ReviewRequestMailable($order));
+        });
+
+        // Return JSON for AJAX, or a plain 200 for form‐post
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success'  => true,
+                'order_id' => $order->id,
             ]);
         }
 
-        // Promo use count
-        if ($code) {
-            PromoCode::where('code',$code)->increment('used_count');
-        }
-
-        // Clear cart
-        CartItem::where('cart_id',$cart->id)->delete();
-        $cart->update(['promo_code'=>null,'discount'=>0,'total'=>0]);
-
-        // Emails
-        Mail::to($order->email)->queue(new Receipt($order));
-        if ($admin = config('mail.admin_address')) {
-            Mail::to($admin)->queue(new OrderPlaced($order));
-        }
-
-        return response()->json(['success'=>true,'order_id'=>$order->id]);
+        return response('', 200);
     }
 
-    /**
-     * AJAX: apply a promo code to the cart and return new totals.
-     */
     public function applyPromo(Request $request)
     {
         $data = $request->validate([
@@ -156,7 +216,6 @@ class CheckoutController extends Controller
             return response()->json(['error' => 'Your cart is empty.'], 422);
         }
 
-        // look up the promo
         $promo = PromoCode::where('code', $data['code'])
             ->where('active', true)
             ->first();
@@ -170,35 +229,36 @@ class CheckoutController extends Controller
 
         $subtotal = $items->sum(fn($i) => $i->price * $i->quantity);
 
-        // compute discount
         if ($promo->type === 'fixed') {
             $discount = min($promo->discount, $subtotal);
-        } else { // percent
+        } else {
             $discount = round($subtotal * $promo->discount / 100, 2);
         }
 
-        // persist onto cart
         $cart->update([
             'promo_code' => $promo->code,
             'discount'   => $discount,
         ]);
 
-        // now recalc tax + total
+        // calculate tax & total
         ['tax' => $tax, 'total' => $total] = $this->calculateTotals($subtotal, $discount);
 
         return response()->json(compact('subtotal', 'discount', 'tax', 'total'));
     }
 
     /**
-     * helper: from subtotal & discount, build tax + total
+     * Compute tax and total based on config('cart.tax_rate').
+     *
+     * @param  float|int  $subtotal  amount before discount
+     * @param  float|int  $discount  discount amount
+     * @return array{tax: float, total: float}
      */
-    private function calculateTotals(float $subtotal, float $discount): array
+    private function calculateTotals($subtotal, $discount): array
     {
-        $taxRate = config('cart.tax_rate', 0);
-        $tax     = round(($subtotal - $discount) * $taxRate, 2);
-        $total   = round($subtotal - $discount + $tax, 2);
+        $tax   = round(($subtotal - $discount) * config('cart.tax_rate', 0), 2);
+        $total = round($subtotal - $discount + $tax, 2);
 
-        return compact('tax', 'total');
+        return ['tax' => $tax, 'total' => $total];
     }
 
     /**
@@ -215,10 +275,12 @@ class CheckoutController extends Controller
     private function getCart(Request $request): Cart
     {
         if (auth()->check()) {
-            return Cart::firstOrCreate(['user_id'=>auth()->id()]);
+            return Cart::firstOrCreate(['user_id' => auth()->id()]);
         }
+
         $sessionId = $request->session()->get('cart_session_id', Str::uuid());
-        $request->session()->put('cart_session_id',$sessionId);
-        return Cart::firstOrCreate(['session_id'=>$sessionId]);
+        $request->session()->put('cart_session_id', $sessionId);
+
+        return Cart::firstOrCreate(['session_id' => $sessionId]);
     }
 }

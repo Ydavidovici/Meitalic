@@ -160,55 +160,87 @@ function adminDashboard() {
 }
 Alpine.data('adminDashboard', adminDashboard);
 
-// — User dashboard component (unchanged) —
 function userDashboard() {
     return {
-        dateRange: 'all',
-        status:    '',
-        modalOpen: false,
+        // ── Order Details Modal ──
         selectedOrder: null,
+        isOrderModalOpen: false,
 
         async openOrder(id) {
             try {
-                let res = await fetch(`/order/${id}`, {headers:{'Accept':'application/json'}});
+                const res = await fetch(`/order/${id}`, {
+                    headers: { 'Accept': 'application/json' }
+                });
                 if (!res.ok) throw new Error(res.statusText);
                 this.selectedOrder = await res.json();
-                this.modalOpen     = true;
-            } catch(e) {
+                this.isOrderModalOpen = true;
+            } catch (e) {
                 alert('Failed to load order: ' + e.message);
             }
         },
-
-        closeModal() {
-            this.modalOpen     = false;
+        closeOrderModal() {
+            this.isOrderModalOpen = false;
             this.selectedOrder = null;
         },
 
+        // ── Review Modal ──
+        isReviewModalOpen: false,
+        modalData: {
+            orderId: null,
+            itemId: null,
+            productId: null,
+            rating: 1,
+            body: ''
+        },
+        // Make sure your dashboard view includes:
+        // <meta name="reviews-store-route" content="{{ route('dashboard.reviews.store') }}">
+        get modalAction() {
+            return document
+                .querySelector('meta[name="reviews-store-route"]')
+                .content;
+        },
+        get modalTitle() {
+            return 'Leave a Review';
+        },
+        openReviewModal(data) {
+            this.modalData = { ...this.modalData, ...data };
+            this.isReviewModalOpen = true;
+        },
+        closeReviewModal() {
+            this.isReviewModalOpen = false;
+        },
+
+        // ── Order Actions ──
         async cancelOrder(id) {
-            let res = await fetch(`/order/${id}/cancel`, {
-                method:'PATCH',
-                headers:{
-                    'Content-Type':'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            const res = await fetch(`/order/${id}/cancel`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document
+                        .querySelector('meta[name="csrf-token"]')
+                        .content
                 }
             });
             if (!res.ok) return alert('Cancel failed');
-            this.selectedOrder.status = 'canceled';
+            if (this.selectedOrder) this.selectedOrder.status = 'canceled';
         },
 
         async returnOrder(id) {
-            let res = await fetch(`/order/${id}/return`, {
-                method:'PATCH',
-                headers:{
-                    'Content-Type':'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            const res = await fetch(`/order/${id}/return`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document
+                        .querySelector('meta[name="csrf-token"]')
+                        .content
                 }
             });
             if (!res.ok) return alert('Return failed');
-            this.selectedOrder.status = 'returned';
+            if (this.selectedOrder) this.selectedOrder.status = 'returned';
         }
-    }
+    };
 }
+
 Alpine.data('userDashboard', userDashboard);
 
 // — Global form validator + AJAX filters for admin products (unchanged) —

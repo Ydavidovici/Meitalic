@@ -1,5 +1,5 @@
 <?php
-// app/Mail/AdminOrderNotificationMail.php
+// app/Mail/ReturnRequestMailable.php
 
 namespace App\Mail;
 
@@ -11,7 +11,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class AdminOrderNotificationMail extends Mailable implements ShouldQueue
+class ReturnRequestMailable extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
@@ -25,14 +25,14 @@ class AdminOrderNotificationMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'New Order Placed — #' . $this->order->id,
+            subject: 'Return Requested — #' . $this->order->id,
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            markdown: 'emails.admin.order_notification',
+            markdown: 'emails.return_request',
         );
     }
 

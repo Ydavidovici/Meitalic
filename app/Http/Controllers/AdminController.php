@@ -3,11 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;      // ← Make sure this import is present
+use Illuminate\Validation\Rule;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use App\Models\PromoCode;
+use App\Models\Review;
 
 class AdminController extends Controller
 {
@@ -144,6 +145,32 @@ class AdminController extends Controller
             ));
         }
 
+        $reviewCounts = [
+            'pending'  => Review::where('status','pending')->count(),
+            'approved' => Review::where('status','approved')->count(),
+            'rejected' => Review::where('status','rejected')->count(),
+        ];
+
+// a small sample list for each status (or paginate if you prefer)
+        $pendingReviews  = Review::with('user','product','orderItem.order')
+            ->where('status','pending')
+            ->latest()
+            ->take(10)
+            ->get();
+
+        $approvedReviews = Review::with('user','product','orderItem.order')
+            ->where('status','approved')
+            ->latest()
+            ->take(10)
+            ->get();
+
+        $rejectedReviews = Review::with('user','product','orderItem.order')
+            ->where('status','rejected')
+            ->latest()
+            ->take(10)
+            ->get();
+
+
         return view('pages.admin.dashboard', compact(
             'kpis',
             'counts',
@@ -161,7 +188,11 @@ class AdminController extends Controller
             'analyticsHtml',
             'products',
             'allBrands',
-            'allCategories'
+            'allCategories',
+            'reviewCounts',
+            'pendingReviews',
+            'approvedReviews',
+            'rejectedReviews'
         ));
     }
 
@@ -249,5 +280,55 @@ class AdminController extends Controller
 
         $order->update($data);
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * GET /admin/reviews
+     */
+    public function reviewsIndex(Request $request)
+    {
+        abort_if(! $request->user()?->is_admin, 403);
+
+        $q = Review::with('user','product','orderItem.order');
+
+        if ($pid = $request->query('product_id')) {
+            $q->where('product_id', $pid);
+        }
+        if ($status = $request->query('status')) {
+            $q->where('status', $status);
+        }
+
+        $reviews = $q->latest()
+            ->paginate(20)
+            ->appends($request->only('product_id','status'));
+
+        return view('pages.admin.reviews.index', compact('reviews'));
+    }
+
+    /**
+     * PATCH /admin/reviews/{review}/approve
+     */
+    public function reviewsApprove(Review $review)
+    {
+        $review->update(['status' => 'approved']);
+        return back()->with('success','Review approved.');
+    }
+
+    /**
+     * PATCH /admin/reviews/{review}/reject
+     */
+    public function reviewsReject(Review $review)
+    {
+        $review->update(['status' => 'rejected']);
+        return back()->with('success','Review rejected.');
+    }
+
+    /**
+     * DELETE /admin/reviews/{review}
+     */
+    public function reviewsDestroy(Review $review)
+    {
+        $review->delete();
+        return back()->with('success','Review deleted.');
     }
 }

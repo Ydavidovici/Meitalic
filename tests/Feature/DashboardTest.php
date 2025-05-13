@@ -59,7 +59,6 @@ class DashboardTest extends TestCase
                 'recentOrders',
                 'allOrders',
                 'recommendations',
-                'activePromos',
             ])
             // numeric metrics
             ->assertViewHas('totalOrders', 3)
@@ -70,8 +69,6 @@ class DashboardTest extends TestCase
             ->assertSeeText('Spend This Year')
             ->assertSeeText('Store Credit')
             ->assertSeeText('You Might Like')
-            ->assertSeeText('Active Promo Codes')
-            ->assertSeeText('SAVE10')
             // no admin UI
             ->assertDontSee('Manage Products')
             ->assertDontSee('Revenue Today');
@@ -138,8 +135,8 @@ class DashboardTest extends TestCase
                 'slowMovers',
                 'newCustomersToday',
                 'topCustomers',
-                'activeCoupons',
-                'expiringCoupons',
+                'activePromos',
+                'expiringPromos',
                 'analyticsHtml',
             ])
             // KPI headings

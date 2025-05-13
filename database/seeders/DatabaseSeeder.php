@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             PromoCodeSeeder::class,
             CartSeeder::class,
             CartItemSeeder::class,
+            ReviewSeeder::class
         ]);
 
         \App\Models\User::factory()->regular()->create();

@@ -17,6 +17,7 @@ use App\Http\Controllers\{
     AdminController,
     PromoCodeController,
     NewsletterController,
+    ReviewController
 };
 
 // ───────────── Public Pages ────────────────
@@ -35,7 +36,7 @@ Route::post('/stripe/webhook', [PaymentController::class, 'handleWebhook']);
 
 // ───────────── Checkout & Orders ───────────
 Route::get('/checkout',           [CheckoutController::class,'checkout'])
-    ->name('checkout.index');
+    ->name('checkout');
 Route::post('/checkout/apply-promo',[CheckoutController::class,'applyPromo'])
     ->name('checkout.applyPromo');
 Route::post('/checkout/place-order',[CheckoutController::class,'placeOrder'])
@@ -66,14 +67,34 @@ require __DIR__.'/auth.php';
 Route::middleware('auth')->group(function () {
 
     // Dashboard & Account
-    Route::get('/dashboard',        [AccountController::class,'index'])->name('account.index');
+    Route::get('/dashboard',        [AccountController::class,'index'])->name('dashboard');
     Route::get('/dashboard/orders', [AccountController::class,'orders'])->name('dashboard.orders');
     Route::get('/dashboard/cart',   [AccountController::class,'cart'])->name('dashboard.cart');
 
     // Single order details (JSON modal)
     Route::get('/order/{order}',    [AccountController::class,'show'])->name('order.show');
-    Route::patch('/order/{order}/cancel',[AccountController::class,'cancel'])->name('order.cancel');
-    Route::patch('/order/{order}/return',[AccountController::class,'return'])->name('order.return');
+    Route::patch('/order/{order}/cancel', [OrderController::class,'cancel'])
+        ->name('order.cancel');
+    Route::post('/order/{order}/return',[OrderController::class,'requestReturn'])
+        ->name('order.return');
+
+    // Reviews
+    Route::get('/dashboard/reviews', [ReviewController::class,'userIndex'])
+        ->name('dashboard.reviews.index');
+    Route::get(
+        '/dashboard/orders/{order}/items/{item}/review',
+        [ReviewController::class, 'create']
+    )->name('dashboard.reviews.create');
+    Route::post(
+        '/dashboard/reviews',
+        [ReviewController::class, 'store']
+    )->name('dashboard.reviews.store');
+    Route::get(
+        '/dashboard/reviews/{review}/edit',
+        [ReviewController::class, 'edit']
+    )->name('dashboard.reviews.edit');
+    Route::match(['put','patch'], '/dashboard/reviews/{review}', [ReviewController::class, 'update'])
+        ->name('dashboard.reviews.update');
 
     // Profile
     Route::get('/profile',   [ProfileController::class,'edit'])->name('profile.edit');
@@ -97,6 +118,10 @@ Route::middleware('auth')->group(function () {
         Route::patch('/orders/{order}',        [AdminController::class,'update'])->name('orders.update');
         Route::post('/orders/bulk-update',     [AdminController::class,'bulkUpdateOrderStatus'])
             ->name('orders.bulkUpdate');
+        Route::patch('/orders/{order}/return/approve', [OrderController::class, 'approveReturn'])
+            ->name('orders.return.approve');
+        Route::patch('/orders/{order}/return/reject', [OrderController::class, 'rejectReturn'])
+            ->name('orders.return.reject');
 
         // inventory
         Route::patch('/products/{product}/adjust',[AdminController::class,'adjustInventory'])
@@ -112,6 +137,17 @@ Route::middleware('auth')->group(function () {
                 'update'=>'products.update',
                 'destroy'=>'products.destroy',
             ]);
+
+
+        Route::get('reviews',             [AdminController::class,'reviewsIndex'])
+            ->name('reviews.index');
+        Route::patch('reviews/{review}/approve', [AdminController::class,'reviewsApprove'])
+            ->name('reviews.approve');
+        Route::patch('reviews/{review}/reject',  [AdminController::class,'reviewsReject'])
+            ->name('reviews.reject');
+        Route::delete('reviews/{review}',        [AdminController::class,'reviewsDestroy'])
+            ->name('reviews.destroy');
+
 
         Route::post   ('promo',         [PromoCodeController::class,'store'])->name('promo.store');
         Route::put    ('promo/{promo}', [PromoCodeController::class,'update'])->name('promo.update');

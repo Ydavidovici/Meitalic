@@ -97,6 +97,20 @@
                                 <button @click="singleMark({{ $order->id }}, 'shipped')" class="text-sm text-blue-600 hover:underline">Mark Shipped</button>
                                 <button @click="singleMark({{ $order->id }}, 'delivered')" class="text-sm text-green-600 hover:underline">Mark Delivered</button>
                                 <button @click.stop="openOrderEdit({{ $order->id }})" class="text-sm text-indigo-600 hover:underline">Edit</button>
+
+                                {{-- NEW: Approve / Reject Return --}}
+                                @if($order->status === 'pending_return')
+                                    <form method="POST" action="{{ route('admin.orders.updateStatus', $order) }}" class="inline">
+                                        @csrf @method('PATCH')
+                                        <input type="hidden" name="status" value="returned">
+                                        <button class="text-sm text-green-600 hover:underline">Approve Return</button>
+                                    </form>
+                                    <form method="POST" action="{{ route('admin.orders.updateStatus', $order) }}" class="inline">
+                                        @csrf @method('PATCH')
+                                        <input type="hidden" name="status" value="return_rejected">
+                                        <button class="text-sm text-red-600 hover:underline">Reject Return</button>
+                                    </form>
+                                @endif
                             </td>
                         </tr>
                     @endforeach
@@ -174,6 +188,85 @@
                 </div>
             </div>
         </x-modal>
+
+        {{-- 2.c) REVIEW MANAGEMENT --}}
+        <div class="card mb-8 bg-white rounded shadow p-6" x-data="{ tab:'pending' }">
+            <h3 class="font-bold mb-4">Review Management</h3>
+
+            {{-- tabs --}}
+            <ul class="flex space-x-4 mb-4 border-b">
+                @foreach(['pending','approved','rejected'] as $st)
+                    <li>
+                        <button
+                            @click="tab='{{ $st }}'"
+                            :class="tab==='{{ $st }}'
+                   ? 'border-b-2 border-indigo-600 text-indigo-600'
+                   : 'text-gray-600 hover:text-gray-800'"
+                            class="pb-1"
+                        >
+                            {{ ucfirst($st) }} ({{ $reviewCounts[$st] }})
+                        </button>
+                    </li>
+                @endforeach
+            </ul>
+
+            {{-- content sections --}}
+            @foreach(['pending','approved','rejected'] as $st)
+                <div x-show="tab==='{{ $st }}'">
+                    @php
+                        $list = ${$st . 'Reviews'};
+                    @endphp
+
+                    @if($list->isEmpty())
+                        <p class="text-gray-600">No {{ $st }} reviews.</p>
+                    @else
+                        <table class="w-full text-left border-collapse mb-4">
+                            <thead class="bg-gray-100">
+                            <tr>
+                                <th class="px-4 py-2">Product</th>
+                                <th class="px-4 py-2">User</th>
+                                <th class="px-4 py-2">Rating</th>
+                                <th class="px-4 py-2">Comment</th>
+                                <th class="px-4 py-2">Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @foreach($list as $r)
+                                <tr class="border-t">
+                                    <td class="px-4 py-2">
+                                        <a href="{{ route('products.show',$r->product->slug) }}"
+                                           class="hover:underline">
+                                            {{ $r->product->name }}
+                                        </a>
+                                    </td>
+                                    <td class="px-4 py-2">{{ $r->user->name }}</td>
+                                    <td class="px-4 py-2">{{ $r->rating }} ★</td>
+                                    <td class="px-4 py-2">{{ Str::limit($r->body, 50) }}</td>
+                                    <td class="px-4 py-2 space-x-2">
+                                        @if($st === 'pending')
+                                            <form method="POST" action="{{ route('admin.reviews.approve',$r) }}" class="inline">
+                                                @csrf @method('PATCH')
+                                                <button class="text-green-600 hover:underline">Approve</button>
+                                            </form>
+                                            <form method="POST" action="{{ route('admin.reviews.reject',$r) }}" class="inline">
+                                                @csrf @method('PATCH')
+                                                <button class="text-red-600 hover:underline">Reject</button>
+                                            </form>
+                                        @else
+                                            <form method="POST" action="{{ route('admin.reviews.destroy',$r) }}" class="inline">
+                                                @csrf @method('DELETE')
+                                                <button class="text-red-600 hover:underline">Delete</button>
+                                            </form>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                            </tbody>
+                        </table>
+                    @endif
+                </div>
+            @endforeach
+        </div>
 
         {{-- 3. INVENTORY MANAGEMENT --}}
         <div class="card mb-8 bg-white rounded shadow">

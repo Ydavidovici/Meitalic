@@ -106,7 +106,7 @@
                     <span class="font-semibold">$<span x-text="total.toFixed(2)"></span></span>
                 </div>
                 <a
-                    href="{{ route('checkout.index') }}"
+                    href="{{ route('checkout') }}"
                     class="block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded"
                 >
                     Checkout

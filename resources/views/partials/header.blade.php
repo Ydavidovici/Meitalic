@@ -57,7 +57,7 @@
                             $user = auth()->user();
                             $accountUrl = $user->is_admin
                                 ? route('admin.dashboard')
-                                : route('account.index');
+                                : route('dashboard');
                             $accountActive = $user->is_admin
                                 ? request()->routeIs('admin.dashboard')
                                 : request()->routeIs('account.*');

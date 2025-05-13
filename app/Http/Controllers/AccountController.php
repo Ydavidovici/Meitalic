@@ -24,12 +24,14 @@ class AccountController extends Controller
 
         // 2) Recent & upcoming orders (just list most recent 5)
         $recentOrders = Order::where('user_id', $user->id)
+            ->with('orderItems.review')
             ->latest()
             ->take(5)
             ->get();
 
         // 3) Full order history (paginated)
         $allOrders = Order::where('user_id', $user->id)
+            ->with('orderItems.review')
             ->latest()
             ->paginate(10);
 
@@ -39,7 +41,6 @@ class AccountController extends Controller
             ->take(8)
             ->get();
 
-        // **Note: no promo codes passed to users!**
 
         return view('pages.dashboard.index', [
             'totalOrders'    => $totalOrders,
@@ -79,25 +80,6 @@ class AccountController extends Controller
         ]);
     }
 
-    /**
-     * Cancel an order.
-     */
-    public function cancel(Order $order)
-    {
-        $this->authorize('update', $order);
-        $order->update(['status' => 'canceled']);
-        return response()->json(['status' => 'canceled']);
-    }
-
-    /**
-     * Return an order.
-     */
-    public function return(Order $order)
-    {
-        $this->authorize('update', $order);
-        $order->update(['status' => 'returned']);
-        return response()->json(['status' => 'returned']);
-    }
 
     /**
      * Show a simple cart summary page (optional).
@@ -121,4 +103,19 @@ class AccountController extends Controller
 
         return view('pages.dashboard.orders', compact('orders'));
     }
+
+    /**
+     * Show all reviews this user has left.
+     */
+    public function reviews(Request $request)
+    {
+        $reviews = $request->user()
+            ->reviews()                        // make sure User model has reviews()
+            ->with(['product','orderItem.order'])
+            ->latest()
+            ->paginate(10);
+
+        return view('pages.dashboard.reviews.index', compact('reviews'));
+    }
+
 }

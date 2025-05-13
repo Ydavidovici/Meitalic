@@ -1,5 +1,5 @@
 <?php
-// app/Mail/AdminOrderNotificationMail.php
+// app/Mail/OrderDeliveredMailable.php
 
 namespace App\Mail;
 
@@ -11,7 +11,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class AdminOrderNotificationMail extends Mailable implements ShouldQueue
+class OrderDeliveredMailable extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
@@ -25,14 +25,14 @@ class AdminOrderNotificationMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'New Order Placed — #' . $this->order->id,
+            subject: 'Order Delivered — #' . $this->order->id,
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            markdown: 'emails.admin.order_notification',
+            markdown: 'emails.orders.delivered',
         );
     }
 

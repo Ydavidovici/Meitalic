@@ -84,4 +84,9 @@ class Product extends Model
     {
         return $query->where('is_featured', true);
     }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
 }

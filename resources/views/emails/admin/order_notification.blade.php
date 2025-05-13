@@ -1,12 +1,11 @@
-<x-mail::message>
-# Introduction
+@extends('emails.layouts.email')
 
-The body of your message.
+@section('subject', 'New Order Placed — #'.$order->id)
 
-<x-mail::button :url="''">
-Button Text
-</x-mail::button>
-
-Thanks,<br>
-{{ config('app.name') }}
-</x-mail::message>
+@section('content')
+    <p>A new order has been placed by <strong>{{ $order->user->name }}</strong> ({{ $order->user->email }}).</p>
+    <p><strong>Order Total:</strong> ${{ number_format($order->total, 2) }}</p>
+    <p>
+        <a href="{{ route('admin.orders.show', $order) }}">View in Admin Panel</a>
+    </p>
+@endsection

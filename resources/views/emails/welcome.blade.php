@@ -1,12 +1,8 @@
-<x-mail::message>
-# Introduction
+@extends('emails.layouts.email')
 
-The body of your message.
+@section('subject', 'Welcome to '.config('app.name'))
 
-<x-mail::button :url="''">
-Button Text
-</x-mail::button>
-
-Thanks,<br>
-{{ config('app.name') }}
-</x-mail::message>
+@section('content')
+    <p>Hi {{ $user->name }},</p>
+    <p>Welcome aboard! We’re thrilled to have you with us.</p>
+@endsection
