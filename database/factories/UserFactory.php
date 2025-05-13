@@ -56,7 +56,7 @@ class UserFactory extends Factory
         return $this->state(fn (array $attrs) => [
             'name'               => 'Regular User',
             'email'              => 'user@meitalic.test',
-            'password'           => static::$password ??= Hash::make('UserPass123'),
+            'password'           => Hash::make('UserPass123'),
             'is_admin'           => false,
             'email_verified_at'  => now(),
         ]);
