@@ -43,5 +43,4 @@
             </form>
         </div>
     </div>
-    @vite('resources/js/shop.js')
 @endsection

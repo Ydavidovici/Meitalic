@@ -23,6 +23,11 @@
 @tailwind utilities;
 
 @layer base {
+    html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+    }
     /* Alpine’s [x‑cloak] support (shared) */
     [x-cloak] { display: none !important; }
 }
@@ -73,7 +78,7 @@
     /* —— Page scaffolding —— */
     .layout-root          { @apply overflow-y-scroll font-sans antialiased text-text bg-gradient-to-br from-secondary via-primary; }
     .layout-vh            { @apply flex flex-col min-h-screen; }
-    .layout-main          { @apply flex-grow pt-16 container mx-auto px-4 sm:px-6 lg:px-8; }
+    .layout-main          { @apply w-full pt-16 w-full px-4 sm:px-6 lg:px-8; }
 
     /* —— Cart overlay & sidebar —— */
     .cart-overlay         { @apply fixed inset-0 z-40; }
@@ -112,7 +117,7 @@
     }
 
     .site-header__inner {
-        @apply container flex items-center justify-between py-6 px-4 sm:px-6 lg:px-8;
+        @apply w-full flex items-center justify-between py-6 px-4 sm:px-6 lg:px-8;
     }
 
     /* —— Logo —— */

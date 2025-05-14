@@ -82,40 +82,61 @@
     <!-- About -->
     <section id="about" class="about">
         <div class="about__inner">
-            <div class="about__stack">
-                <h2 class="section-title">About the Brand</h2>
-                <blockquote class="about__quote">
-                    “A short and powerful quote to inspire customers.”
-                </blockquote>
+            <!-- Main title & quote -->
+            <h2 class="section-title">About the Brand</h2>
+            <blockquote class="about__quote mb-12">
+                “A short and powerful quote to inspire customers.”
+            </blockquote>
+
+            <!-- Our Philosophy -->
+            <div class="about__section about__philosophy">
+                <h2 class="section-subtitle">Our Philosophy</h2>
+                <div class="philosophy__card">
+                    <p class="philosophy__text">
+                        We believe in clean, effective skincare powered by nature and science.
+                        Our products feature natural botanicals, hydrating formulas,
+                        cruelty‑free practices & dermatologist‑tested safety—
+                        all rigorously blended to bring out your best skin.
+                    </p>
+                </div>
             </div>
-        </div>
+
+            <!-- Our Mission -->
+            <div class="about__section about__mission">
+                <h2 class="section-subtitle">Our Mission</h2>
+                <div class="mission__card">
+                    <p class="mission__text">
+                        From lab to bottle, every formulation is meticulously developed
+                        and tested for maximum efficacy and safety—so you can trust
+                        what you put on your skin.
+                    </p>
+                </div>
+            </div>
+
     </section>
 
-    <!-- Benefits -->
-    <section class="benefits">
-        <div class="benefits__inner">
-            <div class="benefits__grid">
-                @foreach([
-                    'Natural Ingredients',
-                    'Hydrating Formula',
-                    'Cruelty-Free',
-                    'Dermatologist Tested'
-                ] as $b)
-                    <div class="benefits__card">{{ $b }}</div>
-                @endforeach
-            </div>
-        </div>
-    </section>
+
+
 
     <!-- Reviews -->
     <section class="reviews">
         <div class="reviews__inner">
-            <div class="reviews__stack">
-                <h2 class="section-title">Customer Reviews</h2>
-                <p class="text-neutral-600">
-                    “A customer testimonial... no one ever raving any orates.”
-                </p>
-                <div class="reviews__stars">★★★★★</div>
+            <h2 class="section-title">Customer Reviews</h2>
+
+            <div class="reviews__grid">
+                {{-- Ideally loop through your actual reviews; here are two examples: --}}
+                <div class="reviews__card">
+                    <p class="reviews__text">
+                        “A customer testimonial... no one ever raving any orates.”
+                    </p>
+                    <div class="reviews__stars">★★★★★</div>
+                </div>
+                <div class="reviews__card">
+                    <p class="reviews__text">
+                        “Another glowing review praising the quality and results!”
+                    </p>
+                    <div class="reviews__stars">★★★★★</div>
+                </div>
             </div>
         </div>
     </section>
@@ -123,9 +144,10 @@
     <!-- Newsletter -->
     <section class="newsletter">
         <div class="newsletter__inner">
-            <div class="newsletter__stack">
-                <h2 class="section-title">Join Our Newsletter</h2>
-                <p class="text-neutral-600">Get 10% off your first order</p>
+            <h2 class="section-title">Join Our Newsletter</h2>
+
+            <div class="newsletter__card">
+                <p class="newsletter__text mb-4">Get 10% off your first order</p>
                 <form class="newsletter__form">
                     <input
                         type="email"
@@ -139,4 +161,5 @@
             </div>
         </div>
     </section>
+
 @endsection
