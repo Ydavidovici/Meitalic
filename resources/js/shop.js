@@ -7,18 +7,6 @@ import Alpine from 'alpinejs';
 // Expose Alpine globally
 window.Alpine = Alpine;
 
-// ── CSS Imports ──
-
-// Shop page styles
-import '../css/pages/home.css';
-import '../css/pages/products.css';
-import '../css/pages/product.css';
-import '../css/pages/cart/index.css';
-
-// Partials
-
-import '../css/partials/product-grid.css';
-
 // ── Alpine Stores ──
 // Cart store & sidebar
 Alpine.store('cart', {

@@ -5,7 +5,6 @@ import './bootstrap';
 import Alpine from 'alpinejs';
 window.Alpine = Alpine;
 
-import '../css/globals.css'
 // ── Auth store (used by your nav to show Login/Logout) ──
 Alpine.store('auth', {
     isAuthenticated: window.isAuthenticated

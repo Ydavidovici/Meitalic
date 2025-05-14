@@ -11,13 +11,9 @@ const TAX_RATE = parseFloat(
     document.querySelector('meta[name="tax-rate"]').content
 ) || 0;
 
-// ── CSS Imports ──
-//import '../css/globals.css';
-//import '../css/layouts/app.css';
-// Checkout page styles
+
 import '../css/pages/checkout/index.css';
 import '../css/pages/checkout/success.css';
-// Partials
 
 
 // ── Alpine Stores ──

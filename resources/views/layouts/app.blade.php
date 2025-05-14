@@ -15,10 +15,12 @@
 
 
     @vite([
-                'resources/css/globals.css',
-                //'resources/css/layouts/app.css',
-                //'resources/css/partials/header.css',
-                //'resources/css/partials/footer.css',
+      'resources/css/globals.css',
+      'resources/css/pages/home.css',
+      'resources/css/pages/products.css',
+      'resources/css/pages/product.css',
+      'resources/css/pages/cart/index.css',
+      'resources/css/partials/product-grid.css',
     ])
     @stack('styles')
 </head>
