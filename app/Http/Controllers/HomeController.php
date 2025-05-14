@@ -11,7 +11,7 @@ class HomeController extends Controller
         // grab 5 random featured products
         $featuredProducts = Product::featured()
             ->inRandomOrder()
-            ->take(5)
+            ->take(4)
             ->get();
 
         return view('pages.home', compact('featuredProducts'));
