@@ -56,7 +56,6 @@
     .hero__image {
         @apply w-full h-auto
         rounded-2xl   /* soft corners */
-        shadow-lg     /* gentle lift */
         object-cover;
     }
 
