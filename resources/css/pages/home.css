@@ -16,9 +16,48 @@
         @apply w-full py-16;
     }
 
-    /*—— 2) Hero stays full‑bleed gradient ——*/
     .hero {
-        @apply section bg-gradient-to-br from-secondary via-primary relative z-10;
+        @apply section;        /* w-full + py-16 */
+    }
+
+    /* 2) Inner wrapper becomes our 2‑col grid */
+    .hero__inner {
+        @apply max-w-screen-lg mx-auto
+        grid grid-cols-1 lg:grid-cols-2
+        items-center gap-8
+        px-6 sm:px-8 lg:px-12;
+    }
+
+    /* 3) Text block */
+    .hero__content {
+        @apply text-center lg:text-left space-y-4 lg:space-y-6;
+    }
+
+    .hero__title {
+        @apply text-4xl sm:text-5xl md:text-6xl font-bold text-text;
+    }
+
+    .hero__subtitle {
+        @apply text-lg sm:text-xl italic text-neutral-700 max-w-md mx-auto lg:mx-0;
+    }
+
+    .hero__cta {
+        @apply inline-block btn-primary mt-4 px-8 py-3 text-lg rounded-full;
+    }
+
+    .hero__figure {
+        @apply hidden lg:block;
+        /* make 100% sure it isn't getting any white bg/padding */
+        background: transparent !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .hero__image {
+        @apply w-full h-auto
+        rounded-2xl   /* soft corners */
+        shadow-lg     /* gentle lift */
+        object-cover;
     }
 
     /*—— 3) Everything else is just plain stripes ——*/
@@ -32,7 +71,6 @@
     }
 
     /*—— 4) Inner wrappers: just center + padding, no bg ——*/
-    .hero__inner,
     .featured__inner,
     .categories__inner,
     .about__inner,
@@ -48,22 +86,7 @@
         @apply text-3xl font-bold mb-8 text-center text-center;
     }
 
-    /*—— 6) Hero sub‑components (unchanged) ——*/
-    .hero__content {
-        @apply max-w-screen-lg mx-auto text-center lg:text-left;
-    }
-    .hero__stack {
-        @apply space-y-4 transform -translate-y-8;
-    }
-    .hero__title {
-        @apply text-4xl sm:text-5xl font-bold text-text leading-tight;
-    }
-    .hero__subtitle {
-        @apply italic text-lg text-neutral-700 max-w-xl mx-auto lg:mx-0;
-    }
-    .hero__cta {
-        @apply btn-primary w-max;
-    }
+
 
     /*—— 7) Featured Products grid & cards ——*/
     .featured__title {

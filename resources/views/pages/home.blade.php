@@ -11,18 +11,24 @@
     <section class="hero">
         <div class="hero__inner">
             <div class="hero__content">
-                <div class="hero__stack">
-                    <h1 class="hero__title">Meitalic</h1>
-                    <p class="hero__subtitle">
-                        Where elegance meets skincare.
-                    </p>
-                </div>
-                <a href="{{ route('products.index') }}" class="hero__cta">
-                    Shop Now
-                </a>
+                <h1 class="hero__title">Meitalic</h1>
+                <p class="hero__subtitle">Where elegance meets skincare.</p>
+                <a href="{{ route('products.index') }}" class="hero__cta">Shop Now</a>
             </div>
+
+            <figure class="hero__figure">
+                <img
+                    src="{{ asset('images/hero-photo.png') }}"
+                    alt="Elegant woman"
+                    class="hero__image"
+                />
+                <figcaption class="sr-only">
+                    Woman with glowing skin in a soft‑lit portrait.
+                </figcaption>
+            </figure>
         </div>
     </section>
+
 
     <!-- Featured Products -->
     @if($featuredProducts->count())
