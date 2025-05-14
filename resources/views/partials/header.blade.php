@@ -99,11 +99,6 @@
             <li class="site-nav__item">
                 <button @click="$store.cart.toggle()" class="cart-toggle" aria-label="Cart">
                     🛒
-                    <span
-                        x-show="$store.cart.open"
-                        x-text="'(' + $data.items?.length + ')'"
-                        class="cart-toggle__badge"
-                    ></span>
                 </button>
             </li>
         </ul>
