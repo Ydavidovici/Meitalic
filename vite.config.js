@@ -30,8 +30,6 @@ export default defineConfig({
 
                 // 5. your JS
                 'resources/js/globals.js',
-                'resources/js/shop.js',
-                'resources/js/checkout.js',
                 'resources/js/user-dashboard.js',
                 'resources/js/admin-dashboard.js'
             ],

@@ -24,7 +24,7 @@
     ])
     @stack('styles')
 </head>
-<body class="layout-root">
+<body x-data="{}" class="layout-root">
 <div class="layout-vh">
 
     @include('partials.header')
@@ -33,15 +33,14 @@
     <div
         x-data="{}"
         x-show="$store.cart.open"
+        x-cloak                          {{-- ←–– hide initially, Alpine will remove when true --}}
         x-on:keydown.window.escape="$store.cart.close()"
         class="cart-overlay"
-        style="display: none;"
     >
         <div class="cart-backdrop" @click="$store.cart.close()"></div>
 
         <aside
             x-data="cartSidebar()"
-            x-ref="cartSidebar"
             x-init="load()"
             class="cart-panel"
         >
@@ -63,51 +62,67 @@
                     <ul class="cart-list">
                         <template x-for="item in items" :key="item.id">
                             <li class="cart-item">
-                                <img :src="item.product.image_url" alt="" class="cart-item-img">
+                                <img :src="item.product.image_url" class="cart-item-img">
                                 <div class="cart-item-info">
                                     <p class="cart-item-name" x-text="item.product.name"></p>
                                     <p class="cart-item-meta">
-                                        $<span x-text="item.price.toFixed(2)"></span> × <span x-text="item.quantity"></span>
+                                        $<span x-text="item.price.toFixed(2)"></span>
+                                        ×
+                                        <span x-text="item.quantity"></span>
                                     </p>
                                 </div>
-                                <button @click="remove(item.id)" class="cart-item-remove">Remove</button>
+                                <button @click="remove(item.id)" class="cart-item-remove">
+                                    Remove
+                                </button>
                             </li>
                         </template>
                     </ul>
                 </template>
             </div>
 
-            <footer class="cart-footer">
-                <div class="cart-summary-row">
-                    <span class="cart-summary-label">Subtotal:</span>
-                    <span class="cart-summary-value">$<span x-text="subtotal.toFixed(2)"></span></span>
-                </div>
-                <div class="cart-summary-row">
-                    <span class="cart-summary-label">Discount:</span>
-                    <span class="cart-summary-value">− $<span x-text="discount.toFixed(2)"></span></span>
-                </div>
-                <div class="cart-summary-row">
-                    <span class="cart-summary-label">Tax:</span>
-                    <span class="cart-summary-value">$<span x-text="tax.toFixed(2)"></span></span>
-                </div>
-                <div class="cart-total-row">
-                    <span class="cart-total-label">Total:</span>
-                    <span class="cart-total-value">$<span x-text="total.toFixed(2)"></span></span>
-                </div>
-                <a href="{{ route('checkout') }}" class="cart-checkout-btn">Checkout</a>
-            </footer>
+            <template x-if="!loading">     {{-- wrap footer so no “$0.00” flash on load --}}
+                <footer class="cart-footer">
+                    <div class="cart-summary-row">
+                        <span class="cart-summary-label">Subtotal:</span>
+                        <span class="cart-summary-value">
+                $<span x-text="subtotal.toFixed(2)"></span>
+              </span>
+                    </div>
+                    <div class="cart-summary-row">
+                        <span class="cart-summary-label">Discount:</span>
+                        <span class="cart-summary-value">
+                − $<span x-text="discount.toFixed(2)"></span>
+              </span>
+                    </div>
+                    <div class="cart-summary-row">
+                        <span class="cart-summary-label">Tax:</span>
+                        <span class="cart-summary-value">
+                $<span x-text="tax.toFixed(2)"></span>
+              </span>
+                    </div>
+                    <div class="cart-total-row">
+                        <span class="cart-total-label">Total:</span>
+                        <span class="cart-total-value">
+                $<span x-text="total.toFixed(2)"></span>
+              </span>
+                    </div>
+                    <a href="{{ route('checkout') }}" class="cart-checkout-btn">
+                        Checkout
+                    </a>
+                </footer>
+            </template>
         </aside>
     </div>
     {{-- END CART OVERLAY & SIDEBAR --}}
 
     <main class="layout-main">
-    @yield('content')
+        @yield('content')
     </main>
 
     @include('partials.footer')
 </div>
+
+{{-- only globals.js is needed now; it imports shop.js + checkout.js --}}
 @vite('resources/js/globals.js')
-@vite('resources/js/shop.js')
-@vite('resources/js/checkout.js')
 </body>
 </html>

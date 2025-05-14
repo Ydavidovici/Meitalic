@@ -16,5 +16,4 @@
             Back to Home
         </a>
     </div>
-    @vite('resources/js/checkout.js')
 @endsection

@@ -10,7 +10,7 @@
         </a>
 
         <!-- Navigation -->
-        <ul class="site-nav" x-data>
+        <ul class="site-nav">
             <!-- Static Links -->
             <li class="site-nav__item">
                 <x-nav-link
@@ -97,19 +97,16 @@
 
             <!-- Cart toggle button (always shown) -->
             <li class="site-nav__item">
-                <button
-                    @click="Alpine.store('cart').toggle()"
-                    aria-label="View cart"
-                    class="cart-toggle"
-                >
+                <button @click="$store.cart.toggle()" class="cart-toggle" aria-label="Cart">
                     🛒
                     <span
-                        x-text="$store.cart.count || ''"
-                        x-show="$store.cart.count > 0"
+                        x-show="$store.cart.open"
+                        x-text="'(' + $data.items?.length + ')'"
                         class="cart-toggle__badge"
                     ></span>
                 </button>
             </li>
         </ul>
     </div>
+
 </header>
