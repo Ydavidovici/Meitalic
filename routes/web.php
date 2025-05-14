@@ -39,6 +39,9 @@ Route::get('/checkout',           [CheckoutController::class,'checkout'])
     ->name('checkout');
 Route::post('/checkout/apply-promo',[CheckoutController::class,'applyPromo'])
     ->name('checkout.applyPromo');
+Route::post('/checkout/shipping-cost',
+    [CheckoutController::class,'calculateShipping'])
+    ->name('checkout.shipping');
 Route::post('/checkout/place-order',[CheckoutController::class,'placeOrder'])
     ->name('checkout.placeOrder');
 Route::post('/checkout',          [CheckoutController::class,'create'])

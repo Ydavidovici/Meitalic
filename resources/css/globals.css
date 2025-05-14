@@ -1,5 +1,23 @@
 /* resources/css/app.css */
 
+/* 0) Design tokens as CSS variables */
+:root {
+    /* colors */
+    --color-primary:    #f5e4e1;    /* light rose */
+    --color-secondary:  #fffaf7;    /* cream */
+    --color-accent:     #e3bfc3;    /* soft pink */
+    --color-text:       #333333;    /* dark gray */
+    --color-neutral-100:#FFFAF7;
+    --color-neutral-200:#F9F6F4;
+    --color-neutral-600:#666666;
+    --color-neutral-800:#333333;
+    --color-dark:       #1F1F1F;
+
+    /* font */
+    --font-sans:        'Instrument Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

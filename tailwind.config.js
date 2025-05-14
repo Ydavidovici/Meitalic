@@ -1,4 +1,5 @@
-const defaultTheme = require('tailwindcss/defaultTheme');
+// tailwind.config.js
+const defaultTheme = require('tailwindcss/defaultTheme')
 
 module.exports = {
     content: [
@@ -7,35 +8,25 @@ module.exports = {
         './resources/css/**/*.css',
     ],
     theme: {
-        container: {
-            center: true,
-            padding: {
-                DEFAULT: '1rem',
-                sm: '1.5rem',
-                lg: '2rem',
-                xl: '4rem',
-            },
-        },
+        container: { /* your container settings… */ },
         extend: {
             colors: {
-                primary: '#f5e4e1',    // light rose
-                secondary: '#fffaf7',  // cream
-                accent: '#e3bfc3',     // soft pink
-                text: '#333333',       // dark gray
+                primary:    'var(--color-primary)',
+                secondary:  'var(--color-secondary)',
+                accent:     'var(--color-accent)',
+                text:       'var(--color-text)',
                 neutral: {
-                    100: '#FFFAF7',
-                    200: '#F9F6F4',
-                    600: '#666666',
-                    800: '#333333',
+                    100: 'var(--color-neutral-100)',
+                    200: 'var(--color-neutral-200)',
+                    600: 'var(--color-neutral-600)',
+                    800: 'var(--color-neutral-800)',
                 },
-                dark: '#1F1F1F',
+                dark:       'var(--color-dark)',
             },
             fontFamily: {
-                sans: ['Instrument Sans', ...defaultTheme.fontFamily.sans],
+                sans: ['var(--font-sans)', ...defaultTheme.fontFamily.sans],
             },
         },
     },
-    plugins: [
-        require('@tailwindcss/forms'),
-    ],
-};
+    plugins: [require('@tailwindcss/forms')],
+}
