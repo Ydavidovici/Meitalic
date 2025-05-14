@@ -1,0 +1,139 @@
+@import "../globals.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+
+    /* —— Hero —— */
+    .hero {
+        @apply w-full bg-gradient-to-br from-secondary via-primary pt-20 pb-12;
+    }
+    .hero__inner {
+        @apply container px-4 sm:px-6 lg:px-8;
+    }
+    .hero__content {
+        @apply max-w-screen-lg mx-auto text-center lg:text-left;
+    }
+    .hero__stack {
+        @apply space-y-4 transform -translate-y-8;
+    }
+    .hero__title {
+        @apply text-4xl sm:text-5xl font-bold text-text leading-tight;
+    }
+    .hero__subtitle {
+        @apply italic text-lg text-neutral-700 max-w-xl mx-auto lg:mx-0;
+    }
+    .hero__cta {
+        @apply btn-primary w-max;
+    }
+
+    /* —— Featured Products —— */
+    .featured {
+        @apply py-12 bg-white;
+    }
+    .featured__inner {
+        @apply container px-4 sm:px-6 lg:px-8;
+    }
+    .featured__title {
+        @apply text-2xl font-bold mb-6;
+    }
+    .featured__grid {
+        @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6;
+    }
+    .featured__card {
+        @apply card hover:shadow-lg transition;
+    }
+    .featured__img {
+        @apply w-full h-48 object-cover rounded-t;
+    }
+    .featured__body {
+        @apply p-4;
+    }
+    .featured__name {
+        @apply font-semibold text-lg;
+    }
+    .featured__price {
+        @apply text-gray-600;
+    }
+
+    /* —— Categories —— */
+    .categories {
+        @apply py-20;
+    }
+    .categories__inner {
+        @apply container px-4 sm:px-6 lg:px-8;
+    }
+    .categories__stack {
+        @apply max-w-screen-lg mx-auto space-y-12 text-center;
+    }
+    .categories__grid {
+        @apply grid grid-cols-2 md:grid-cols-5 gap-6;
+    }
+    .categories__card {
+        @apply card hover:shadow-lg transition;
+    }
+
+    /* —— About —— */
+    .about {
+        @apply py-20;
+    }
+    .about__inner {
+        @apply container px-4 sm:px-6 lg:px-8;
+    }
+    .about__stack {
+        @apply max-w-screen-md mx-auto text-center space-y-6;
+    }
+    .about__quote {
+        @apply italic text-neutral-600;
+    }
+
+    /* —— Benefits —— */
+    .benefits {
+        @apply py-20;
+    }
+    .benefits__inner {
+        @apply container px-4 sm:px-6 lg:px-8;
+    }
+    .benefits__grid {
+        @apply max-w-screen-lg mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center;
+    }
+    .benefits__card {
+        @apply card;
+    }
+
+    /* —— Reviews —— */
+    .reviews {
+        @apply py-20;
+    }
+    .reviews__inner {
+        @apply container px-4 sm:px-6 lg:px-8;
+    }
+    .reviews__stack {
+        @apply max-w-screen-md mx-auto text-center space-y-6;
+    }
+    .reviews__stars {
+        @apply text-yellow-400 text-2xl;
+    }
+
+    /* —— Newsletter —— */
+    .newsletter {
+        @apply py-20;
+    }
+    .newsletter__inner {
+        @apply container px-4 sm:px-6 lg:px-8;
+    }
+    .newsletter__stack {
+        @apply max-w-screen-md mx-auto text-center space-y-6;
+    }
+    .newsletter__form {
+        @apply flex flex-col md:flex-row justify-center items-center gap-4 max-w-md mx-auto;
+    }
+    .newsletter__input {
+        @apply w-full md:w-auto px-6 py-3 border rounded focus:outline-none focus:ring-2 focus:ring-accent;
+    }
+    .newsletter__btn {
+        @apply btn-primary;
+    }
+}

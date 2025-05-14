@@ -1,32 +1,49 @@
-<header class="bg-white border-b border-primary">
-    <div class="container flex items-center justify-between py-6 px-4 sm:px-6 lg:px-8">
+<header class="site-header">
+    <div class="site-header__inner">
         <!-- Logo -->
-        <a href="{{ route('home') }}" class="no-underline">
-            <img src="{{ asset('images/logo-meitalic.png') }}"
-                 alt="Meitalic Logo"
-                 class="h-8">
+        <a href="{{ route('home') }}" class="site-header__logo-link">
+            <img
+                src="{{ asset('images/logo-meitalic.png') }}"
+                alt="Meitalic Logo"
+                class="site-header__logo"
+            >
         </a>
 
         <!-- Navigation -->
-        <ul class="flex items-center space-x-6" x-data>
+        <ul class="site-nav" x-data>
             <!-- Static Links -->
-            <li>
-                <x-nav-link :href="route('home')" :active="request()->routeIs('home')">
+            <li class="site-nav__item">
+                <x-nav-link
+                    :href="route('home')"
+                    :active="request()->routeIs('home')"
+                    class="site-nav__link"
+                >
                     Home
                 </x-nav-link>
             </li>
-            <li>
-                <x-nav-link :href="route('products.index')" :active="request()->routeIs('products.*')">
+            <li class="site-nav__item">
+                <x-nav-link
+                    :href="route('products.index')"
+                    :active="request()->routeIs('products.*')"
+                    class="site-nav__link"
+                >
                     Shop
                 </x-nav-link>
             </li>
-            <li>
-                <x-nav-link :href="route('home') . '#about'">
+            <li class="site-nav__item">
+                <x-nav-link
+                    :href="route('home') . '#about'"
+                    class="site-nav__link"
+                >
                     About
                 </x-nav-link>
             </li>
-            <li>
-                <x-nav-link :href="route('contact')" :active="request()->routeIs('contact')">
+            <li class="site-nav__item">
+                <x-nav-link
+                    :href="route('contact')"
+                    :active="request()->routeIs('contact')"
+                    class="site-nav__link"
+                >
                     Contact
                 </x-nav-link>
             </li>
@@ -34,17 +51,13 @@
             <!-- Guest links -->
             @guest
                 <template x-if="! $store.auth.isAuthenticated">
-                    <li>
-                        <a href="{{ route('login') }}" class="btn-secondary">
-                            Login
-                        </a>
+                    <li class="site-nav__item">
+                        <a href="{{ route('login') }}" class="site-nav__cta">Login</a>
                     </li>
                 </template>
                 <template x-if="! $store.auth.isAuthenticated">
-                    <li>
-                        <a href="{{ route('register') }}" class="btn-secondary">
-                            Register
-                        </a>
+                    <li class="site-nav__item">
+                        <a href="{{ route('register') }}" class="site-nav__cta">Register</a>
                     </li>
                 </template>
             @endguest
@@ -52,7 +65,7 @@
             <!-- Authenticated links -->
             @auth
                 <template x-if="$store.auth.isAuthenticated">
-                    <li>
+                    <li class="site-nav__item">
                         @php
                             $user = auth()->user();
                             $accountUrl = $user->is_admin
@@ -66,35 +79,34 @@
                         <x-nav-link
                             :href="$accountUrl"
                             :active="$accountActive"
+                            class="site-nav__link"
                         >
                             My Account
                         </x-nav-link>
                     </li>
                 </template>
                 <template x-if="$store.auth.isAuthenticated">
-                    <li>
+                    <li class="site-nav__item">
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
-                            <button type="submit" class="btn-secondary">
-                                Logout
-                            </button>
+                            <button type="submit" class="site-nav__cta">Logout</button>
                         </form>
                     </li>
                 </template>
             @endauth
 
             <!-- Cart toggle button (always shown) -->
-            <li>
+            <li class="site-nav__item">
                 <button
                     @click="Alpine.store('cart').toggle()"
-                    class="relative p-2 rounded-full hover:bg-gray-100 transition"
                     aria-label="View cart"
+                    class="cart-toggle"
                 >
                     🛒
                     <span
                         x-text="$store.cart.count || ''"
                         x-show="$store.cart.count > 0"
-                        class="absolute top-0 right-0 bg-red-500 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center"
+                        class="cart-toggle__badge"
                     ></span>
                 </button>
             </li>

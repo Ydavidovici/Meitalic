@@ -1,0 +1,18 @@
+/* resources/css/partials/product-grid.css */
+@import "../globals.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+    /* Container grid */
+    .product-grid {
+        @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8;
+    }
+
+    /* Pagination wrapper spans full width */
+    .product-grid__pagination {
+        @apply col-span-full mt-8;
+    }
+}

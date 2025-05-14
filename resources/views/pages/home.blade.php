@@ -2,20 +2,22 @@
 
 @section('title','Meitalic Cosmeceuticals')
 
+@push('styles')
+    @vite('resources/css/pages/home.css')
+@endpush
+
 @section('content')
     <!-- Hero -->
-    <section class="w-full bg-gradient-to-br from-secondary via-primary pt-20 pb-12">
-        <div class="container px-4 sm:px-6 lg:px-8">
-            <div class="max-w-screen-lg mx-auto text-center lg:text-left">
-                <div class="space-y-4 transform -translate-y-8">
-                    <h1 class="text-4xl sm:text-5xl font-bold text-text leading-tight">
-                        Meitalic
-                    </h1>
-                    <p class="italic text-lg text-neutral-700 max-w-xl mx-auto lg:mx-0">
+    <section class="hero">
+        <div class="hero__inner">
+            <div class="hero__content">
+                <div class="hero__stack">
+                    <h1 class="hero__title">Meitalic</h1>
+                    <p class="hero__subtitle">
                         Where elegance meets skincare.
                     </p>
                 </div>
-                <a href="{{ route('products.index') }}" class="btn-primary w-max">
+                <a href="{{ route('products.index') }}" class="hero__cta">
                     Shop Now
                 </a>
             </div>
@@ -24,23 +26,25 @@
 
     <!-- Featured Products -->
     @if($featuredProducts->count())
-        <section class="py-12 bg-white">
-            <div class="container px-4 sm:px-6 lg:px-8">
-                <h2 class="text-2xl font-bold mb-6">Featured Products</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+        <section class="featured">
+            <div class="featured__inner">
+                <h2 class="featured__title">Featured Products</h2>
+                <div class="featured__grid">
                     @foreach($featuredProducts as $product)
-                        <div class="card hover:shadow-lg transition">
+                        <div class="featured__card">
                             <a href="{{ route('products.show', $product->slug) }}">
                                 @if($product->image)
                                     <img
                                         src="{{ Str::startsWith($product->image, ['http://','https://']) ? $product->image : asset('storage/'.$product->image) }}"
                                         alt="{{ $product->name }}"
-                                        class="w-full h-48 object-cover rounded-t"
+                                        class="featured__img"
                                     />
                                 @endif
-                                <div class="p-4">
-                                    <h3 class="font-semibold text-lg">{{ $product->name }}</h3>
-                                    <p class="text-gray-600">${{ number_format($product->price,2) }}</p>
+                                <div class="featured__body">
+                                    <h3 class="featured__name">{{ $product->name }}</h3>
+                                    <p class="featured__price">
+                                        ${{ number_format($product->price,2) }}
+                                    </p>
                                 </div>
                             </a>
                         </div>
@@ -51,11 +55,11 @@
     @endif
 
     <!-- Categories -->
-    <section class="py-20">
-        <div class="container px-4 sm:px-6 lg:px-8">
-            <div class="max-w-screen-lg mx-auto space-y-12 text-center">
+    <section class="categories">
+        <div class="categories__inner">
+            <div class="categories__stack">
                 <h2 class="section-title">Shop by Category</h2>
-                <div class="grid grid-cols-2 md:grid-cols-5 gap-6">
+                <div class="categories__grid">
                     @foreach([
                         'Essential Line',
                         'Rosacea Line',
@@ -65,7 +69,7 @@
                     ] as $cat)
                         <a
                             href="{{ route('products.index', ['category' => $cat]) }}"
-                            class="card hover:shadow-lg transition"
+                            class="categories__card"
                         >
                             {{ $cat }}
                         </a>
@@ -76,11 +80,11 @@
     </section>
 
     <!-- About -->
-    <section id="about" class="py-20">
-        <div class="container px-4 sm:px-6 lg:px-8">
-            <div class="max-w-screen-md mx-auto text-center space-y-6">
+    <section id="about" class="about">
+        <div class="about__inner">
+            <div class="about__stack">
                 <h2 class="section-title">About the Brand</h2>
-                <blockquote class="italic text-neutral-600">
+                <blockquote class="about__quote">
                     “A short and powerful quote to inspire customers.”
                 </blockquote>
             </div>
@@ -88,42 +92,49 @@
     </section>
 
     <!-- Benefits -->
-    <section class="py-20">
-        <div class="container px-4 sm:px-6 lg:px-8">
-            <div class="max-w-screen-lg mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-                @foreach(['Natural Ingredients','Hydrating Formula','Cruelty-Free','Dermatologist Tested'] as $b)
-                    <div class="card">{{ $b }}</div>
+    <section class="benefits">
+        <div class="benefits__inner">
+            <div class="benefits__grid">
+                @foreach([
+                    'Natural Ingredients',
+                    'Hydrating Formula',
+                    'Cruelty-Free',
+                    'Dermatologist Tested'
+                ] as $b)
+                    <div class="benefits__card">{{ $b }}</div>
                 @endforeach
             </div>
         </div>
     </section>
 
     <!-- Reviews -->
-    <section class="py-20">
-        <div class="container px-4 sm:px-6 lg:px-8">
-            <div class="max-w-screen-md mx-auto text-center space-y-6">
+    <section class="reviews">
+        <div class="reviews__inner">
+            <div class="reviews__stack">
                 <h2 class="section-title">Customer Reviews</h2>
                 <p class="text-neutral-600">
                     “A customer testimonial... no one ever raving any orates.”
                 </p>
-                <div class="text-yellow-400 text-2xl">★★★★★</div>
+                <div class="reviews__stars">★★★★★</div>
             </div>
         </div>
     </section>
 
     <!-- Newsletter -->
-    <section class="py-20">
-        <div class="container px-4 sm:px-6 lg:px-8">
-            <div class="max-w-screen-md mx-auto text-center space-y-6">
+    <section class="newsletter">
+        <div class="newsletter__inner">
+            <div class="newsletter__stack">
                 <h2 class="section-title">Join Our Newsletter</h2>
                 <p class="text-neutral-600">Get 10% off your first order</p>
-                <form class="flex flex-col md:flex-row justify-center items-center gap-4 max-w-md mx-auto">
+                <form class="newsletter__form">
                     <input
                         type="email"
                         placeholder="Email address"
-                        class="w-full md:w-auto px-6 py-3 border rounded focus:outline-none focus:ring-2 focus:ring-accent"
+                        class="newsletter__input"
                     >
-                    <button type="submit" class="btn-primary">Subscribe</button>
+                    <button type="submit" class="newsletter__btn">
+                        Subscribe
+                    </button>
                 </form>
             </div>
         </div>

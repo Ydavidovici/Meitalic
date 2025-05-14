@@ -1,9 +1,10 @@
-<div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+{{-- resources/views/partials/product-grid.blade.php --}}
+<div id="product-grid" class="product-grid">
     @foreach($products as $product)
         <x-product-card :product="$product"/>
     @endforeach
 
-    <div class="col-span-full mt-8">
+    <div class="product-grid__pagination">
         {{ $products->withQueryString()->links() }}
     </div>
 </div>

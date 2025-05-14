@@ -1,0 +1,117 @@
+/* resources/css/pages/dashboard/index.css */
+
+@import "../../globals.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+    /* Root container */
+    .dashboard {
+        @apply py-12 container px-4 sm:px-6 lg:px-8 space-y-8;
+    }
+
+    /* 1) At‑a‑Glance Metrics */
+    .dashboard__metrics {
+        @apply grid grid-cols-1 sm:grid-cols-3 gap-6;
+    }
+    .dashboard__metric-card {
+        @apply p-6 bg-white rounded shadow;
+    }
+    .dashboard__metric-title {
+        @apply font-semibold;
+    }
+    .dashboard__metric-value {
+        @apply text-3xl;
+    }
+
+    /* 2) Recent & Upcoming Orders */
+    .dashboard__recent {
+        @apply bg-white rounded shadow p-6;
+    }
+    .dashboard__recent-title {
+        @apply text-xl font-bold mb-4;
+    }
+    .dashboard__recent-list {
+        @apply space-y-2;
+    }
+    .dashboard__recent-item {
+        @apply flex justify-between items-center;
+    }
+    .dashboard__status-badge {
+        @apply ml-2 px-2 py-1 bg-gray-100 rounded text-sm;
+    }
+    .dashboard__review-btn {
+        @apply text-sm hover:underline;
+    }
+    .dashboard__review-available {
+        @apply text-green-600;
+    }
+    .dashboard__review-none {
+        @apply text-gray-600;
+    }
+
+    /* 3) Full Order History */
+    .dashboard__history {
+        @apply bg-white rounded shadow p-6;
+    }
+    .dashboard__history-title {
+        @apply text-xl font-bold mb-4;
+    }
+    /* Table styling is inherited from globals/app.css */
+
+    /* 4) Account & Profile */
+    .dashboard__profile {
+        @apply bg-white rounded shadow p-6;
+    }
+    .dashboard__profile-title {
+        @apply text-xl font-bold mb-4;
+    }
+    .dashboard__profile-fields {
+        @apply space-y-2;
+    }
+    .dashboard__profile-fields strong {
+        @apply font-semibold;
+    }
+    .dashboard__profile-edit-btn {
+        @apply mt-4 btn-primary;
+    }
+
+    /* 5) Modals (profile-edit and review) */
+    /* Uses global .modal-wrapper, .modal-panel, .btn-secondary, .btn-primary */
+
+    /* 6) Recommendations & Promotions */
+    .dashboard__recommendations {
+        @apply bg-white rounded shadow p-6;
+    }
+    .dashboard__recommendations-title {
+        @apply font-bold mb-2;
+    }
+    .dashboard__recommendations-grid {
+        @apply grid grid-cols-2 md:grid-cols-4 gap-4;
+    }
+    .recommendation-card {
+        @apply h-40 bg-gray-100 rounded overflow-hidden mb-4 flex flex-col;
+    }
+    .recommendation-card__img {
+        @apply w-full h-24 object-cover rounded-t;
+    }
+    .recommendation-card__actions {
+        @apply p-2 flex-1 flex items-center;
+    }
+    .recommendation-card__btn {
+        @apply btn-primary flex-1 text-center py-1;
+    }
+
+    /* 7) Support */
+    .dashboard__support {
+        @apply bg-white rounded shadow p-6 text-center;
+    }
+    .dashboard__support-btn {
+        @apply btn-primary;
+    }
+
+    /* 8) Inline Order Details Modal */
+    /* Reuses .modal-wrapper, .modal-panel, .btn-secondary, .btn-primary */
+}

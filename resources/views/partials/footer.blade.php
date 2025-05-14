@@ -1,3 +1,6 @@
-<footer class="py-6 px-6 text-center text-sm text-gray-500 border-t">
-    © 2025 Meitalic. All rights reserved.
+{{-- resources/views/partials/footer.blade.php --}}
+<footer class="site-footer">
+    <div class="site-footer__content">
+        © 2025 Meitalic. All rights reserved.
+    </div>
 </footer>

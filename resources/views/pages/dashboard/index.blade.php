@@ -1,44 +1,48 @@
 @php use Illuminate\Support\Str; @endphp
 @extends('layouts.app')
+@push('styles')
+    @vite('resources/js/user-dashboard.js')
+@endpush
 @section('title','Your Dashboard')
 
 @section('content')
     <script>
         window.profileData = @json($profileData);
     </script>
-    <div x-data="userDashboard()" class="py-12 container px-4 sm:px-6 lg:px-8 space-y-8">
+
+    <div x-data="userDashboard()" class="dashboard">
 
         {{-- 1) At‑a‑Glance Metrics --}}
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div class="p-6 bg-white rounded shadow">
-                <h4 class="font-semibold">Total Orders</h4>
-                <p class="text-3xl">{{ $totalOrders }}</p>
+        <div class="dashboard__metrics">
+            <div class="dashboard__metric-card">
+                <h4 class="dashboard__metric-title">Total Orders</h4>
+                <p class="dashboard__metric-value">{{ $totalOrders }}</p>
             </div>
-            <div class="p-6 bg-white rounded shadow">
-                <h4 class="font-semibold">Spend This Year</h4>
-                <p class="text-3xl">${{ number_format($yearlySpend,2) }}</p>
+            <div class="dashboard__metric-card">
+                <h4 class="dashboard__metric-title">Spend This Year</h4>
+                <p class="dashboard__metric-value">${{ number_format($yearlySpend,2) }}</p>
             </div>
-            <div class="p-6 bg-white rounded shadow">
-                <h4 class="font-semibold">Store Credit</h4>
-                <p class="text-3xl">{{ $storeCredit }} pts</p>
+            <div class="dashboard__metric-card">
+                <h4 class="dashboard__metric-title">Store Credit</h4>
+                <p class="dashboard__metric-value">{{ $storeCredit }} pts</p>
             </div>
         </div>
 
         {{-- 2) Recent & Upcoming Orders --}}
-        <div class="bg-white rounded shadow p-6">
-            <h3 class="text-xl font-bold mb-4">Recent & Upcoming Orders</h3>
-            <ul class="space-y-2">
+        <div class="dashboard__recent">
+            <h3 class="dashboard__recent-title">Recent &amp; Upcoming Orders</h3>
+            <ul class="dashboard__recent-list">
                 @foreach($recentOrders as $o)
-                    <li class="flex justify-between items-center">
+                    <li class="dashboard__recent-item">
                         <span>Order #{{ $o->id }}</span>
-                        <span class="ml-2 px-2 py-1 bg-gray-100 rounded text-sm">{{ ucfirst($o->status) }}</span>
+                        <span class="dashboard__status-badge">{{ ucfirst($o->status) }}</span>
 
                         @if($o->status === 'delivered')
                             @php $item = $o->orderItems->first(fn($i) => ! $i->review); @endphp
                             <div>
                                 <button
                                     @click="openReviewModal({ orderId: {{ $o->id }}, itemId: {{ $item?->id ?? 'null' }}, productId: {{ $item?->product_id ?? 'null' }}, rating: 1, body: '' })"
-                                    class="text-sm {{ $item? '&text-green-600' : 'text-gray-600' }} hover:underline"
+                                    class="dashboard__review-btn {{ $item ? 'dashboard__review-available' : 'dashboard__review-none' }}"
                                 >
                                     {{ $item ? 'Leave Review' : 'Manage Reviews' }}
                                 </button>
@@ -50,69 +54,53 @@
         </div>
 
         {{-- 3) Full Order History --}}
-        <div class="bg-white rounded shadow p-6">
-            <h3 class="text-xl font-bold mb-4">Order History</h3>
-            {{-- table markup omitted for brevity; unchanged --}}
+        <div class="dashboard__history">
+            <h3 class="dashboard__history-title">Order History</h3>
+            {{-- (Your table markup goes here, unchanged) --}}
         </div>
 
         {{-- 4) Account & Profile --}}
-        <div class="bg-white rounded shadow p-6">
-            <h3 class="text-xl font-bold mb-4">Your Profile</h3>
-
-            <div class="space-y-2">
+        <div class="dashboard__profile">
+            <h3 class="dashboard__profile-title">Your Profile</h3>
+            <div class="dashboard__profile-fields">
                 <div><strong>Name:</strong> {{ $user->name }}</div>
                 <div><strong>Email:</strong> {{ $user->email }}</div>
-                {{-- add any other fields you track, e.g. phone, address --}}
+                {{-- Add other fields as needed --}}
             </div>
-
-            <button
-                @click="openProfileModal()"
-                class="mt-4 btn-primary"
-            >Edit Profile</button>
+            <button @click="openProfileModal()" class="dashboard__profile-edit-btn">
+                Edit Profile
+            </button>
         </div>
 
-        {{-- Profile Edit Modal --}}
-        <div
-            x-show="isProfileModalOpen"
-            x-cloak
-            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-        >
-            <div class="bg-white rounded-lg p-6 w-full max-w-md relative">
-                <button @click="closeProfileModal()" class="absolute top-2 right-2 text-gray-600 text-xl">&times;</button>
-                <h2 class="text-xl font-bold mb-4">Edit Profile</h2>
-                <form action="{{ route('profile.update') }}" method="POST">
-                    @csrf
-                    @method('PUT')
-                    <div class="mb-4">
-                        <label for="name" class="block font-medium">Name</label>
-                        <input
-                            type="text"
-                            id="name"
-                            name="name"
-                            x-model="profileForm.name"
-                            class="border rounded w-full p-2"
-                        />
-                    </div>
-                    <div class="mb-4">
-                        <label for="email" class="block font-medium">Email</label>
-                        <input
-                            type="email"
-                            id="email"
-                            name="email"
-                            x-model="profileForm.email"
-                            class="border rounded w-full p-2"
-                        />
-                    </div>
-                    {{-- add more fields as needed --}}
-                    <button type="submit" class="btn-primary w-full">Save</button>
-                </form>
-            </div>
-        </div>
+        <x-modal name="profile-edit" maxWidth="md">
+            <x-slot name="title">Edit Profile</x-slot>
+            <form id="profile-form" action="{{ route('profile.update') }}" method="POST">
+                @csrf @method('PUT')
+                <div class="mb-4">
+                    <label for="name" class="block font-medium">Name</label>
+                    <input id="name" name="name" x-model="profileForm.name" />
+                </div>
+                <div class="mb-4">
+                    <label for="email" class="block font-medium">Email</label>
+                    <input id="email" name="email" x-model="profileForm.email" />
+                </div>
+            </form>
+            <x-slot name="footer">
+                <button @click="$dispatch('close-modal','profile-edit')" class="btn-secondary">
+                    Cancel
+                </button>
+                <button type="submit" form="profile-form" class="btn-primary">
+                    Save
+                </button>
+            </x-slot>
+        </x-modal>
 
         {{-- Review Modal --}}
-        <div x-show="isReviewModalOpen" x-cloak class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div class="bg-white rounded-lg p-6 w-full max-w-md relative">
-                <button @click="closeReviewModal()" class="absolute top-2 right-2 text-gray-600 text-xl">&times;</button>
+        <div x-show="isReviewModalOpen" x-cloak class="modal-wrapper">
+            <div class="modal-panel">
+                <button @click="closeReviewModal()" class="absolute top-2 right-2 text-gray-600 text-xl">
+                    &times;
+                </button>
                 <h2 class="text-xl font-bold mb-4" x-text="modalTitle"></h2>
                 <form :action="modalAction" method="POST">
                     @csrf
@@ -137,32 +125,28 @@
             </div>
         </div>
 
-
-
-        {{-- 6. Recommendations & Promotions --}}
-        <div class="bg-white rounded shadow p-6">
-            <h3 class="font-bold mb-2">You Might Like</h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {{-- 6) Recommendations & Promotions --}}
+        <div class="dashboard__recommendations">
+            <h3 class="dashboard__recommendations-title">You Might Like</h3>
+            <div class="dashboard__recommendations-grid">
                 @foreach($recommendations as $prod)
-                    <div class="h-40 bg-gray-100 rounded overflow-hidden mb-4">
+                    <div class="recommendation-card">
                         <img
                             src="{{ Str::startsWith($prod->thumbnail_url, ['http://','https://'])
-                      ? $prod->thumbnail_url
-                      : asset('storage/'.$prod->thumbnail_url)
-                    }}"
+                                ? $prod->thumbnail_url
+                                : asset('storage/'.$prod->thumbnail_url)
+                            }}"
                             alt="{{ $prod->name }}"
-                            class="w-full h-24 object-cover rounded"
+                            class="recommendation-card__img"
                         >
-                        {{-- Add to Cart button --}}
-                        <div class="p-2">
+                        <div class="recommendation-card__actions">
                             <form action="{{ route('cart.add') }}" method="POST" class="flex items-center gap-2">
                                 @csrf
                                 <input type="hidden" name="product_id" value="{{ $prod->id }}">
                                 <input type="hidden" name="quantity" value="1">
-                                <button
-                                    type="submit"
-                                    class="btn-primary flex-1 text-center py-1"
-                                >Add to Cart</button>
+                                <button type="submit" class="recommendation-card__btn">
+                                    Add to Cart
+                                </button>
                             </form>
                         </div>
                     </div>
@@ -170,24 +154,19 @@
             </div>
         </div>
 
-        {{-- 7. Support --}}
-        <div class="bg-white rounded shadow p-6 text-center">
-            <a href="{{ route('contact') }}" class="btn-primary">Contact Support</a>
+        {{-- 7) Support --}}
+        <div class="dashboard__support">
+            <a href="{{ route('contact') }}" class="dashboard__support-btn">
+                Contact Support
+            </a>
         </div>
 
-
-        {{-- Inline Order Details Modal --}}
-        <div
-            x-show="isOrderModalOpen"
-            x-cloak
-            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-        >
-            <div class="bg-white rounded-lg overflow-auto max-w-2xl w-full mx-4 p-6 relative">
-                <button @click="closeModal()"
-                        class="absolute top-3 right-3 text-gray-600 hover:text-gray-900 text-2xl">
+        {{-- 8) Inline Order Details Modal --}}
+        <div x-show="isOrderModalOpen" x-cloak class="modal-wrapper">
+            <div class="modal-panel">
+                <button @click="closeModal()" class="absolute top-3 right-3 text-gray-600 hover:text-gray-900 text-2xl">
                     &times;
                 </button>
-
                 <template x-if="selectedOrder">
                     <div>
                         <h2 class="text-2xl font-bold mb-4">
@@ -195,17 +174,11 @@
                         </h2>
                         <p class="mb-2">
                             <strong>Status:</strong>
-                            <span x-text="
-              selectedOrder.status.charAt(0).toUpperCase()
-              + selectedOrder.status.slice(1)
-            "></span>
+                            <span x-text="selectedOrder.status.charAt(0).toUpperCase() + selectedOrder.status.slice(1)"></span>
                         </p>
                         <p class="mb-4">
                             <strong>Date:</strong>
-                            <span x-text="
-              new Date(selectedOrder.created_at)
-                .toLocaleString()
-            "></span>
+                            <span x-text="new Date(selectedOrder.created_at).toLocaleString()"></span>
                         </p>
                         <p class="mb-4">
                             <strong>Total:</strong>
@@ -224,27 +197,20 @@
                         </ul>
 
                         <div class="mt-6 flex space-x-2">
-                            <button @click="closeModal()" class="btn-secondary">
-                                Close
-                            </button>
+                            <button @click="closeModal()" class="btn-secondary">Close</button>
 
                             <template x-if="selectedOrder.status === 'pending'">
-                                <button @click="cancelOrder(selectedOrder.id)" class="btn-primary">
-                                    Cancel Order
-                                </button>
+                                <button @click="cancelOrder(selectedOrder.id)" class="btn-primary">Cancel Order</button>
                             </template>
 
                             <template x-if="['shipped','delivered'].includes(selectedOrder.status)">
-                                <button @click="returnOrder(selectedOrder.id)" class="btn-primary">
-                                    Return Order
-                                </button>
+                                <button @click="returnOrder(selectedOrder.id)" class="btn-primary">Return Order</button>
                             </template>
                         </div>
                     </div>
                 </template>
             </div>
         </div>
+
     </div>
 @endsection
-
-

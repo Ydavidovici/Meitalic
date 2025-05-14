@@ -1,5 +1,10 @@
 @extends('layouts.app')
 
+@push('scripts')
+    @vite('resources/js/user-dashboard.js')
+@endpush
+
+
 @section('title', 'My Account')
 
 @section('content')

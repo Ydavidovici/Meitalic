@@ -1,5 +1,10 @@
 @extends('layouts.app')
 
+@push('scripts')
+    @vite('resources/js/admin-dashboard.js')
+@endpush
+
+
 @section('title', 'Edit Product')
 
 @section('content')

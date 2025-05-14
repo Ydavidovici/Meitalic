@@ -1,0 +1,32 @@
+@import "../../globals.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Success Container */
+.success-container {
+    max-width: 40rem;      /* max-w-2xl */
+    margin: 4rem auto;     /* py-16 + centering */
+    text-align: center;
+    padding-top: 4rem;     /* match py-16 */
+    padding-bottom: 4rem;
+}
+
+/* Heading */
+.success-heading {
+    font-size: 1.875rem;   /* text-3xl */
+    font-weight: 700;      /* font-bold */
+    margin-bottom: 1rem;   /* mb-4 */
+}
+
+/* Text */
+.success-text {
+    color: #4b5563;        /* text-gray-600 */
+}
+
+/* Back button */
+.btn-back-home {
+    display: inline-block;
+    margin-top: 1.5rem;    /* mt-6 */
+}
