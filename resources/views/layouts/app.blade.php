@@ -21,6 +21,7 @@
       'resources/css/pages/product.css',
       'resources/css/pages/cart/index.css',
       'resources/css/partials/product-grid.css',
+      'resources/css/auth/auth.css',
     ])
     @stack('styles')
 </head>

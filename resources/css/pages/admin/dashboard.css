@@ -1,4 +1,6 @@
+/* resources/css/pages/admin/dashboard.css */
 
+/* 1. Base imports & layers */
 @import "../../globals.css";
 
 @tailwind base;
@@ -6,89 +8,261 @@
 @tailwind utilities;
 
 @layer base {
-    /* x‑cloak for Alpine modals */
-    [x-cloak] { display: none !important; }
+    [x-cloak] {
+        display: none !important;
+    }
 }
 
+/* 2. Page scaffold */
 @layer components {
-    /* —— Cards & Panels —— */
-    .card                    { @apply bg-white p-6 rounded-lg shadow hover:shadow-md transition; }
-    .metrics-card            { @apply bg-white rounded-lg shadow hover:shadow-md transition p-6 mb-8; }
-    .settings-card           { @apply bg-white rounded-lg shadow hover:shadow-md transition p-6 mb-8; }
-
-    /* —— Settings List —— */
-    .settings-list           { @apply space-y-1; }
-    .settings-link           { @apply text-indigo-600 hover:underline; }
-
-    /* —— Insights Panel —— */
-    .insights-card           { @apply bg-white rounded-lg shadow p-6 mb-8; }
-    .insights-card .insight-heading { @apply font-bold mb-2 text-lg; }
-    .insights-card .insight-list    { @apply space-y-1; }
-    .insights-card .insight-item    { @apply text-gray-700; }
-
-    /* —— Promotions Section —— */
-    .promotions-section      { @apply bg-white rounded-lg shadow p-6 mb-8; }
-    .promotions-header       { @apply flex items-center justify-between mb-4; }
-    .promotions-title        { @apply text-lg font-bold; }
-    .promotions-list         { @apply space-y-2; }
-    .promo-row               { @apply flex items-center justify-between border rounded p-4; }
-    .promo-info              { @apply font-mono text-gray-800; }
-    .promo-expires           { @apply text-sm text-gray-500; }
-    .promo-actions           { @apply space-x-2; }
-    .promo-edit-btn          { @apply text-indigo-600 hover:underline text-sm; }
-    .promo-delete-btn        { @apply text-red-600 hover:underline text-sm; }
-    .promo-empty             { @apply text-gray-600; }
-
-    /* —— Promo Form (modal) —— */
-    .promo-form              { @apply space-y-4; }
-    .promo-field             { @apply flex flex-col; }
-    .promo-field-label       { @apply block font-medium mb-1; }
-    .promo-field-input       { @apply w-full border rounded px-3 py-2; }
-    .promo-field-error       { @apply text-red-600 text-sm mt-1; }
-    .promo-checkbox-field    { @apply flex items-center space-x-2 mb-4; }
-    .promo-checkbox-input    { @apply h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500; }
-    .promo-checkbox-label    { @apply font-medium; }
-    .promo-modal-footer      { @apply flex justify-end space-x-4; }
-
-    /* —— Filters on Inventory —— */
-    .filters-form            { @apply grid grid-cols-1 md:grid-cols-7 gap-4 px-6 mb-6 items-center; }
-    .filters-form input,
-    .filters-form select     { @apply border rounded px-3 py-2; }
-    .filters-submit          { @apply btn-secondary whitespace-nowrap; }
-
-    /* —— Inventory Grid & Cards —— */
-    .inventory-section       { @apply mb-8 bg-white rounded shadow; }
-    .inventory-header        { @apply p-6 flex items-center justify-between; }
-    .inventory-title         { @apply text-xl font-bold; }
-    .inventory-add-btn       { @apply btn-primary whitespace-nowrap; }
-
-    .product-grid            { @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6; }
-    .product-card            { @apply bg-white p-6 rounded-lg shadow hover:shadow-md transition flex flex-col h-full; }
-    .product-card__title     { @apply font-semibold mb-2; }
-    .product-card__image-wrap{ @apply h-40 bg-gray-100 rounded overflow-hidden mb-4; }
-    .product-card__image     { @apply w-full h-full object-cover; }
-    .product-card__no-image  { @apply w-full h-full flex items-center justify-center text-gray-400; }
-    .product-card__price     { @apply text-gray-600 text-sm mb-2; }
-    .product-card__stock     { @apply text-lg font-bold mb-4; }
-    .product-card__edit-btn  { @apply btn-primary mt-auto; }
-    .product-card__empty     { @apply col-span-full text-center py-12 text-gray-600; }
-    .product-grid__pagination{ @apply mt-6; }
-
-    /* —— Order‑Edit & Inventory‑Create modals —— */
-    /* (all scoped under their IDs in app.css—leave those in app.css!) */
-
+    .admin-dashboard {
+        @apply py-12 container px-4 sm:px-6 lg:px-8 space-y-12;
+    }
 }
 
+/* 3. KPI Cards */
+@layer components {
+    .kpi-section {
+        @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6;
+    }
+    .kpi-card {
+        @apply bg-white p-6 rounded-lg shadow hover:shadow-md transition cursor-pointer;
+    }
+    .kpi-card__label {
+        @apply font-semibold text-gray-700;
+    }
+    .kpi-card__value {
+        @apply text-3xl font-medium;
+    }
+}
+
+/* 4. Order Management */
+@layer components {
+    .order-management {
+        @apply bg-white rounded-lg shadow p-6 space-y-4;
+    }
+    .order-management__header {
+        @apply flex justify-between items-center;
+    }
+    .order-management__badges {
+        @apply space-x-2;
+    }
+    .order-management__badge--pending {
+        @apply px-2 py-1 bg-yellow-100 text-yellow-700 rounded;
+    }
+    .order-management__badge--unfulfilled {
+        @apply px-2 py-1 bg-red-100 text-red-700 rounded;
+    }
+    .order-management__bulk-actions button {
+        @apply text-sm hover:underline;
+    }
+    .order-filters {
+        @apply mb-4 flex flex-wrap items-center space-x-2;
+    }
+    .order-filters label {
+        @apply font-medium;
+    }
+    .order-filters select,
+    .order-filters input {
+        @apply form-input;
+    }
+    .order-filters .btn-secondary {
+        @apply whitespace-nowrap;
+    }
+    .orders-table {
+        @apply w-full text-left border-collapse;
+    }
+    .orders-table thead {
+        @apply bg-gray-100;
+    }
+    .orders-table th,
+    .orders-table td {
+        @apply px-4 py-2;
+    }
+    .orders-table tbody tr {
+        @apply border-t;
+    }
+    .orders-table__checkbox {
+        @apply p-2;
+    }
+    .orders-table__status {
+        @apply px-2 py-1 bg-gray-100 rounded text-sm inline-block;
+    }
+    .orders-table__actions button {
+        @apply text-sm hover:underline;
+    }
+    .orders-pagination {
+        @apply mt-4;
+    }
+}
+
+/* 5. Review Management */
+@layer components {
+    .review-management {
+        @apply bg-white rounded-lg shadow p-6;
+    }
+    .review-management__tabs {
+        @apply flex space-x-4 mb-4 border-b;
+    }
+    .review-management__tab-btn {
+        @apply pb-1 font-medium;
+    }
+    .review-management__tab-btn--active {
+        @apply border-b-2 border-indigo-600 text-indigo-600;
+    }
+    .review-table {
+        @apply w-full text-left border-collapse mb-4;
+    }
+    .review-table thead {
+        @apply bg-gray-100;
+    }
+    .review-table th,
+    .review-table td {
+        @apply px-4 py-2;
+    }
+    .review-table tbody tr {
+        @apply border-t;
+    }
+    .review-table__actions button {
+        @apply text-sm hover:underline;
+    }
+    .review-empty {
+        @apply text-gray-600;
+    }
+}
+
+/* 6. Inventory Management */
+@layer components {
+    .inventory-section {
+        @apply bg-white rounded-lg shadow p-6 space-y-6;
+    }
+    .inventory-header {
+        @apply flex justify-between items-center;
+    }
+    .inventory-title {
+        @apply text-xl font-bold;
+    }
+    .inventory-add-btn {
+        @apply btn-primary whitespace-nowrap;
+    }
+    .filters-form {
+        @apply grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-4 mb-6;
+    }
+    .filters-form input,
+    .filters-form select {
+        @apply form-input;
+    }
+    .filters-submit {
+        @apply btn-secondary col-span-full;
+    }
+    .inventory-grid {
+        @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
+    }
+    .inventory-card {
+        @apply bg-white p-6 rounded-lg shadow hover:shadow-md transition flex flex-col h-full;
+    }
+    .inventory-card__title {
+        @apply font-semibold mb-2;
+    }
+    .inventory-card__image-wrap {
+        @apply h-40 bg-gray-100 rounded overflow-hidden mb-4;
+    }
+    .inventory-card__image {
+        @apply w-full h-full object-cover;
+    }
+    .inventory-card__no-image {
+        @apply flex items-center justify-center w-full h-full text-gray-400;
+    }
+    .inventory-card__price {
+        @apply text-gray-600 text-sm mb-2;
+    }
+    .inventory-card__stock {
+        @apply text-lg font-bold mb-4;
+    }
+    .inventory-card__edit-btn {
+        @apply btn-primary mt-auto;
+    }
+    .inventory-empty {
+        @apply col-span-full text-center py-12 text-gray-600;
+    }
+    .inventory-pagination {
+        @apply mt-6;
+    }
+}
+
+/* 7. Customer Insights */
+@layer components {
+    .insights-card {
+        @apply bg-white rounded-lg shadow p-6;
+    }
+    .insights-card__title {
+        @apply font-bold text-lg;
+    }
+    .insights-card__list {
+        @apply list-disc pl-6 mt-2 space-y-1;
+    }
+    .insights-card__item {
+        @apply text-gray-700;
+    }
+}
+
+/* 8. Promotions */
+@layer components {
+    .promotions-section {
+        @apply bg-white rounded-lg shadow p-6 space-y-4;
+    }
+    .promotions-header {
+        @apply flex justify-between items-center;
+    }
+    .promotions-title {
+        @apply text-xl font-bold;
+    }
+    .promotions-list {
+        @apply space-y-2;
+    }
+    .promo-row {
+        @apply flex justify-between items-center bg-gray-50 rounded p-4;
+    }
+    .promo-info {
+        @apply font-mono text-gray-800;
+    }
+    .promo-expires {
+        @apply text-sm text-gray-500;
+    }
+    .promo-actions button {
+        @apply text-sm hover:underline;
+    }
+    .promo-empty {
+        @apply text-gray-600;
+    }
+}
+
+/* 9. Settings & Dev Metrics */
+@layer components {
+    .settings-card {
+        @apply bg-white rounded-lg shadow p-6;
+    }
+    .settings-list {
+        @apply list-none space-y-2 p-0 m-0;
+    }
+    .settings-link {
+        @apply text-indigo-600 hover:underline;
+    }
+    .metrics-card {
+        @apply bg-white rounded-lg shadow p-6;
+    }
+}
+
+/* 10. Responsive utilities for modals (remain in this file) */
 @layer utilities {
-    /* responsive fixes for field‑group‑full spans */
-    #order-edit-modal   .field-group-full,
+    #order-edit-modal .field-group-full,
     #inventory-create-modal .field-group-full {
         @apply mb-6;
     }
     @screen md {
-        #order-edit-modal   .field-group-full,
+        #order-edit-modal .field-group-full,
         #inventory-create-modal .field-group-full {
-            grid-column: span 2 / span 2;
+            @apply col-span-2;
         }
     }
 }

@@ -21,9 +21,9 @@ export default defineConfig(({ command }) => {
                     'resources/css/pages/checkout/success.css',
                     'resources/css/pages/dashboard/index.css',
                     'resources/css/pages/home.css',
-                    // 'resources/css/pages/orders/show.css',
                     'resources/css/pages/product.css',
                     'resources/css/pages/products.css',
+                    'resources/css/auth/auth.css',
 
                     // 4. shared partials
                     'resources/css/partials/product-grid.css',

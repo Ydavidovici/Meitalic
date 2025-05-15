@@ -1,0 +1,148 @@
+/* resources/css/pages/auth/auth.css */
+@import "../globals.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+    /* Page wrapper */
+    .auth-page {
+        @apply max-w-md mx-auto px-4 sm:px-6 lg:px-8 mt-16;
+    }
+
+    /* Card/container around form */
+    .auth-card {
+        @apply max-w-md mx-auto p-6 border rounded shadow bg-white;
+    }
+
+    /* Title */
+    .auth-title {
+        @apply text-2xl font-bold mb-4;
+    }
+
+    /* Session status & error list */
+    .auth-status {
+        @apply mb-4 text-green-600 font-medium;
+    }
+    .auth-errors {
+        @apply mb-4 text-red-600;
+    }
+    .auth-errors ul {
+        @apply list-disc list-inside;
+    }
+
+    /* Form wrapper */
+    .auth-form {
+        @apply space-y-4;
+    }
+
+    /* Field group */
+    .auth-form-group {
+        @apply mb-4;
+    }
+    .auth-label {
+        @apply block text-sm font-medium;
+    }
+    .auth-input {
+        @apply w-full p-2 border border-gray-300 rounded-lg mt-1 focus:outline-none focus:ring-2 focus:ring-primary;
+    }
+    .auth-checkbox {
+        @apply form-input w-auto mr-2;
+    }
+    .auth-checkbox-label {
+        @apply text-sm text-gray-600;
+    }
+
+    /* Links row */
+    .auth-footer-links {
+        @apply flex items-center justify-between;
+    }
+    .auth-link {
+        @apply text-sm text-pink-600 hover:underline;
+    }
+
+    /* Submit button */
+    .auth-submit-btn {
+        @apply btn-primary;
+    }
+
+    .auth-page {
+        @apply max-w-md mx-auto px-4 sm:px-6 lg:px-8 mt-16;
+    }
+
+    /* Form container */
+    .auth-card {
+        @apply p-6 border rounded shadow bg-white;
+    }
+
+    /* Form title */
+    .auth-title {
+        @apply text-2xl font-bold mb-4;
+    }
+
+    /* Form wrapper */
+    .auth-form {
+        @apply space-y-4;
+    }
+
+    /* Field group */
+    .auth-form-group {
+        @apply mb-4;
+    }
+    .auth-label {
+        @apply block text-sm font-medium;
+    }
+    .auth-input {
+        @apply w-full p-2 border border-gray-300 rounded-lg mt-1 focus:outline-none focus:ring-2 focus:ring-primary;
+    }
+    .auth-error {
+        @apply text-red-600 text-sm mt-2;
+    }
+
+    /* Footer links & submit */
+    .auth-footer-links {
+        @apply flex items-center justify-between;
+    }
+    .auth-link {
+        @apply underline text-sm text-gray-600 hover:text-gray-900;
+    }
+    .auth-submit-btn {
+        @apply btn-primary;
+    }
+
+    /* Verify Email Page wrapper */
+    .auth-verify-page {
+        @apply max-w-md mx-auto px-4 sm:px-6 lg:px-8 mt-16 space-y-6;
+    }
+
+    /* Instruction / description text */
+    .auth-text {
+        @apply text-sm text-gray-600;
+    }
+
+    /* Status message */
+    .auth-status {
+        @apply font-medium text-sm text-green-600;
+    }
+
+    /* Action buttons row */
+    .auth-actions {
+        @apply flex items-center justify-between;
+    }
+
+    /* Primary button */
+    .auth-btn-primary {
+        @apply btn-primary;
+    }
+
+    /* Inline link button */
+    .auth-btn-link {
+        @apply underline text-sm text-gray-600 hover:text-gray-900;
+    }
+
+    /* Inline form wrapper */
+    .auth-form-inline {
+        @apply inline;
+    }
+}

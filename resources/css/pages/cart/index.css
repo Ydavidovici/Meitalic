@@ -1,5 +1,72 @@
+/* resources/css/pages/cart/index.css */
 @import "../../globals.css";
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+    /* Page wrapper */
+    .cart-page {
+        @apply max-w-4xl mx-auto py-12 px-4;
+    }
+
+    /* Headings */
+    .cart-title {
+        @apply text-3xl font-semibold mb-6;
+    }
+
+    /* Notifications */
+    .notification {
+        @apply mb-4 p-3 rounded;
+    }
+    .notification--success {
+        @apply bg-green-100 text-green-700;
+    }
+    .notification--error {
+        @apply bg-red-100 text-red-700;
+    }
+
+    /* Empty state */
+    .cart-empty {
+        @apply text-gray-600 text-center mt-10;
+    }
+    .cart-empty__link {
+        @apply text-blue-600 hover:underline mt-2 inline-block;
+    }
+
+    /* Table wrapper & table */
+    .cart-table-wrapper {
+        @apply overflow-x-auto mb-6;
+    }
+    .cart-table {
+        @apply min-w-full text-left border-collapse;
+    }
+    .cart-table th,
+    .cart-table td {
+        @apply py-2;
+    }
+    .cart-table th {
+        @apply border-b;
+    }
+    .cart-table tbody tr {
+        @apply border-b;
+    }
+    .cart-table__remove-btn {
+        @apply text-red-600 hover:underline;
+    }
+
+    /* Footer area */
+    .cart-footer {
+        @apply flex flex-col items-end space-y-4;
+    }
+    .promo-form {
+        @apply flex items-center gap-2;
+    }
+    .cart-total {
+        @apply text-xl font-semibold;
+    }
+    .checkout-btn {
+        @apply btn-primary px-6 py-3;
+    }
+}

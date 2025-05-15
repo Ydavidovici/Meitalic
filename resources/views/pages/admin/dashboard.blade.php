@@ -7,10 +7,10 @@
 
 @section('content')
 
-    <div x-data="adminDashboard()" class="py-12 container px-4 sm:px-6 lg:px-8">
+    <div x-data="adminDashboard()" class="admin-dashboard">
 
         {{-- 1. KPI CARDS --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-12">
+        <div class="kpi-section">
             @foreach([
               ['orders-today',    'Orders Today',      $kpis['orders_today']],
               ['orders-week',     'Orders This Week',  $kpis['orders_week']],
@@ -20,9 +20,9 @@
               ['revenue-month',   'Revenue This Month','$'.number_format($kpis['revenue_month'],2)],
               ['avg-order-value', 'Avg. Order Value',  '$'.number_format($kpis['avg_order_value'],2)],
             ] as [$key, $label, $value])
-                <div class="card cursor-pointer" @click="openModal('{{ $key }}')">
-                    <h4 class="font-semibold">{{ $label }}</h4>
-                    <p class="text-3xl">{{ $value }}</p>
+                <div class="kpi-card" @click="openModal('{{ $key }}')">
+                    <h4 class="kpi-card__label">{{ $label }}</h4>
+                    <p class="kpi-card__value">{{ $value }}</p>
                 </div>
             @endforeach
         </div>
@@ -47,68 +47,74 @@
         @endforeach
 
         {{-- 2. ORDER MANAGEMENT --}}
-        <div class="card mb-8">
-            <h3 class="font-bold mb-4 flex justify-between items-center">
-                <span>Order Management</span>
-                <div class="space-x-2">
-                    <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded">Pending: {{ $counts['pending'] }}</span>
-                    <span class="px-2 py-1 bg-red-100 text-red-700 rounded">Unfulfilled: {{ $counts['unfulfilled'] }}</span>
-                    <button @click="markBulk('shipped')"   class="text-sm text-blue-600 hover:underline">Mark Selected Shipped</button>
-                    <button @click="markBulk('delivered')" class="text-sm text-green-600 hover:underline">Mark Selected Delivered</button>
+        <div class="order-management">
+
+            <div class="order-management__header">
+                <h3>Order Management</h3>
+                <div class="order-management__badges">
+            <span class="order-management__badge--pending">
+                Pending: {{ $counts['pending'] }}
+            </span>
+                    <span class="order-management__badge--unfulfilled">
+                Unfulfilled: {{ $counts['unfulfilled'] }}
+            </span>
+                    <div class="order-management__bulk-actions">
+                        <button @click="markBulk('shipped')">Mark Selected Shipped</button>
+                        <button @click="markBulk('delivered')">Mark Selected Delivered</button>
+                    </div>
                 </div>
-            </h3>
+            </div>
 
             {{-- Filters --}}
             <x-form
                 id="orders-filters-form"
                 method="GET"
                 action="{{ route('admin.orders') }}"
-                class="mb-4 flex flex-wrap items-center space-x-2"
+                class="order-filters"
             >
-                <label for="status" class="font-medium">Status:</label>
-                <select name="status" id="status" class="form-select">
+                <label for="status">Status:</label>
+                <select name="status" id="status">
                     @foreach($allStatuses as $st)
-                        <option value="{{ $st }}" @selected(request('status','all') === $st)>{{ ucfirst($st) }}</option>
+                        <option value="{{ $st }}" @selected(request('status','all') === $st)>
+                            {{ ucfirst($st) }}
+                        </option>
                     @endforeach
                 </select>
 
-                <label for="order_number" class="font-medium">Order #:</label>
+                <label for="order_number">Order #:</label>
                 <input
                     type="text"
                     name="order_number"
                     id="order_number"
                     value="{{ request('order_number') }}"
                     placeholder="e.g. 1234"
-                    class="form-input w-32"
                 />
 
-                <label for="min_amount" class="font-medium">Min $:</label>
+                <label for="min_amount">Min $:</label>
                 <input
                     type="number"
                     name="min_amount"
                     id="min_amount"
                     step="0.01"
                     value="{{ request('min_amount') }}"
-                    class="form-input w-20"
                 />
 
-                <label for="max_amount" class="font-medium">Max $:</label>
+                <label for="max_amount">Max $:</label>
                 <input
                     type="number"
                     name="max_amount"
                     id="max_amount"
                     step="0.01"
                     value="{{ request('max_amount') }}"
-                    class="form-input w-20"
                 />
 
-                <button type="submit" class="btn-secondary whitespace-nowrap">Filter</button>
+                <button type="submit" class="btn-secondary">Filter</button>
             </x-form>
 
             {{-- Orders Table --}}
             <div id="orders-grid">
-                <table class="w-full text-left border-collapse">
-                    <thead class="bg-gray-100">
+                <table class="orders-table">
+                    <thead>
                     <tr>
                         <th><input type="checkbox" @click="toggleAll" /></th>
                         <th>#</th>
@@ -120,18 +126,22 @@
                     </thead>
                     <tbody>
                     @foreach($recentOrders as $order)
-                        <tr class="border-t">
-                            <td><input type="checkbox" value="{{ $order->id }}" x-model="selectedOrders" /></td>
+                        <tr>
+                            <td class="orders-table__checkbox">
+                                <input type="checkbox" value="{{ $order->id }}" x-model="selectedOrders" />
+                            </td>
                             <td>{{ $order->id }}</td>
                             <td>{{ optional($order->user)->name ?? 'Guest' }}</td>
                             <td>
-                                <span class="px-2 py-1 bg-gray-100 rounded text-sm">{{ ucfirst($order->status) }}</span>
+                            <span class="orders-table__status">
+                                {{ ucfirst($order->status) }}
+                            </span>
                             </td>
                             <td>{{ $order->created_at->format('M j, Y') }}</td>
-                            <td class="space-x-2">
-                                <button @click="singleMark({{ $order->id }}, 'shipped')"   class="text-sm text-blue-600 hover:underline">Mark Shipped</button>
-                                <button @click="singleMark({{ $order->id }}, 'delivered')" class="text-sm text-green-600 hover:underline">Mark Delivered</button>
-                                <button @click.stop="openOrderEdit({{ $order->id }})"       class="text-sm text-indigo-600 hover:underline">Edit</button>
+                            <td class="orders-table__actions">
+                                <button @click="singleMark({{ $order->id }}, 'shipped')">Mark Shipped</button>
+                                <button @click="singleMark({{ $order->id }}, 'delivered')">Mark Delivered</button>
+                                <button @click.stop="openOrderEdit({{ $order->id }})">Edit</button>
 
                                 @if($order->status === 'pending_return')
                                     <x-form
@@ -140,7 +150,7 @@
                                         class="inline"
                                     >
                                         <input type="hidden" name="status" value="returned">
-                                        <button class="text-sm text-green-600 hover:underline">Approve Return</button>
+                                        <button>Approve Return</button>
                                     </x-form>
 
                                     <x-form
@@ -149,7 +159,7 @@
                                         class="inline"
                                     >
                                         <input type="hidden" name="status" value="return_rejected">
-                                        <button class="text-sm text-red-600 hover:underline">Reject Return</button>
+                                        <button>Reject Return</button>
                                     </x-form>
                                 @endif
                             </td>
@@ -158,141 +168,67 @@
                     </tbody>
                 </table>
 
-                <div class="mt-4">{{ $recentOrders->links() }}</div>
+                <div class="orders-pagination">
+                    {{ $recentOrders->links() }}
+                </div>
             </div>
         </div>
 
-        {{-- Edit Order Modal --}}
-        <x-modal name="order-edit" maxWidth="lg" focusable>
-            <x-slot name="title">Edit Order #<span x-text="selectedOrder.id"></span></x-slot>
-            <template x-if="selectedOrder">
-                <div class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                        <div>
-                            <label class="block font-medium">Status</label>
-                            <select x-model="selectedOrder.status" class="form-select w-full">
-                                <template x-for="st in ['pending','shipped','delivered','unfulfilled','canceled','returned']" :key="st">
-                                    <option :value="st" x-text="st.charAt(0).toUpperCase()+st.slice(1)"></option>
-                                </template>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block font-medium">Date</label>
-                            <input type="text" readonly x-model="selectedOrder.created_at"
-                                   class="form-input bg-gray-100" />
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block font-medium">Customer</label>
-                            <input type="text" readonly x-model="selectedOrder.user?.name ?? 'Guest'"
-                                   class="form-input bg-gray-100" />
-                        </div>
-                        <div>
-                            <label class="block font-medium">Shipping Address</label>
-                            <textarea x-model="selectedOrder.shipping_address" rows="2" class="form-textarea"></textarea>
-                        </div>
-                        <div>
-                            <label class="block font-medium">Email</label>
-                            <input type="email" x-model="selectedOrder.email" class="form-input" />
-                        </div>
-                        <div>
-                            <label class="block font-medium">Phone</label>
-                            <input type="text" x-model="selectedOrder.phone" class="form-input" />
-                        </div>
-                    </div>
 
-                    <h4 class="font-semibold mb-2">Items</h4>
-                    <table class="w-full mb-6 border-collapse">
-                        <thead class="bg-gray-100">
-                        <tr>
-                            <th class="px-2 py-1 text-left">Product</th>
-                            <th class="px-2 py-1 text-left">Qty</th>
-                            <th class="px-2 py-1 text-left">Price</th>
-                            <th class="px-2 py-1 text-left">Line Total</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <template x-for="item in selectedOrder.items" :key="item.id">
-                            <tr class="border-t">
-                                <td x-text="item.name" class="px-2 py-1"></td>
-                                <td class="px-2 py-1">
-                                    <input type="number" min="1" x-model.number="item.quantity"
-                                           class="form-input w-16 p-1" />
-                                </td>
-                                <td class="px-2 py-1">
-                                    <input type="number" step="0.01" min="0" x-model.number="item.price"
-                                           class="form-input w-20 p-1" />
-                                </td>
-                                <td class="px-2 py-1">$<span x-text="(item.quantity*item.price).toFixed(2)"></span></td>
-                            </tr>
-                        </template>
-                        </tbody>
-                    </table>
-
-                    <div class="mb-6">
-                        <label class="font-medium">Order Total</label>
-                        <input type="number" step="0.01" x-model="selectedOrder.total"
-                               class="form-input w-32" />
-                    </div>
-                </div>
-            </template>
-            <x-slot name="footer">
-                <button @click="$dispatch('close-modal','order-edit')" class="btn-secondary">Cancel</button>
-                <button @click="updateOrder()" class="btn-primary">Save Changes</button>
-            </x-slot>
-        </x-modal>
-
-        {{-- Review Management --}}
-        <div class="card mb-8 bg-white rounded shadow p-6" x-data="{ tab:'pending' }">
-            <h3 class="font-bold mb-4">Review Management</h3>
-            <ul class="flex space-x-4 mb-4 border-b">
+        {{-- 5. REVIEW MANAGEMENT --}}
+        <div class="review-management" x-data="{ tab: 'pending' }">
+            <div class="review-management__tabs">
                 @foreach(['pending','approved','rejected'] as $st)
-                    <li>
-                        <button
-                            @click="tab='{{ $st }}'"
-                            :class="tab==='{{ $st }}' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-600 hover:text-gray-800'"
-                            class="pb-1"
-                        >{{ ucfirst($st) }} ({{ $reviewCounts[$st] }})</button>
-                    </li>
+                    <button
+                        @click="tab='{{ $st }}'"
+                        :class="tab==='{{ $st }}'
+                    ? 'review-management__tab-btn review-management__tab-btn--active'
+                    : 'review-management__tab-btn'"
+                    >
+                        {{ ucfirst($st) }} ({{ $reviewCounts[$st] }})
+                    </button>
                 @endforeach
-            </ul>
+            </div>
+
             @foreach(['pending','approved','rejected'] as $st)
                 <div x-show="tab==='{{ $st }}'">
                     @php $list = ${$st.'Reviews'}; @endphp
+
                     @if($list->isEmpty())
-                        <p class="text-gray-600">No {{ $st }} reviews.</p>
+                        <p class="review-empty">No {{ $st }} reviews.</p>
                     @else
-                        <table class="w-full text-left border-collapse mb-4">
-                            <thead class="bg-gray-100">
+                        <table class="review-table">
+                            <thead>
                             <tr>
-                                <th class="px-4 py-2">Product</th>
-                                <th class="px-4 py-2">User</th>
-                                <th class="px-4 py-2">Rating</th>
-                                <th class="px-4 py-2">Comment</th>
-                                <th class="px-4 py-2">Actions</th>
+                                <th>Product</th>
+                                <th>User</th>
+                                <th>Rating</th>
+                                <th>Comment</th>
+                                <th>Actions</th>
                             </tr>
                             </thead>
                             <tbody>
                             @foreach($list as $r)
-                                <tr class="border-t">
-                                    <td class="px-4 py-2">
-                                        <a href="{{ route('products.show',$r->product->slug) }}" class="hover:underline">
+                                <tr>
+                                    <td>
+                                        <a href="{{ route('products.show',$r->product->slug) }}">
                                             {{ $r->product->name }}
                                         </a>
                                     </td>
-                                    <td class="px-4 py-2">{{ $r->user->name }}</td>
-                                    <td class="px-4 py-2">{{ $r->rating }} ★</td>
-                                    <td class="px-4 py-2">{{ Str::limit($r->body, 50) }}</td>
-                                    <td class="px-4 py-2 space-x-2">
+                                    <td>{{ $r->user->name }}</td>
+                                    <td>{{ $r->rating }} ★</td>
+                                    <td>{{ Str::limit($r->body, 50) }}</td>
+                                    <td class="review-table__actions">
                                         @if($st === 'pending')
                                             <x-form method="PATCH" action="{{ route('admin.reviews.approve',$r) }}" class="inline">
-                                                <button class="text-green-600 hover:underline">Approve</button>
+                                                <button>Approve</button>
                                             </x-form>
                                             <x-form method="PATCH" action="{{ route('admin.reviews.reject',$r) }}" class="inline">
-                                                <button class="text-red-600 hover:underline">Reject</button>
+                                                <button>Reject</button>
                                             </x-form>
                                         @else
                                             <x-form method="DELETE" action="{{ route('admin.reviews.destroy',$r) }}" class="inline">
-                                                <button class="text-red-600 hover:underline">Delete</button>
+                                                <button>Delete</button>
                                             </x-form>
                                         @endif
                                     </td>
@@ -305,11 +241,13 @@
             @endforeach
         </div>
 
-        {{-- Inventory Management --}}
-        <div class="inventory-section mb-8">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold">Inventory</h3>
-                <button @click="openModal('inventory-create')" class="btn-primary">+ New Product</button>
+        {{-- 6. INVENTORY MANAGEMENT --}}
+        <div class="inventory-section">
+            <div class="inventory-header">
+                <h3 class="inventory-title">Inventory</h3>
+                <button @click="openModal('inventory-create')" class="inventory-add-btn">
+                    + New Product
+                </button>
             </div>
 
             {{-- Filters --}}
@@ -317,129 +255,85 @@
                 id="admin-filters-form"
                 method="GET"
                 action="{{ route('admin.products.index') }}"
-                class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"
+                class="filters-form"
             >
                 <input
                     name="q"
                     value="{{ request('q') }}"
                     placeholder="Search products…"
-                    class="form-input col-span-2"
                 />
-                <select name="brand" class="form-select">
-                    <option value="">All Brands</option>
-                    {{-- … --}}
-                </select>
-                <select name="category" class="form-select">
-                    <option value="">All Categories</option>
-                    {{-- … --}}
-                </select>
-                <select name="featured" class="form-select">
-                    <option value="">Featured?</option>
-                    {{-- … --}}
-                </select>
-                <select name="sort" class="form-select">
-                    <option value="">Sort By</option>
-                    {{-- … --}}
-                </select>
-                <select name="dir" class="form-select">
-                    <option value="">Direction</option>
-                    {{-- … --}}
-                </select>
-                <button type="submit" class="btn-secondary col-span-full">Apply</button>
+                <select name="brand"><option value="">All Brands</option></select>
+                <select name="category"><option value="">All Categories</option></select>
+                <select name="featured"><option value="">Featured?</option></select>
+                <select name="sort"><option value="">Sort By</option></select>
+                <select name="dir"><option value="">Direction</option></select>
+                <button type="submit" class="filters-submit">Apply</button>
             </x-form>
 
             {{-- Product Grid --}}
-            @include('partials.admin.product-grid')
+            <div class="inventory-grid">
+                @include('partials.admin.product-grid')
+            </div>
 
-            {{-- Create Product Modal --}}
-            <x-modal name="inventory-create" maxWidth="lg" focusable>
-                <x-slot name="title">Create New Product</x-slot>
-                <x-form
-                    id="inventory-create-form"
-                    method="POST"
-                    action="{{ route('admin.products.store') }}"
-                    enctype="multipart/form-data"
-                    @submit.prevent="validateAndSubmit($el)"
-                    class="space-y-4 p-6"
-                >
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <x-input-label for="name" :value="__('Name')" />
-                            <x-text-input id="name" name="name" required class="form-input" />
-                        </div>
-                        <div>
-                            <x-input-label for="brand" :value="__('Brand')" />
-                            <x-text-input id="brand" name="brand" required class="form-input" />
-                        </div>
-                        <div>
-                            <x-input-label for="category" :value="__('Category')" />
-                            <x-text-input id="category" name="category" required class="form-input" />
-                        </div>
-                        <div>
-                            <x-input-label for="price" :value="__('Price')" />
-                            <x-text-input id="price" name="price" type="number" step="0.01" required class="form-input"/>
-                        </div>
-                        <div>
-                            <x-input-label for="inventory" :value="__('Starting Inventory')" />
-                            <x-text-input id="inventory" name="inventory" type="number" required class="form-input"/>
-                        </div>
-                        <div class="md:col-span-2">
-                            <x-input-label for="description" :value="__('Description')" />
-                            <textarea id="description" name="description" rows="4" required class="form-textarea w-full">{{ old('description') }}</textarea>
-                        </div>
-                        <div>
-                            <x-input-label for="image" :value="__('Product Image')" />
-                            <input id="image" name="image" type="file" accept="image/*" class="form-input" />
-                        </div>
-                    </div>
-                    <div class="flex items-center">
-                        <input id="is_featured" name="is_featured" type="checkbox" value="1" @checked(old('is_featured')) class="mr-2"/>
-                        <label for="is_featured" class="font-medium">Featured</label>
-                    </div>
-                </x-form>
-                <x-slot name="footer">
-                    <button @click="$dispatch('close-modal','inventory-create')" class="btn-secondary">Cancel</button>
-                    <button type="submit" form="inventory-create-form" class="btn-primary">Create</button>
-                </x-slot>
-            </x-modal>
+            <div class="inventory-pagination">
+                {{ $products->links() /* or $products->links() */ }}
+            </div>
         </div>
 
-        {{-- Customer Insights --}}
-        <div class="insights-card mb-8">
-            <h3 class="text-lg font-semibold">New Registrations Today: {{ $newCustomersToday }}</h3>
-            <h4 class="text-base font-medium mt-2">Top Customers by Lifetime Spend</h4>
-            <ul class="list-disc pl-6 mt-2">
+        {{-- 7. CUSTOMER INSIGHTS --}}
+        <div class="insights-card">
+            <h3 class="insights-card__title">
+                New Registrations Today: {{ $newCustomersToday }}
+            </h3>
+            <ul class="insights-card__list">
                 @foreach($topCustomers as $user)
-                    <li>{{ $user->name }} (${{ number_format($user->lifetime_spend,2) }})</li>
+                    <li class="insights-card__item">
+                        {{ $user->name }} (${{ number_format($user->lifetime_spend,2) }})
+                    </li>
                 @endforeach
             </ul>
         </div>
 
-        {{-- Promotions --}}
-        <div class="promotions-section mb-8">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold">Promo Codes</h3>
+        {{-- 8. PROMOTIONS --}}
+        <div class="promotions-section">
+
+            <div class="promotions-header">
+                <h3 class="promotions-title">Promo Codes</h3>
                 <button @click="openModal('promo-create')" class="btn-primary">+ New Promo</button>
             </div>
-            <div class="space-y-2">
+
+            <div class="promotions-list">
                 @forelse($activePromos as $promo)
-                    <div class="flex justify-between items-center p-4 bg-gray-50 rounded">
-                        <div>
-                            <span class="font-medium">{{ $promo->code }}</span>
-                            — {{ $promo->type==='percent' ? $promo->discount.'%' : '$'.number_format($promo->discount,2) }}
+                    <div class="promo-row">
+                        <div class="promo-info">
+                            <span>{{ $promo->code }}</span>
+                            — {{ $promo->type === 'percent'
+               ? $promo->discount.'%'
+               : '$'.number_format($promo->discount, 2) }}
                             @if($promo->expires_at)
-                                <span class="text-sm text-gray-500">(expires {{ $promo->expires_at->format('M j, Y') }})</span>
+                                <span class="promo-expires">
+              (expires {{ $promo->expires_at->format('M j, Y') }})
+            </span>
                             @endif
                         </div>
-                        <div class="space-x-2">
-                            <button @click="openModal('promo-edit-{{ $promo->id }}')" class="text-indigo-600 hover:underline">Edit</button>
-                            <x-form method="DELETE" action="{{ route('admin.promo.destroy',$promo) }}" class="inline">
-                                <button type="submit" onclick="return confirm('Delete promo {{ $promo->code }}?')" class="text-red-600 hover:underline">Delete</button>
+                        <div class="promo-actions">
+                            <button @click="openModal('promo-edit-{{ $promo->id }}')">Edit</button>
+                            <x-form
+                                method="DELETE"
+                                action="{{ route('admin.promo.destroy', $promo) }}"
+                                class="inline"
+                            >
+                                <button
+                                    type="submit"
+                                    onclick="return confirm('Delete promo {{ $promo->code }}?')"
+                                >
+                                    Delete
+                                </button>
                             </x-form>
                         </div>
                     </div>
                 @empty
-                    <p class="text-gray-600">No promo codes defined.</p>
+                    <p class="promo-empty">No promo codes defined.</p>
                 @endforelse
             </div>
         </div>
@@ -511,11 +405,19 @@
             {!! $analyticsHtml !!}
         </div>
 
-        {{-- 7. SETTINGS --}}
+        {{-- 9. SETTINGS --}}
         <div class="settings-card">
-            <ul class="settings-list space-y-2">
-                <li><a href="{{ route('admin.products.index') }}" class="settings-link">Manage Products</a></li>
-                <li><a href="{{ route('admin.orders') }}" class="settings-link">View All Orders</a></li>
+            <ul class="settings-list">
+                <li>
+                    <a href="{{ route('admin.products.index') }}" class="settings-link">
+                        Manage Products
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('admin.orders') }}" class="settings-link">
+                        View All Orders
+                    </a>
+                </li>
             </ul>
         </div>
 
