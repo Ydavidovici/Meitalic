@@ -18,6 +18,7 @@
         >
             <h3 class="section-heading">Shipping & Contact</h3>
 
+            {{-- Address --}}
             <div class="form-group">
                 <label for="shipping_address" class="block font-medium mb-1">Address</label>
                 <textarea
@@ -31,6 +32,27 @@
                 <x-input-error :messages="$errors->get('shipping_address')" class="mt-1" />
             </div>
 
+            {{-- Calculate Shipping --}}
+            <div class="form-group">
+                <button
+                    type="button"
+                    @click="calculateShipping()"
+                    :disabled="loading"
+                    class="btn-secondary"
+                >
+                    Calculate Shipping
+                </button>
+            </div>
+
+            {{-- Display Shipping Fee --}}
+            <div
+                x-show="shipping !== null"
+                class="form-group"
+            >
+                <p class="font-medium">Shipping: $<span x-text="shipping.toFixed(2)"></span></p>
+            </div>
+
+            {{-- Contact --}}
             <div class="form-group">
                 <label for="email" class="block font-medium mb-1">Email</label>
                 <input
@@ -78,7 +100,9 @@
                 :disabled="loading"
                 class="btn-primary btn-pay"
             >
-                <span x-text="loading ? 'Processing…' : 'Pay $' + total.toFixed(2)"></span>
+                <span x-text="loading
+                    ? 'Processing…'
+                    : `Pay $${(total + (shipping||0)).toFixed(2)}`"></span>
             </button>
         </div>
     </x-form>

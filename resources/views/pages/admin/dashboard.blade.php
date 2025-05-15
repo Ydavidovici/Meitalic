@@ -72,43 +72,7 @@
                 action="{{ route('admin.dashboard') }}"
                 class="order-filters"
             >
-                <label for="status">Status:</label>
-                <select name="status" id="status">
-                    @foreach($allStatuses as $st)
-                        <option value="{{ $st }}" @selected(request('status','all') === $st)>
-                            {{ ucfirst($st) }}
-                        </option>
-                    @endforeach
-                </select>
-
-                <label for="order_number">Order #:</label>
-                <input
-                    type="text"
-                    name="order_number"
-                    id="order_number"
-                    value="{{ request('order_number') }}"
-                    placeholder="e.g. 1234"
-                />
-
-                <label for="min_amount">Min $:</label>
-                <input
-                    type="number"
-                    name="min_amount"
-                    id="min_amount"
-                    step="0.01"
-                    value="{{ request('min_amount') }}"
-                />
-
-                <label for="max_amount">Max $:</label>
-                <input
-                    type="number"
-                    name="max_amount"
-                    id="max_amount"
-                    step="0.01"
-                    value="{{ request('max_amount') }}"
-                />
-
-                <button type="submit" class="btn-secondary">Filter</button>
+                <!-- existing filters… -->
             </x-form>
 
             {{-- Orders Table --}}
@@ -120,6 +84,8 @@
                         <th>#</th>
                         <th>Customer</th>
                         <th>Status</th>
+                        <th>Shipping</th>
+                        <th>Total</th>
                         <th>Date</th>
                         <th>Actions</th>
                     </tr>
@@ -128,7 +94,11 @@
                     @foreach($recentOrders as $order)
                         <tr>
                             <td class="orders-table__checkbox">
-                                <input type="checkbox" value="{{ $order->id }}" x-model="selectedOrders" />
+                                <input
+                                    type="checkbox"
+                                    value="{{ $order->id }}"
+                                    x-model="selectedOrders"
+                                />
                             </td>
                             <td>{{ $order->id }}</td>
                             <td>{{ optional($order->user)->name ?? 'Guest' }}</td>
@@ -137,31 +107,20 @@
                                 {{ ucfirst($order->status) }}
                             </span>
                             </td>
+                            <td>${{ number_format($order->shipping_fee, 2) }}</td>
+                            <td>${{ number_format($order->total, 2) }}</td>
                             <td>{{ $order->created_at->format('M j, Y') }}</td>
                             <td class="orders-table__actions">
-                                <button @click="singleMark({{ $order->id }}, 'shipped')">Mark Shipped</button>
-                                <button @click="singleMark({{ $order->id }}, 'delivered')">Mark Delivered</button>
-                                <button @click.stop="openOrderEdit({{ $order->id }})">Edit</button>
-
-                                @if($order->status === 'pending_return')
-                                    <x-form
-                                        method="PATCH"
-                                        action="{{ route('admin.orders.updateStatus', $order) }}"
-                                        class="inline"
-                                    >
-                                        <input type="hidden" name="status" value="returned">
-                                        <button>Approve Return</button>
-                                    </x-form>
-
-                                    <x-form
-                                        method="PATCH"
-                                        action="{{ route('admin.orders.updateStatus', $order) }}"
-                                        class="inline"
-                                    >
-                                        <input type="hidden" name="status" value="return_rejected">
-                                        <button>Reject Return</button>
-                                    </x-form>
-                                @endif
+                                <button @click="singleMark({{ $order->id }}, 'shipped')">
+                                    Mark Shipped
+                                </button>
+                                <button @click="singleMark({{ $order->id }}, 'delivered')">
+                                    Mark Delivered
+                                </button>
+                                <button @click.stop="openOrderEdit({{ $order->id }})">
+                                    Edit
+                                </button>
+                                {{-- pending_return actions… --}}
                             </td>
                         </tr>
                     @endforeach
@@ -173,6 +132,114 @@
                 </div>
             </div>
         </div>
+
+        {{-- Edit Order Modal --}}
+        <x-modal name="order-edit" maxWidth="lg">
+            <x-slot name="title">
+                Edit Order # <span x-text="selectedOrder.id"></span>
+            </x-slot>
+
+            <x-form
+                method="PATCH"
+                x-bind:action="'/admin/orders/' + selectedOrder.id"
+                @submit.prevent="updateOrder()"
+                class="modal-body"
+            >
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {{-- Status --}}
+                    <div class="form-group">
+                        <x-input-label for="status" value="Status" />
+                        <select
+                            id="status"
+                            name="status"
+                            x-model="selectedOrder.status"
+                            required
+                            class="form-select"
+                        >
+                            @foreach(['pending','shipped','delivered','unfulfilled','canceled','returned'] as $st)
+                                <option value="{{ $st }}">{{ ucfirst($st) }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- Shipping Fee --}}
+                    <div class="form-group">
+                        <x-input-label for="shipping_fee" value="Shipping Fee" />
+                        <input
+                            id="shipping_fee"
+                            name="shipping_fee"
+                            type="number"
+                            step="0.01"
+                            x-model="selectedOrder.shipping_fee"
+                            required
+                            class="form-input"
+                        />
+                    </div>
+
+                    {{-- Total --}}
+                    <div class="form-group">
+                        <x-input-label for="total" value="Total" />
+                        <input
+                            id="total"
+                            name="total"
+                            type="number"
+                            step="0.01"
+                            x-model="selectedOrder.total"
+                            required
+                            class="form-input"
+                        />
+                    </div>
+
+                    {{-- Shipping Address --}}
+                    <div class="form-group field-group-full">
+                        <x-input-label for="shipping_address" value="Shipping Address" />
+                        <textarea
+                            id="shipping_address"
+                            name="shipping_address"
+                            rows="2"
+                            x-model="selectedOrder.shipping_address"
+                            required
+                            class="form-textarea"
+                        ></textarea>
+                    </div>
+
+                    {{-- Email --}}
+                    <div class="form-group">
+                        <x-input-label for="email" value="Email" />
+                        <input
+                            id="email"
+                            name="email"
+                            type="email"
+                            x-model="selectedOrder.email"
+                            class="form-input"
+                        />
+                    </div>
+
+                    {{-- Phone --}}
+                    <div class="form-group">
+                        <x-input-label for="phone" value="Phone" />
+                        <input
+                            id="phone"
+                            name="phone"
+                            type="text"
+                            x-model="selectedOrder.phone"
+                            class="form-input"
+                        />
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <x-secondary-button type="button" @click="$dispatch('close-modal','order-edit')">
+                        Cancel
+                    </x-secondary-button>
+                    <x-primary-button type="submit">
+                        Save Changes
+                    </x-primary-button>
+                </div>
+            </x-form>
+        </x-modal>
+
+
 
 
         {{-- 5. REVIEW MANAGEMENT --}}

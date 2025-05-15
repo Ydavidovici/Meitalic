@@ -15,6 +15,7 @@ class OrderFactory extends Factory
         return [
             'user_id'          => User::factory(),  // creates a new user for each order
             'shipping_address' => $this->faker->address,
+            'shipping_fee'     => $this->faker->randomFloat(2, 0, 20),
             'total'            => $this->faker->randomFloat(2, 20, 500),
             'status'           => 'pending',
         ];

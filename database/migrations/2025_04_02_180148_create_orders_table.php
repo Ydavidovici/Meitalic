@@ -12,6 +12,7 @@ class CreateOrdersTable extends Migration
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
             $table->text('shipping_address');
+            $table->decimal('shipping_fee', 8, 2)->default(0);
             $table->decimal('total', 8, 2);
             $table->string('status')->default('pending');
             $table->string('email')->nullable();

@@ -14,12 +14,20 @@ use App\Models\PromoCode;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Http\Controllers\PaymentController;
+use App\Services\UPSService;
 use App\Mail\ReviewRequestMailable;
 use App\Mail\OrderConfirmationMailable;
 use App\Mail\AdminOrderNotificationMail;
 
 class CheckoutController extends Controller
 {
+    protected UPSService $ups;
+
+    public function __construct(UPSService $ups)
+    {
+        $this->ups = $ups;
+    }
+
     /**
      * Show the checkout page.
      */
@@ -30,7 +38,8 @@ class CheckoutController extends Controller
         $subtotal = $items->sum(fn($i) => $i->total);
         $discount = $cart->discount ?? 0;
         $tax      = round(($subtotal - $discount) * config('cart.tax_rate', 0), 2);
-        $total    = round($subtotal - $discount + $tax, 2);
+        $shipping = session('shipping_fee', 0);
+        $total    = round($subtotal - $discount + $tax + $shipping, 2);
 
         if ($items->isEmpty()) {
             return redirect()
@@ -38,49 +47,117 @@ class CheckoutController extends Controller
                 ->with('error', 'Your cart is empty.');
         }
 
-        return view('pages.checkout.index', compact('items', 'subtotal', 'discount', 'tax', 'total'));
+        return view('pages.checkout.index', compact(
+            'items','subtotal','discount','tax','shipping','total'
+        ));
     }
 
     /**
-     * AJAX: create a Stripe PaymentIntent and return its client_secret.
+     * AJAX: calculate UPS shipping for this address + cart.
+     */
+    public function calculateShipping(Request $request)
+    {
+        $data = $request->validate([
+            'shipping_address' => 'required|string',
+        ]);
+
+        $cart  = $this->getCart($request);
+        $items = $cart->cartItems()->with('product')->get();
+        $subtotal = $items->sum(fn($i) => $i->price * $i->quantity);
+
+        if ($subtotal >= config('shipping.free_threshold')) {
+            $fee = 0;
+        } else {
+            // total weight
+            $weight = $items->sum(fn($i) => $i->product->weight * $i->quantity);
+
+            // bounding dims + total volume
+            $maxLen = $maxWid = $maxHei = 0;
+            $totalVol = 0;
+            foreach ($items as $i) {
+                $p = $i->product;
+                $maxLen = max($maxLen, $p->length);
+                $maxWid = max($maxWid, $p->width);
+                $maxHei = max($maxHei, $p->height);
+                $totalVol += ($p->length * $p->width * $p->height) * $i->quantity;
+            }
+
+            // pick smallest box
+            $boxes = config('shipping.boxes');
+            usort($boxes, fn($a,$b) =>
+                ($a['length'] * $a['width'] * $a['height'])
+                <=> ($b['length'] * $b['width'] * $b['height'])
+            );
+
+            $selected = null;
+            foreach ($boxes as $b) {
+                $vol = $b['length'] * $b['width'] * $b['height'];
+                if (
+                    $b['length'] >= $maxLen
+                    && $b['width']  >= $maxWid
+                    && $b['height'] >= $maxHei
+                    && $vol >= $totalVol
+                ) {
+                    $selected = $b;
+                    break;
+                }
+            }
+            if (! $selected) {
+                // fallback to largest
+                $selected = end($boxes);
+            }
+
+            // call UPS
+            $shipTo = ['AddressLine' => $data['shipping_address']];
+            $fee = $this->ups->getRate(
+                $shipTo,
+                $weight,
+                ['length' => $selected['length'], 'width' => $selected['width'], 'height' => $selected['height']]
+            );
+        }
+
+        session(['shipping_fee' => $fee]);
+
+        return response()->json(['shipping' => $fee]);
+    }
+
+    /**
+     * AJAX: create a Stripe PaymentIntent including shipping.
      */
     public function paymentIntent(Request $request)
     {
-        $cart  = $this->getCart($request);
-        $items = $cart->cartItems()->get();
-
+        $cart     = $this->getCart($request);
+        $items    = $cart->cartItems()->get();
         if ($items->isEmpty()) {
             return response()->json(['error' => 'Your cart is empty'], 422);
         }
 
-        // all values here are in cents
-        $subtotal = $items->sum(fn($i) => $i->price * $i->quantity);
-        $discount = $cart->discount ?? 0;
-        $tax      = round(($subtotal - $discount) * config('cart.tax_rate', 0), 2);
-
-        // total cents to charge
-        $amountCents = (int) round($subtotal - $discount + $tax);
+        $subtotal      = $items->sum(fn($i) => $i->price * $i->quantity);
+        $discount      = $cart->discount ?? 0;
+        $tax           = round(($subtotal - $discount) * config('cart.tax_rate', 0), 2);
+        $shippingFee   = session('shipping_fee', 0);
+        $amountCents   = (int) round($subtotal - $discount + $tax + $shippingFee);
 
         Stripe::setApiKey(config('services.stripe.secret'));
         $intent = PaymentIntent::create([
             'amount'   => $amountCents,
             'currency' => 'usd',
             'metadata' => [
-                'cart_id'  => $cart->id,
-                'discount' => $discount,
-                'user_id'  => auth()->id(),
+                'cart_id'      => $cart->id,
+                'discount'     => $discount,
+                'shipping_fee' => $shippingFee,
+                'user_id'      => auth()->id(),
             ],
         ]);
 
         return response()->json([
             'clientSecret' => $intent->client_secret,
-            'amount'       => $amountCents / 100, // e.g. 90 cents → 0.90 dollars
+            'amount'       => $amountCents / 100,
         ]);
     }
 
     /**
-     * Called **after** client confirms payment.
-     * Persist the order, line‑items, clear the cart, send emails.
+     * After payment succeeds: record order + line‑items, including shipping_fee.
      */
     public function placeOrder(Request $request)
     {
@@ -93,75 +170,53 @@ class CheckoutController extends Controller
 
         Stripe::setApiKey(config('services.stripe.secret'));
 
-        // ── JSON/AJAX flow: confirm an existing PaymentIntent ──
+        // confirm existing PaymentIntent
         if ($request->expectsJson()) {
             $pi = PaymentIntent::retrieve($data['payment_intent']);
             if ($pi->status !== 'succeeded') {
                 return response()->json(['error' => 'Payment not successful'], 422);
             }
             $stripePaymentId = $data['payment_intent'];
-        }
-        // ── Non‑AJAX/full‑flow: create a new PaymentIntent ──
-        else {
-            $cart     = $this->getCart($request);
-            $items    = $cart->cartItems()->get();
-            $subtotal = $items->sum(fn($i) => $i->price * $i->quantity);
-            $discount = $cart->discount ?? 0;
-            $tax      = round(($subtotal - $discount) * config('cart.tax_rate', 0), 2);
-            $amountCents = intval(($subtotal - $discount + $tax) * 100);
-
-            $intent = PaymentIntent::create([
-                'amount'   => $amountCents,
-                'currency' => 'usd',
-                'metadata' => [
-                    'cart_id'  => $cart->id,
-                    'discount' => $discount,
-                    'user_id'  => auth()->id(),
-                ],
-            ]);
-
-            $stripePaymentId = $intent->id;
+        } else {
+            // unlikely in AJAX flow, but stubbed for completeness
+            $stripePaymentId = $data['payment_intent'];
         }
 
-        // ── Gather/re‑use cart, items & totals ──
-        $cart     ??= $this->getCart($request);
-        $items    ??= $cart->cartItems()->with('product')->get();
-        $subtotal ??= $items->sum(fn($i) => $i->price * $i->quantity);
-        $discount ??= $cart->discount ?? 0;
-        $tax      ??= round(($subtotal - $discount) * config('cart.tax_rate', 0), 2);
-        $total     = round($subtotal - $discount + $tax, 2);
-        $code      = $cart->promo_code;
-        $amount    = $request->expectsJson()
-            ? intval(($subtotal - $discount + $tax) * 100)
-            : $amountCents;
-
-        $order = null;
+        // re‑gather
+        $cart     = $this->getCart($request);
+        $items    = $cart->cartItems()->with('product')->get();
+        $subtotal = $items->sum(fn($i) => $i->price * $i->quantity);
+        $discount = $cart->discount ?? 0;
+        $tax      = round(($subtotal - $discount) * config('cart.tax_rate', 0), 2);
+        $shipping = session('shipping_fee', 0);
+        $total    = round($subtotal - $discount + $tax + $shipping, 2);
 
         DB::transaction(function() use (
             $data, $cart, $items, $subtotal,
-            $discount, $tax, $total, $code, $amount,
+            $discount, $tax, $shipping, $total,
             $stripePaymentId,
             & $order
         ) {
-            // 1) Create the order into that outer variable
+            // 1) create order
             $order = Order::create([
                 'user_id'          => auth()->id(),
                 'shipping_address' => $data['shipping_address'],
                 'email'            => $data['email'],
                 'phone'            => $data['phone'] ?? null,
+                'shipping_fee'     => $shipping,
                 'total'            => $total,
                 'status'           => 'paid',
-                'meta'             => json_encode(['payment_intent' => $data['payment_intent']]),
+                'meta'             => json_encode(['payment_intent' => $stripePaymentId]),
             ]);
 
-            // 2) Record the payment
+            // 2) payment record
             app(PaymentController::class)->recordPayment(
                 $order,
                 $stripePaymentId,
-                $amount
+                intval($total)
             );
 
-            // 3) Persist line items
+            // 3) line‐items
             foreach ($items as $i) {
                 $order->orderItems()->create([
                     'product_id' => $i->product_id,
@@ -172,35 +227,28 @@ class CheckoutController extends Controller
                 ]);
             }
 
-            // 4) Promo usage
-            if ($code) {
+            // 4) promo usage
+            if ($code = $cart->promo_code) {
                 PromoCode::where('code', $code)->increment('used_count');
             }
 
-            // 5) Clear the cart
+            // 5) clear cart
             CartItem::where('cart_id', $cart->id)->delete();
-            $cart->update(['promo_code' => null, 'discount' => 0, 'total' => 0]);
+            $cart->update(['promo_code' => null, 'discount' => 0]);
 
-            // 6) Emails
-            Mail::to($order->email)
-                ->queue(new OrderConfirmationMailable($order));
+            // 6) emails
+            Mail::to($order->email)->queue(new OrderConfirmationMailable($order));
             if ($admin = config('mail.admin_address')) {
-                Mail::to($admin)
-                    ->queue(new AdminOrderNotificationMail($order));
+                Mail::to($admin)->queue(new AdminOrderNotificationMail($order));
             }
             Mail::to($order->email)
                 ->later(now()->addDays(7), new ReviewRequestMailable($order));
         });
 
-        // Return JSON for AJAX, or a plain 200 for form‐post
         if ($request->expectsJson()) {
-            return response()->json([
-                'success'  => true,
-                'order_id' => $order->id,
-            ]);
+            return response()->json(['success' => true, 'order_id' => $order->id]);
         }
-
-        return response('', 200);
+        return redirect()->route('checkout.success');
     }
 
     public function applyPromo(Request $request)

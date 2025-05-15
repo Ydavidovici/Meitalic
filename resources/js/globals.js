@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 })
 
-// 5) Cart store & sidebar component
+// 5) Cart store & sidebar component (unchanged)
 Alpine.store('cart', {
     open:   false,
     toggle() { this.open = !this.open },
@@ -70,7 +70,6 @@ Alpine.data('cartSidebar', () => ({
     total:    0,
 
     init() {
-        // reload whenever user opens the panel
         this.$watch('$store.cart.open', open => {
             if (open) this.load()
         })
@@ -112,24 +111,39 @@ Alpine.data('cartSidebar', () => ({
     }
 }))
 
-// 6) Checkout‐page component (still lives here, but only runs on checkout)
+// 6) Checkout‐page component (updated for shipping step)
 import '../css/pages/checkout/index.css'
 import '../css/pages/checkout/success.css'
 
 Alpine.data('checkoutPage', ()=>({
-    items:     [],
-    subtotal:  0,
-    discount:  0,
-    tax:       0,
-    total:     0,
-    promoCode: '',
-    promoError:'',
-    orderError:'',
-    loading:   false,
-    form:      { shipping_address:'', email:'', phone:'' },
+    // steps: 1 = shipping, 2 = review shipping, 3 = payment
+    step:          1,
+    items:         [],
+    subtotal:      0,
+    discount:      0,
+    tax:           0,
+    shippingFee:   0,
+    total:         0,
+    shippingLoading:false,
+    shippingError: '',
+    promoCode:     '',
+    promoError:    '',
+    orderError:    '',
+    loading:       false,
+    form: {
+        shipping_address: '',
+        email:            '',
+        phone:            ''
+    },
 
     init() {
         this.loadCart()
+    },
+
+    // recalculate tax + total including shipping
+    recalc() {
+        this.tax   = parseFloat(((this.subtotal - this.discount) * TAX_RATE).toFixed(2))
+        this.total = parseFloat((this.subtotal - this.discount + this.tax + this.shippingFee).toFixed(2))
     },
 
     async loadCart() {
@@ -138,13 +152,48 @@ Alpine.data('checkoutPage', ()=>({
         let j = await res.json()
         this.items    = j.items.map(i=>({
             ...i,
-            price: parseFloat(i.price),
+            price:    parseFloat(i.price),
             quantity: parseInt(i.quantity,10)
         }))
         this.subtotal = this.items.reduce((s,i)=>s + i.price*i.quantity,0)
         this.discount = parseFloat(j.discount||0)
-        this.tax      = parseFloat(((this.subtotal - this.discount)*TAX_RATE).toFixed(2))
-        this.total    = parseFloat((this.subtotal - this.discount + this.tax).toFixed(2))
+        this.shippingFee = 0
+        this.recalc()
+    },
+
+    // Step 2: call your shipping-cost endpoint
+    async calculateShipping() {
+        this.shippingError = ''
+        this.shippingLoading = true
+
+        try {
+            let res = await fetch('/checkout/shipping-cost', {
+                method: 'POST',
+                headers: {
+                    'Content-Type':   'application/json',
+                    'Accept':         'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({ shipping_address: this.form.shipping_address })
+            })
+
+            let j = await res.json()
+            if (!res.ok) {
+                this.shippingError = j.error || 'Failed to calculate shipping.'
+                return
+            }
+
+            this.shippingFee = parseFloat(j.shipping)
+            this.recalc()
+            this.step = 2
+        }
+        catch(e) {
+            console.error(e)
+            this.shippingError = 'Shipping calculation failed.'
+        }
+        finally {
+            this.shippingLoading = false
+        }
     },
 
     async applyPromo() {
@@ -159,16 +208,26 @@ Alpine.data('checkoutPage', ()=>({
             body: JSON.stringify({ code: this.promoCode })
         })
         let j = await res.json()
-        if (!res.ok) { this.promoError = j.error; return }
-        this.subtotal = parseFloat(j.subtotal)
-        this.discount = parseFloat(j.discount)
-        this.tax      = parseFloat(((this.subtotal - this.discount)*TAX_RATE).toFixed(2))
-        this.total    = parseFloat((this.subtotal - this.discount + this.tax).toFixed(2))
+        if (!res.ok) {
+            this.promoError = j.error
+            return
+        }
+        this.subtotal    = parseFloat(j.subtotal)
+        this.discount    = parseFloat(j.discount)
+        this.recalc()
     },
 
+    // Step 3: place order (including shippingFee)
     async placeOrder() {
         this.orderError = ''
         this.loading    = true
+
+        // include shipping_fee in payload
+        let payload = {
+            ...this.form,
+            shipping_fee: this.shippingFee
+        }
+
         let res = await fetch('/checkout/place-order',{
             method:'POST',
             headers:{
@@ -176,11 +235,18 @@ Alpine.data('checkoutPage', ()=>({
                 'Accept':'application/json',
                 'X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content
             },
-            body: JSON.stringify(this.form)
+            body: JSON.stringify(payload)
         })
+
         let j = await res.json()
         this.loading = false
-        if (!res.ok) { this.orderError = j.error; return }
+
+        if (!res.ok) {
+            this.orderError = j.error
+            return
+        }
+
+        // redirect on success (or show success UI)
         window.location = j.checkout_url
     }
 }))
