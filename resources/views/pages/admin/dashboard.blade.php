@@ -69,7 +69,7 @@
             <x-form
                 id="orders-filters-form"
                 method="GET"
-                action="{{ route('admin.orders') }}"
+                action="{{ route('admin.dashboard') }}"
                 class="order-filters"
             >
                 <label for="status">Status:</label>
@@ -414,7 +414,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="{{ route('admin.orders') }}" class="settings-link">
+                    <a href="{{ route('admin.dashboard') }}" class="settings-link">
                         View All Orders
                     </a>
                 </li>

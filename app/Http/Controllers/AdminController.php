@@ -222,9 +222,11 @@ class AdminController extends Controller
     {
         abort_if(! $request->user()?->is_admin, 403);
 
-        $orders = Order::latest()->paginate(20);
-
-        return view('pages.admin.orders', compact('orders'));
+        // Redirect to dashboard, preserving any filters
+        return redirect()
+            ->route('admin.dashboard', $request->only([
+                'status','min_amount','max_amount','order_number'
+            ]));
     }
 
     /**
