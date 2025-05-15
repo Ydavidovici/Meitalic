@@ -21,6 +21,10 @@ class ProductFactory extends Factory
                 'Skincare', 'Makeup', 'Haircare', 'Fragrance', 'Nail Care'
             ]),
             'description'  => $this->faker->sentences(3, true),
+            'weight'       => $this->faker->randomFloat(2, 0.1, 20), // pounds
+            'length'       => $this->faker->numberBetween(1, 24),    // inches
+            'width'        => $this->faker->numberBetween(1, 24),    // inches
+            'height'       => $this->faker->numberBetween(1, 24),    // inches
             'price'        => $this->faker->randomFloat(2, 10, 150),
             'image'        => 'images/hero-photo.png',
             'sku'          => strtoupper(Str::random(8)),

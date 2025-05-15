@@ -88,6 +88,10 @@ class ProductController extends Controller
             'brand'        => 'required|string|max:255',
             'category'     => 'required|string',
             'description'  => 'required|string',
+            'weight'       => 'required|numeric|min:0',    // pounds
+            'length'       => 'required|integer|min:0',    // inches
+            'width'        => 'required|integer|min:0',    // inches
+            'height'       => 'required|integer|min:0',    // inches
             'price'        => 'required|numeric|min:0',
             'inventory'    => 'required|integer|min:0',
             'image'        => 'nullable|image|max:2048',
@@ -127,6 +131,10 @@ class ProductController extends Controller
             'brand'        => 'required|string|max:255',
             'category'     => 'required|string',
             'description'  => 'required|string',
+            'weight'       => 'required|numeric|min:0',
+            'length'       => 'required|integer|min:0',
+            'width'        => 'required|integer|min:0',
+            'height'       => 'required|integer|min:0',
             'price'        => 'required|numeric|min:0',
             'inventory'    => 'required|integer|min:0',
             'image'        => 'nullable|image|max:2048',
