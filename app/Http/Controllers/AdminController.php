@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\User;
 use App\Models\PromoCode;
 use App\Models\Review;
+use App\Models\Newsletter;
 
 class AdminController extends Controller
 {
@@ -171,6 +172,9 @@ class AdminController extends Controller
             ->get();
 
 
+        $templates   = config('newsletters.templates');
+        $newsletters = Newsletter::latest()->paginate(5);
+
         return view('pages.admin.dashboard', compact(
             'kpis',
             'counts',
@@ -192,7 +196,9 @@ class AdminController extends Controller
             'reviewCounts',
             'pendingReviews',
             'approvedReviews',
-            'rejectedReviews'
+            'rejectedReviews',
+            'templates',
+            'newsletters',
         ));
     }
 

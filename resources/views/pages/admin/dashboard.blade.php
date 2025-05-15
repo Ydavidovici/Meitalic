@@ -558,9 +558,3 @@
 
     @vite('resources/js/admin-dashboard.js')
 @endsection
-
-@php
-    // Pass the templates and paginated newsletters into the view
-    View::share('templates', config('newsletters.templates'));
-    View::share('newsletters', \App\Models\Newsletter::latest()->paginate(5));
-@endphp

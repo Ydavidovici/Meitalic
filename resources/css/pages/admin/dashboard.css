@@ -237,6 +237,30 @@
     }
 }
 
+/* 9. Newsletter Management */
+@layer components {
+    .newsletter-section {
+        @apply bg-white rounded-lg shadow p-6 space-y-4;
+    }
+    .newsletter-section table {
+        @apply w-full text-left border-collapse mb-4;
+    }
+    .newsletter-section thead {
+        @apply bg-gray-100;
+    }
+    .newsletter-section th,
+    .newsletter-section td {
+        @apply px-4 py-2;
+    }
+    .newsletter-section tbody tr {
+        @apply border-t;
+    }
+    .newsletter-section .btn-primary {
+        @apply whitespace-nowrap;
+    }
+}
+
+
 /* 9. Settings & Dev Metrics */
 @layer components {
     .settings-card {
