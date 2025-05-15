@@ -23,56 +23,56 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('login') }}">
-                @csrf
-
-                <div class="mb-4">
+            <x-form method="POST" action="{{ route('login') }}" class="space-y-4">
+                <div class="form-group">
                     <label for="email" class="block text-sm font-medium">Email</label>
                     <input
                         id="email"
-                        type="email"
                         name="email"
+                        type="email"
                         value="{{ old('email') }}"
                         required
                         autofocus
-                        class="w-full mt-1 p-2 border rounded"
-                    >
+                        class="form-input w-full"
+                    />
                 </div>
 
-                <div class="mb-4">
+                <div class="form-group">
                     <label for="password" class="block text-sm font-medium">Password</label>
                     <input
                         id="password"
-                        type="password"
                         name="password"
+                        type="password"
                         required
-                        class="w-full mt-1 p-2 border rounded"
-                    >
+                        class="form-input w-full"
+                    />
                 </div>
 
-                <div class="mb-4 flex items-center">
-                    <input type="checkbox" name="remember" id="remember_me" class="mr-2">
+                <div class="flex items-center">
+                    <input
+                        id="remember_me"
+                        name="remember"
+                        type="checkbox"
+                        class="form-input w-auto mr-2"
+                    />
                     <label for="remember_me" class="text-sm text-gray-600">Remember me</label>
                 </div>
 
                 <div class="flex items-center justify-between">
                     @if (Route::has('password.request'))
                         <a
-                            class="text-sm text-pink-600 hover:underline"
                             href="{{ route('password.request') }}"
+                            class="text-sm text-pink-600 hover:underline"
                         >
                             Forgot your password?
                         </a>
                     @endif
 
-                    <button
-                        type="submit"
-                        class="bg-black text-white px-4 py-2 rounded hover:bg-gray-800"
-                    >
+                    <button type="submit" class="btn-primary">
                         Log in
                     </button>
                 </div>
-            </form>
+            </x-form>
         </div>
     </div>
 @endsection

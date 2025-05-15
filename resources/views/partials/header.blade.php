@@ -87,10 +87,13 @@
                 </template>
                 <template x-if="$store.auth.isAuthenticated">
                     <li class="site-nav__item">
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
+                        <x-form
+                            method="POST"
+                            action="{{ route('logout') }}"
+                            class="inline"
+                        >
                             <button type="submit" class="site-nav__cta">Logout</button>
-                        </form>
+                        </x-form>
                     </li>
                 </template>
             @endauth
@@ -103,5 +106,4 @@
             </li>
         </ul>
     </div>
-
 </header>

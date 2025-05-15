@@ -74,26 +74,53 @@
 
         <x-modal name="profile-edit" maxWidth="md">
             <x-slot name="title">Edit Profile</x-slot>
-            <form id="profile-form" action="{{ route('profile.update') }}" method="POST">
-                @csrf @method('PUT')
-                <div class="mb-4">
-                    <label for="name" class="block font-medium">Name</label>
-                    <input id="name" name="name" x-model="profileForm.name" />
-                </div>
-                <div class="mb-4">
-                    <label for="email" class="block font-medium">Email</label>
-                    <input id="email" name="email" x-model="profileForm.email" />
-                </div>
-            </form>
+
+            <!-- 1) Profile update form -->
+            <x-form
+                id="profile-form"
+                method="PUT"
+                action="{{ route('profile.update') }}"
+                class="space-y-4"
+            >
+                <x-form.group>
+                    <x-input-label for="name" :value="__('Name')" />
+                    <x-form.input
+                        id="name"
+                        name="name"
+                        x-model="profileForm.name"
+                    />
+                    <x-input-error :messages="$errors->get('name')" />
+                </x-form.group>
+
+                <x-form.group>
+                    <x-input-label for="email" :value="__('Email')" />
+                    <x-form.input
+                        id="email"
+                        name="email"
+                        x-model="profileForm.email"
+                        type="email"
+                    />
+                    <x-input-error :messages="$errors->get('email')" />
+                </x-form.group>
+            </x-form>
+
             <x-slot name="footer">
-                <button @click="$dispatch('close-modal','profile-edit')" class="btn-secondary">
+                <button
+                    @click="$dispatch('close-modal','profile-edit')"
+                    class="btn-secondary"
+                >
                     Cancel
                 </button>
-                <button type="submit" form="profile-form" class="btn-primary">
+                <button
+                    type="submit"
+                    form="profile-form"
+                    class="btn-primary"
+                >
                     Save
                 </button>
             </x-slot>
         </x-modal>
+
 
         {{-- Review Modal --}}
         <div x-show="isReviewModalOpen" x-cloak class="modal-wrapper">
@@ -102,26 +129,49 @@
                     &times;
                 </button>
                 <h2 class="text-xl font-bold mb-4" x-text="modalTitle"></h2>
-                <form :action="modalAction" method="POST">
-                    @csrf
+
+                <!-- 2) Review submission form -->
+                <x-form
+                    :action="modalAction"
+                    method="POST"
+                    class="space-y-4"
+                >
                     <template x-if="modalData.itemId">
                         <input type="hidden" name="order_item_id" :value="modalData.itemId">
-                        <input type="hidden" name="product_id" :value="modalData.productId">
+                        <input type="hidden" name="product_id"    :value="modalData.productId">
                     </template>
-                    <div class="mb-4">
-                        <label for="rating" class="block font-medium">Rating:</label>
-                        <select name="rating" id="rating" x-model="modalData.rating" class="border rounded w-full p-2">
+
+                    <x-form.group>
+                        <x-input-label for="rating" :value="__('Rating')" />
+                        <select
+                            name="rating"
+                            id="rating"
+                            x-model="modalData.rating"
+                            class="form-select"
+                        >
                             <template x-for="i in [1,2,3,4,5]" :key="i">
                                 <option :value="i" x-text="i"></option>
                             </template>
                         </select>
-                    </div>
-                    <div class="mb-4">
-                        <label for="body" class="block font-medium">Review:</label>
-                        <textarea name="body" id="body" x-model="modalData.body" class="border rounded w-full p-2" rows="4"></textarea>
-                    </div>
-                    <button type="submit" class="btn-primary w-full">Submit Review</button>
-                </form>
+                        <x-input-error :messages="$errors->get('rating')" />
+                    </x-form.group>
+
+                    <x-form.group>
+                        <x-input-label for="body" :value="__('Review')" />
+                        <textarea
+                            name="body"
+                            id="body"
+                            x-model="modalData.body"
+                            class="form-textarea"
+                            rows="4"
+                        ></textarea>
+                        <x-input-error :messages="$errors->get('body')" />
+                    </x-form.group>
+
+                    <button type="submit" class="btn-primary w-full">
+                        Submit Review
+                    </button>
+                </x-form>
             </div>
         </div>
 
@@ -133,21 +183,25 @@
                     <div class="recommendation-card">
                         <img
                             src="{{ Str::startsWith($prod->thumbnail_url, ['http://','https://'])
-                                ? $prod->thumbnail_url
-                                : asset('storage/'.$prod->thumbnail_url)
-                            }}"
+          ? $prod->thumbnail_url
+          : asset('storage/'.$prod->thumbnail_url)
+      }}"
                             alt="{{ $prod->name }}"
                             class="recommendation-card__img"
                         >
                         <div class="recommendation-card__actions">
-                            <form action="{{ route('cart.add') }}" method="POST" class="flex items-center gap-2">
-                                @csrf
+                            <!-- 3) Add‑to‑cart form -->
+                            <x-form
+                                action="{{ route('cart.add') }}"
+                                method="POST"
+                                class="flex items-center gap-2"
+                            >
                                 <input type="hidden" name="product_id" value="{{ $prod->id }}">
-                                <input type="hidden" name="quantity" value="1">
-                                <button type="submit" class="recommendation-card__btn">
+                                <input type="hidden" name="quantity"   value="1">
+                                <button type="submit" class="btn-primary">
                                     Add to Cart
                                 </button>
-                            </form>
+                            </x-form>
                         </div>
                     </div>
                 @endforeach

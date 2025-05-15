@@ -3,12 +3,14 @@
 
 @section('content')
 
-    <div
+    <x-form
+        method="POST"
+        action="{{ route('checkout.create') }}"
+        id="checkout-form"
+        class="checkout-container space-y-6"
         x-data="checkoutPage()"
         x-init="init()"
-        class="checkout-container"
     >
-
         {{-- Shipping & Contact --}}
         <div
             x-show="items.length"
@@ -16,27 +18,45 @@
         >
             <h3 class="section-heading">Shipping & Contact</h3>
 
-            <textarea
-                x-model="form.shipping_address"
-                required
-                class="form-textarea"
-                placeholder="Address"
-            ></textarea>
+            <div class="form-group">
+                <label for="shipping_address" class="block font-medium mb-1">Address</label>
+                <textarea
+                    id="shipping_address"
+                    name="shipping_address"
+                    x-model="form.shipping_address"
+                    required
+                    class="form-textarea"
+                    placeholder="Address"
+                ></textarea>
+                <x-input-error :messages="$errors->get('shipping_address')" class="mt-1" />
+            </div>
 
-            <input
-                x-model="form.email"
-                type="email"
-                required
-                class="form-input"
-                placeholder="Email"
-            >
+            <div class="form-group">
+                <label for="email" class="block font-medium mb-1">Email</label>
+                <input
+                    id="email"
+                    name="email"
+                    x-model="form.email"
+                    type="email"
+                    required
+                    class="form-input"
+                    placeholder="Email"
+                />
+                <x-input-error :messages="$errors->get('email')" class="mt-1" />
+            </div>
 
-            <input
-                x-model="form.phone"
-                type="text"
-                class="form-input"
-                placeholder="Phone (optional)"
-            >
+            <div class="form-group">
+                <label for="phone" class="block font-medium mb-1">Phone (optional)</label>
+                <input
+                    id="phone"
+                    name="phone"
+                    x-model="form.phone"
+                    type="text"
+                    class="form-input"
+                    placeholder="Phone (optional)"
+                />
+                <x-input-error :messages="$errors->get('phone')" class="mt-1" />
+            </div>
         </div>
 
         {{-- Payment --}}
@@ -46,27 +66,22 @@
         >
             <h3 class="section-heading">Payment</h3>
 
-            <div
-                id="card-element"
-                class="form-input"
-            ></div>
-
-            <p
-                id="card-errors"
-                class="error-text"
-            ></p>
+            <div class="form-group">
+                <label for="card-element" class="block font-medium mb-1">Card Details</label>
+                <div id="card-element" class="form-input"></div>
+                <p id="card-errors" class="error-text mt-1"></p>
+            </div>
 
             <button
+                type="button"
                 @click="pay()"
                 :disabled="loading"
                 class="btn-primary btn-pay"
             >
-        <span
-            x-text="loading ? 'Processing…' : 'Pay $' + total.toFixed(2)"
-        ></span>
+                <span x-text="loading ? 'Processing…' : 'Pay $' + total.toFixed(2)"></span>
             </button>
         </div>
-    </div>
+    </x-form>
 
     <script src="https://js.stripe.com/v3/"></script>
 @endsection

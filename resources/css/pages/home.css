@@ -42,7 +42,17 @@
     }
 
     .hero__cta {
-        @apply inline-block btn-primary mt-4 px-8 py-3 text-lg rounded-full;
+        @apply inline-block
+        bg-accent
+        text-white
+        font-medium
+        px-8 py-3
+        text-lg
+        rounded        /* <-- 0.25rem corners (same as your login/register) */
+        hover:bg-pink-400
+        transition;
+        /* remove mt-4 if you’d rather space it differently */
+        margin-top: 1rem;
     }
 
     .hero__figure {

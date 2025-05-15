@@ -41,16 +41,14 @@
                             <a href="{{ route('products.show', $product->slug) }}">
                                 @if($product->image)
                                     <img
-                                        src="{{ Str::startsWith($product->image, ['http://','https://']) ? $product->image : asset('storage/'.$product->image) }}"
+                                        src="{{ $product->image_url }}"
                                         alt="{{ $product->name }}"
                                         class="featured__img"
                                     />
                                 @endif
                                 <div class="featured__body">
                                     <h3 class="featured__name">{{ $product->name }}</h3>
-                                    <p class="featured__price">
-                                        ${{ number_format($product->price,2) }}
-                                    </p>
+                                    <p class="featured__price">${{ number_format($product->price,2) }}</p>
                                 </div>
                             </a>
                         </div>
@@ -154,16 +152,22 @@
 
             <div class="newsletter__card">
                 <p class="newsletter__text mb-4">Get 10% off your first order</p>
-                <form class="newsletter__form">
+                <x-form
+                    method="POST"
+                    action="{{ route('newsletter.subscribe') }}"
+                    class="newsletter__form space-y-4"
+                >
                     <input
                         type="email"
+                        name="email"
                         placeholder="Email address"
-                        class="newsletter__input"
-                    >
-                    <button type="submit" class="newsletter__btn">
+                        required
+                        class="form-input newsletter__input"
+                    />
+                    <button type="submit" class="btn-primary newsletter__btn">
                         Subscribe
                     </button>
-                </form>
+                </x-form>
             </div>
         </div>
     </section>

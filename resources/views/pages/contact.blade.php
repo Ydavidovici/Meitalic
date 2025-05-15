@@ -1,3 +1,4 @@
+{{-- resources/views/contact.blade.php --}}
 @extends('layouts.app')
 
 @section('title', 'Contact Us')
@@ -12,48 +13,67 @@
             </div>
         @endif
 
-        <form method="POST"
-              action="{{ route('contact.submit') }}"
-              enctype="multipart/form-data"
-              class="form--stacked">
+        <x-form
+            method="POST"
+            action="{{ route('contact.submit') }}"
+            enctype="multipart/form-data"
+            class="form--stacked space-y-6"
+        >
             @csrf
 
-            <div class="form-field">
-                <label for="name" class="form-label">Your Name</label>
-                <input type="text"
-                       id="name"
-                       name="name"
-                       required
-                       class="form-input">
+            <div class="form-group">
+                <x-input-label for="name" :value="__('Your Name')" />
+                <input
+                    id="name"
+                    name="name"
+                    type="text"
+                    value="{{ old('name') }}"
+                    required
+                    class="form-input w-full"
+                />
+                <x-input-error :messages="$errors->get('name')" class="mt-1" />
             </div>
 
-            <div class="form-field">
-                <label for="email" class="form-label">Your Email</label>
-                <input type="email"
-                       id="email"
-                       name="email"
-                       required
-                       class="form-input">
+            <div class="form-group">
+                <x-input-label for="email" :value="__('Your Email')" />
+                <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value="{{ old('email') }}"
+                    required
+                    class="form-input w-full"
+                />
+                <x-input-error :messages="$errors->get('email')" class="mt-1" />
             </div>
 
-            <div class="form-field">
-                <label for="photo" class="form-label">Upload Photo (optional)</label>
-                <input type="file"
-                       id="photo"
-                       name="photo"
-                       class="form-input">
+            <div class="form-group">
+                <x-input-label for="photo" :value="__('Upload Photo (optional)')" />
+                <input
+                    id="photo"
+                    name="photo"
+                    type="file"
+                    accept="image/*"
+                    class="form-input w-full"
+                />
+                <x-input-error :messages="$errors->get('photo')" class="mt-1" />
             </div>
 
-            <div class="form-field">
-                <label for="message" class="form-label">Message</label>
-                <textarea id="message"
-                          name="message"
-                          rows="4"
-                          required
-                          class="form-textarea"></textarea>
+            <div class="form-group">
+                <x-input-label for="message" :value="__('Message')" />
+                <textarea
+                    id="message"
+                    name="message"
+                    rows="4"
+                    required
+                    class="form-textarea w-full"
+                >{{ old('message') }}</textarea>
+                <x-input-error :messages="$errors->get('message')" class="mt-1" />
             </div>
 
-            <button type="submit" class="btn-primary">Send Message</button>
-        </form>
+            <button type="submit" class="btn-primary">
+                Send Message
+            </button>
+        </x-form>
     </div>
 @endsection

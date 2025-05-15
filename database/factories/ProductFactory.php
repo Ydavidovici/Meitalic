@@ -22,7 +22,7 @@ class ProductFactory extends Factory
             ]),
             'description'  => $this->faker->sentences(3, true),
             'price'        => $this->faker->randomFloat(2, 10, 150),
-            'image'        => $this->faker->imageUrl(640, 480, 'cosmetics', true, 'Meitalic'),
+            'image'        => 'images/hero-photo.png',
             'sku'          => strtoupper(Str::random(8)),
             'options'      => [
                 'size'  => $this->faker->randomElement(['S','M','L']),

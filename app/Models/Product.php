@@ -52,17 +52,22 @@ class Product extends Model
     /**
      * Fully qualified image URL.
      */
-    public function getImageUrlAttribute(): ?string
+    public function getImageUrlAttribute(): string
     {
-        if (! $this->image) {
-            return null;
+        $img = $this->image;
+
+        // 1) Absolute URLs
+        if (Str::startsWith($img, ['http://', 'https://'])) {
+            return $img;
         }
 
-        if (Str::startsWith($this->image, ['http://', 'https://'])) {
-            return $this->image;
+        // 2) public/images placeholders
+        if (Str::startsWith($img, 'images/')) {
+            return asset($img);
         }
 
-        return asset('storage/' . $this->image);
+        // 3) storage/app/public uploads
+        return asset('storage/' . $img);
     }
 
     /**

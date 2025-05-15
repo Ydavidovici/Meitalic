@@ -1,64 +1,71 @@
 @import "../globals.css";
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Container & Grid */
-.product-container {
-    max-width: 80rem;   /* max-w-5xl */
-    margin: 4rem auto;  /* mt-16 + centering */
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 2.5rem;        /* gap-10 */
-}
-@media (min-width: 768px) {
+@layer components {
+    /* ── GRID LAYOUT ── */
     .product-container {
-        grid-template-columns: 1fr 1fr; /* md:grid-cols-2 */
+        @apply max-w-5xl mx-auto mt-16 mb-16 grid gap-10 px-6 sm:px-8 lg:px-0
+        grid-cols-1 md:grid-cols-2;
     }
-}
 
-/* Image */
-.product-image {
-    width: 100%;
-    border-radius: 0.375rem;           /* rounded */
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06); /* shadow */
-}
+    .product-image-wrapper {
+        @apply overflow-hidden rounded-2xl bg-neutral-100;
+        /* Give it a max-height so it never consumes the entire viewport */
+        max-height: 60vh;
+    }
+    .product-image-wrapper::before { display: none; }
 
-/* Title & Price */
-.product-title {
-    font-size: 2.25rem; /* text-4xl */
-    font-weight: 700;   /* font-bold */
-    margin-bottom: 1rem;/* mb-4 */
-}
-.product-price {
-    font-size: 1.25rem;        /* text-xl */
-    color: #db2777;            /* text-pink-600 */
-    margin-bottom: 1.5rem;     /* mb-6 */
-}
+    /* Make the image contain itself inside the wrapper */
+    .product-image {
+        @apply w-full h-full object-contain;
+    }
 
-/* Description */
-.product-description {
-    color: #374151;   /* text-gray-700 */
-    margin-bottom: 1.5rem; /* mb-6 */
-}
+    /* ── DETAILS SPACING ── */
+    .product-details {
+        @apply flex flex-col space-y-6;
+    }
+    .product-title {
+        @apply text-4xl font-bold text-text;
+    }
+    .product-price {
+        @apply text-2xl text-accent;
+    }
+    .product-description {
+        @apply text-neutral-700 leading-relaxed;
+    }
 
-/* Form group */
-.form-group {
-    display: flex;
-    align-items: center;
-    margin-bottom: 1rem; /* mb-4 */
-}
-.form-label {
-    margin-right: 0.5rem; /* mr-2 */
-    font-size: 0.875rem;  /* text-sm */
-    font-weight: 500;     /* font-medium */
-}
-.quantity-input {
-    width: 5rem;          /* w-20 */
-    padding: 0.5rem;      /* p-2 */
-    border: 1px solid #d1d5db;
-    border-radius: 0.375rem;
-}
+    /* ── ADD TO CART + STEPPER ── */
+    .add-to-cart {
+        @apply mt-auto w-full;
+    }
 
-/* Reuse existing .btn-primary for the button */
+    .quantity-controls {
+        @apply flex w-full items-center justify-between;
+    }
+
+    .quantity-btn {
+        @apply w-10 h-10 flex items-center justify-center
+        bg-neutral-200 text-text rounded
+        hover:bg-neutral-300 transition;
+    }
+
+    .quantity-value {
+        @apply w-full text-center font-medium;
+    }
+
+    .atc-button {
+        @apply mt-4 block w-full bg-accent text-white
+        font-medium py-3 rounded transition
+        hover:bg-pink-500;
+    }
+    .stepper-btn {
+        @apply inline-flex items-center justify-center w-8 h-8 border border-gray-300 rounded;
+    }
+    .stepper-value {
+        @apply mx-2 text-lg;
+    }
+
+
+}

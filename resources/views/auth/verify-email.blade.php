@@ -15,22 +15,28 @@
         @endif
 
         <div class="flex items-center justify-between">
-            <form method="POST" action="{{ route('verification.send') }}">
-                @csrf
+            <x-form
+                method="POST"
+                action="{{ route('verification.send') }}"
+                class="inline"
+            >
                 <x-primary-button>
                     {{ __('Resend Verification Email') }}
                 </x-primary-button>
-            </form>
+            </x-form>
 
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
+            <x-form
+                method="POST"
+                action="{{ route('logout') }}"
+                class="inline"
+            >
                 <button
                     type="submit"
                     class="underline text-sm text-gray-600 hover:text-gray-900"
                 >
                     {{ __('Log Out') }}
                 </button>
-            </form>
+            </x-form>
         </div>
     </div>
 @endsection

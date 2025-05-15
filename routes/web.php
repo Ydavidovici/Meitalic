@@ -34,6 +34,13 @@ Route::get('/brands/{brand}', [BrandController::class, 'show'])->name('brands.sh
 
 Route::post('/stripe/webhook', [PaymentController::class, 'handleWebhook']);
 
+// Public newsletter subscription
+Route::post(
+    '/newsletter/subscribe',
+    [NewsletterController::class, 'subscribe']
+)->name('newsletter.subscribe');
+
+
 // ───────────── Checkout & Orders ───────────
 Route::get('/checkout',           [CheckoutController::class,'checkout'])
     ->name('checkout');

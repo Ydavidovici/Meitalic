@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Your cart')
+@section('title', 'Your Cart')
 
 @section('content')
     <div class="max-w-4xl mx-auto py-12 px-4">
@@ -36,11 +36,13 @@
                             <td>${{ number_format($item->price, 2) }}</td>
                             <td>${{ number_format($item->total, 2) }}</td>
                             <td>
-                                <form method="POST" action="{{ route('cart.remove', $item->id) }}">
-                                    @csrf
-                                    @method('DELETE')
+                                <x-form
+                                    method="DELETE"
+                                    action="{{ route('cart.remove', $item->id) }}"
+                                    class="inline"
+                                >
                                     <button class="text-red-600 hover:underline">Remove</button>
-                                </form>
+                                </x-form>
                             </td>
                         </tr>
                     @endforeach
@@ -50,31 +52,44 @@
 
             <div class="flex flex-col items-end space-y-4">
                 {{-- Promo Code Form --}}
-                <form method="POST" action="{{ route('cart.applyPromo') }}" class="flex items-center gap-2">
-                    @csrf
-                    <input type="text" name="code" class="px-4 py-2 border rounded" placeholder="Promo code"
-                           value="{{ session('applied_promo') ?? '' }}">
-                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                <x-form
+                    method="POST"
+                    action="{{ route('cart.applyPromo') }}"
+                    class="flex items-center gap-2"
+                >
+                    <input
+                        type="text"
+                        name="code"
+                        placeholder="Promo code"
+                        value="{{ session('applied_promo') ?? '' }}"
+                        class="form-input"
+                    />
+                    <button type="submit" class="btn-primary">
                         Apply
                     </button>
-                </form>
+                </x-form>
 
                 {{-- Total --}}
                 <div class="text-xl font-semibold">
                     Total: ${{ number_format($total, 2) }}
                 </div>
 
-                <form method="POST" action="{{ route('checkout.create') }}">
-                    @csrf
-                    <button type="submit" class="bg-black text-white px-6 py-3 rounded hover:bg-gray-900 transition">
+                {{-- Checkout --}}
+                <x-form
+                    method="POST"
+                    action="{{ route('checkout.create') }}"
+                >
+                    <button type="submit" class="btn-primary px-6 py-3">
                         Checkout with Stripe
                     </button>
-                </form>
+                </x-form>
             </div>
         @else
             <div class="text-gray-600 text-center mt-10">
                 <p>Your cart is currently empty.</p>
-                <a href="{{ route('home') }}" class="text-blue-600 hover:underline mt-2 inline-block">Continue Shopping</a>
+                <a href="{{ route('home') }}" class="text-blue-600 hover:underline mt-2 inline-block">
+                    Continue Shopping
+                </a>
             </div>
         @endif
     </div>
