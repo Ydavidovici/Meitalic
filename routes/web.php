@@ -168,5 +168,11 @@ Route::middleware('auth')->group(function () {
             ->name('newsletter.form');
         Route::post('newsletter/send', [NewsletterController::class,'send'])
             ->name('newsletter.send');
+        Route::get   ('newsletter',        [NewsletterController::class,'index'])
+            ->name('newsletter.index');
+        Route::get   ('newsletter/create', [NewsletterController::class,'create'])
+            ->name('newsletter.create');
+        Route::post  ('newsletter',        [NewsletterController::class,'store'])
+            ->name('newsletter.store');
     });
 });

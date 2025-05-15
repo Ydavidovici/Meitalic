@@ -421,7 +421,146 @@
             </ul>
         </div>
 
+        {{-- 8. NEWSLETTER MANAGEMENT --}}
+        <div class="newsletter-section mt-12">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold">Newsletters</h3>
+                <button @click="openModal('newsletter-create')" class="btn-primary">+ New Newsletter</button>
+            </div>
+
+            @if($newsletters->isEmpty())
+                <p>No newsletters have been scheduled yet.</p>
+            @else
+                <table class="w-full text-left border-collapse mb-6">
+                    <thead class="bg-gray-100">
+                    <tr>
+                        <th class="px-2 py-1">ID</th>
+                        <th class="px-2 py-1">Subject</th>
+                        <th class="px-2 py-1">Status</th>
+                        <th class="px-2 py-1">Scheduled At</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach($newsletters as $nl)
+                        <tr class="border-t">
+                            <td class="px-2 py-1">{{ $nl->id }}</td>
+                            <td class="px-2 py-1">{{ $nl->subject }}</td>
+                            <td class="px-2 py-1">{{ ucfirst($nl->status) }}</td>
+                            <td class="px-2 py-1">
+                                {{ $nl->scheduled_at
+                                   ? $nl->scheduled_at->format('M j, Y g:ia')
+                                   : '—' }}
+                            </td>
+                        </tr>
+                    @endforeach
+                    </tbody>
+                </table>
+                <div>{{ $newsletters->links() }}</div>
+            @endif
+        </div>
+
+        {{-- 9. Create Newsletter Modal --}}
+        <x-modal name="newsletter-create" maxWidth="lg">
+            <x-slot name="title">New Newsletter</x-slot>
+
+            <x-form
+                id="newsletter-create-form"
+                method="POST"
+                action="{{ route('admin.newsletter.store') }}"
+                x-data="{ template:'{{ array_key_first($templates) }}', fields:@json(array_values($templates)[0]['fields']) }"
+                @submit.prevent="validateAndSubmit($el)"
+                class="space-y-4 p-6"
+            >
+                @csrf
+
+                {{-- Template selector --}}
+                <div>
+                    <label for="template_key" class="block font-medium">Template</label>
+                    <select
+                        id="template_key"
+                        name="template_key"
+                        x-model="template"
+                        @change="fields = @json($templates)[template].fields"
+                        class="w-full border rounded px-3 py-2"
+                    >
+                        @foreach($templates as $key => $cfg)
+                            <option value="{{ $key }}">{{ $cfg['name'] }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Dynamic fields --}}
+                <template x-for="field in fields" :key="field">
+                    <div>
+                        <label :for="field" class="block font-medium" x-text="field.replace('_',' ').toUpperCase()"></label>
+
+                        <template x-if="field!=='body_text'">
+                            <input
+                                :id="field"
+                                :name="field"
+                                type="text"
+                                required
+                                class="w-full border rounded px-3 py-2"
+                            />
+                        </template>
+
+                        <template x-if="field==='body_text'">
+                        <textarea
+                            :id="field"
+                            :name="field"
+                            rows="4"
+                            required
+                            class="w-full border rounded px-3 py-2"
+                        ></textarea>
+                        </template>
+                    </div>
+                </template>
+
+                {{-- Optional promo code --}}
+                <div>
+                    <label for="promo_code" class="block font-medium">Promo Code (optional)</label>
+                    <input
+                        id="promo_code"
+                        name="promo_code"
+                        type="text"
+                        placeholder="PROMO2025"
+                        class="w-full border rounded px-3 py-2"
+                    />
+                </div>
+
+                {{-- Schedule --}}
+                <div>
+                    <label for="scheduled_at" class="block font-medium">Send At (optional)</label>
+                    <input
+                        type="datetime-local"
+                        id="scheduled_at"
+                        name="scheduled_at"
+                        class="w-full border rounded px-3 py-2"
+                    />
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-4">
+                    <button
+                        type="button"
+                        @click="$dispatch('close-modal','newsletter-create')"
+                        class="btn-secondary"
+                    >
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn-primary">Schedule</button>
+                </div>
+            </x-form>
+
+            <x-slot name="footer"></x-slot>
+        </x-modal>
+
     </div>
 
     @vite('resources/js/admin-dashboard.js')
 @endsection
+
+@php
+    // Pass the templates and paginated newsletters into the view
+    View::share('templates', config('newsletters.templates'));
+    View::share('newsletters', \App\Models\Newsletter::latest()->paginate(5));
+@endphp
