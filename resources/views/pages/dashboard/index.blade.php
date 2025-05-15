@@ -72,50 +72,56 @@
             </button>
         </div>
 
+        {{-- Profile Edit Modal --}}
         <x-modal name="profile-edit" maxWidth="md">
             <x-slot name="title">Edit Profile</x-slot>
 
-            <!-- 1) Profile update form -->
             <x-form
                 id="profile-form"
                 method="PUT"
                 action="{{ route('profile.update') }}"
-                class="space-y-4"
+                class="space-y-4 modal-body"
             >
-                <x-form.group>
-                    <x-input-label for="name" :value="__('Name')" />
-                    <x-form.input
+                {{-- Name Field --}}
+                <div class="space-y-1">
+                    <label for="name" class="block text-sm font-medium text-gray-700">
+                        Name
+                    </label>
+                    <input
                         id="name"
                         name="name"
+                        type="text"
                         x-model="profileForm.name"
+                        class="form-input"
                     />
-                    <x-input-error :messages="$errors->get('name')" />
-                </x-form.group>
+                    @error('name')
+                    <p class="text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
 
-                <x-form.group>
-                    <x-input-label for="email" :value="__('Email')" />
-                    <x-form.input
+                {{-- Email Field --}}
+                <div class="space-y-1">
+                    <label for="email" class="block text-sm font-medium text-gray-700">
+                        Email
+                    </label>
+                    <input
                         id="email"
                         name="email"
-                        x-model="profileForm.email"
                         type="email"
+                        x-model="profileForm.email"
+                        class="form-input"
                     />
-                    <x-input-error :messages="$errors->get('email')" />
-                </x-form.group>
+                    @error('email')
+                    <p class="text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
             </x-form>
 
-            <x-slot name="footer">
-                <button
-                    @click="$dispatch('close-modal','profile-edit')"
-                    class="btn-secondary"
-                >
+            <x-slot name="footer" class="modal-footer">
+                <button @click="$dispatch('close-modal','profile-edit')" class="btn-secondary">
                     Cancel
                 </button>
-                <button
-                    type="submit"
-                    form="profile-form"
-                    class="btn-primary"
-                >
+                <button type="submit" form="profile-form" class="btn-primary">
                     Save
                 </button>
             </x-slot>
@@ -125,27 +131,31 @@
         {{-- Review Modal --}}
         <div x-show="isReviewModalOpen" x-cloak class="modal-wrapper">
             <div class="modal-panel">
-                <button @click="closeReviewModal()" class="absolute top-2 right-2 text-gray-600 text-xl">
-                    &times;
-                </button>
-                <h2 class="text-xl font-bold mb-4" x-text="modalTitle"></h2>
+                <button @click="closeReviewModal()" class="modal-close">&times;</button>
+                <h2 class="modal-title" x-text="modalTitle"></h2>
 
-                <!-- 2) Review submission form -->
                 <x-form
-                    :action="modalAction"
+                    id="review-form"
+                    x-bind:action="modalAction"
                     method="POST"
-                    class="space-y-4"
+                    class="space-y-4 modal-body"
                 >
+                    {{-- Hidden IDs --}}
                     <template x-if="modalData.itemId">
                         <input type="hidden" name="order_item_id" :value="modalData.itemId">
-                        <input type="hidden" name="product_id"    :value="modalData.productId">
+                    </template>
+                    <template x-if="modalData.productId">
+                        <input type="hidden" name="product_id" :value="modalData.productId">
                     </template>
 
-                    <x-form.group>
-                        <x-input-label for="rating" :value="__('Rating')" />
+                    {{-- Rating --}}
+                    <div class="space-y-1">
+                        <label for="rating" class="block text-sm font-medium text-gray-700">
+                            Rating
+                        </label>
                         <select
-                            name="rating"
                             id="rating"
+                            name="rating"
                             x-model="modalData.rating"
                             class="form-select"
                         >
@@ -153,20 +163,27 @@
                                 <option :value="i" x-text="i"></option>
                             </template>
                         </select>
-                        <x-input-error :messages="$errors->get('rating')" />
-                    </x-form.group>
+                        @error('rating')
+                        <p class="text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
 
-                    <x-form.group>
-                        <x-input-label for="body" :value="__('Review')" />
+                    {{-- Review Body --}}
+                    <div class="space-y-1">
+                        <label for="body" class="block text-sm font-medium text-gray-700">
+                            Review
+                        </label>
                         <textarea
-                            name="body"
                             id="body"
+                            name="body"
                             x-model="modalData.body"
-                            class="form-textarea"
                             rows="4"
+                            class="form-textarea"
                         ></textarea>
-                        <x-input-error :messages="$errors->get('body')" />
-                    </x-form.group>
+                        @error('body')
+                        <p class="text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
 
                     <button type="submit" class="btn-primary w-full">
                         Submit Review

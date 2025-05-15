@@ -1,133 +1,95 @@
-// resources/js/admin-dashboard.js
+// resources/js/user-dashboard.js
 
-// ── Core Imports ──
+// Alpine + bootstrap
 import './bootstrap';
 import Alpine from 'alpinejs';
-
-// Expose Alpine globally
+import '../css/pages/dashboard/index.css'
 window.Alpine = Alpine;
 
-// ── CSS Imports ──
-// Admin page styles
-import '../css/pages/dashboard/index.css';
-// Partials
-import '../css/partials/admin_product-grid.css';
+// Alpine component for the user dashboard
+Alpine.data('userDashboard', () => ({
+    // —— Profile Modal State ——
+    profileForm: { name: '', email: '' },
 
-// ── Alpine Stores ──
-// Auth store (for admin auth state)
-Alpine.store('auth', {
-    isAuthenticated: window.isAuthenticated
-});
+    // —— Review Modal State ——
+    isReviewModalOpen: false,
+    modalTitle: '',
+    modalAction: '',
+    modalData: {},
 
-// Dashboard store for modals and dev metrics
-Alpine.store('dashboard', {
-    devMetricsVisible: false,
-    activeModal: null,
+    // —— Order Details Modal State ——
+    isOrderModalOpen: false,
+    selectedOrder: null,
 
-    toggleDevMetrics() {
-        this.devMetricsVisible = !this.devMetricsVisible;
-    },
-
-    openModal(name) {
-        this.activeModal = name;
-        window.dispatchEvent(new CustomEvent('open-modal', { detail: name }));
-    },
-
-    closeModal(name) {
-        if (this.activeModal === name) {
-            this.activeModal = null;
-            window.dispatchEvent(new CustomEvent('close-modal', { detail: name }));
+    init() {
+        // Pre‑populate profileForm from server‐rendered data
+        if (window.profileData) {
+            this.profileForm = { ...window.profileData };
         }
-    }
-});
+    },
 
-// ── Admin Dashboard Component ──
-function adminDashboard() {
-    return {
-        devMetricsVisible: Alpine.store('dashboard').devMetricsVisible,
-        selectedOrders: [],
-        selectedOrder: null,
+    // —— Profile Modal Methods ——
+    openProfileModal() {
+        // refresh with latest data
+        this.profileForm = { ...window.profileData };
+        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'profile-edit' }));
+    },
 
-        openModal(name) {
-            Alpine.store('dashboard').openModal(name);
-        },
+    // —— Review Modal Methods ——
+    openReviewModal({ orderId, itemId, productId, rating = 1, body = '' }) {
+        this.modalTitle = itemId
+            ? `Review Item #${itemId} (Order #${orderId})`
+            : `Review Order #${orderId}`;
+        this.modalAction = '/dashboard/reviews';  // or adjust for edit if you have a review ID
+        this.modalData = { orderId, itemId, productId, rating, body };
+        this.isReviewModalOpen = true;
+    },
+    closeReviewModal() {
+        this.isReviewModalOpen = false;
+    },
 
-        closeModal(name) {
-            Alpine.store('dashboard').closeModal(name);
-        },
-
-        singleMark(id, status) {
-            fetch(`/admin/orders/${id}/status`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({ status })
-            })
-                .then(res => {
-                    if (!res.ok) throw new Error('Update failed');
-                    location.reload(); // Reload after update
-                })
-                .catch(err => {
-                    console.error(err);
-                    alert('Failed to update order status');
-                });
-        },
-
-        markBulk(status) {
-            if (!this.selectedOrders.length) return;
-            fetch('/admin/orders/bulk-update', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({ ids: this.selectedOrders, status })
-            }).then(() => location.reload());
-        },
-
-        async openOrderEdit(id) {
-            const resp = await fetch(`/admin/orders/${id}`, {
-                headers: { 'Accept': 'application/json' }
+    // —— Inline Order Details Modal ——
+    async openOrderModal(orderId) {
+        try {
+            let res = await fetch(`/order/${orderId}`, {
+                headers: { Accept: 'application/json' }
             });
-            if (!resp.ok) return alert('Failed to load order');
-            this.selectedOrder = await resp.json();
-            this.openModal('order-edit');
-        },
-
-        updateOrder() {
-            fetch(`/admin/orders/${this.selectedOrder.id}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({
-                    status: this.selectedOrder.status,
-                    total: this.selectedOrder.total,
-                    shipping_address: this.selectedOrder.shipping_address,
-                    email: this.selectedOrder.email,
-                    phone: this.selectedOrder.phone
-                })
-            })
-                .then(res => {
-                    if (!res.ok) throw new Error('Update failed');
-                    this.closeModal('order-edit');
-                    location.reload();
-                })
-                .catch(err => {
-                    console.error(err);
-                    alert('Failed to save changes');
-                });
+            if (!res.ok) throw new Error('Fetch failed');
+            this.selectedOrder = await res.json();
+            this.isOrderModalOpen = true;
+        } catch (e) {
+            console.error(e);
+            alert('Unable to load order details');
         }
-    };
-}
+    },
+    closeOrderModal() {
+        this.isOrderModalOpen = false;
+    },
 
-// Register Alpine component
-Alpine.data('adminDashboard', adminDashboard);
+    // —— Cancel or Return actions ——
+    async cancelOrder(orderId) {
+        if (!confirm('Are you sure you want to cancel this order?')) return;
+        let res = await fetch(`/order/${orderId}/cancel`, {
+            method: 'PATCH',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            }
+        });
+        if (res.ok) location.reload();
+        else alert('Cancel failed');
+    },
+    async returnOrder(orderId) {
+        if (!confirm('Request a return for this order?')) return;
+        let res = await fetch(`/order/${orderId}/return`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            }
+        });
+        if (res.ok) location.reload();
+        else alert('Return request failed');
+    }
+}));
 
-
-// Initialize Alpine
+// Start Alpine
 Alpine.start();
