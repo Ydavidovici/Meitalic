@@ -15,6 +15,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Http\Controllers\PaymentController;
 use App\Services\UPSService;
+use App\Services\PackagingService;
 use App\Mail\ReviewRequestMailable;
 use App\Mail\OrderConfirmationMailable;
 use App\Mail\AdminOrderNotificationMail;
@@ -68,52 +69,24 @@ class CheckoutController extends Controller
         if ($subtotal >= config('shipping.free_threshold')) {
             $fee = 0;
         } else {
-            // total weight
+            // 1) Total weight
             $weight = $items->sum(fn($i) => $i->product->weight * $i->quantity);
 
-            // bounding dims + total volume
-            $maxLen = $maxWid = $maxHei = 0;
-            $totalVol = 0;
-            foreach ($items as $i) {
-                $p = $i->product;
-                $maxLen = max($maxLen, $p->length);
-                $maxWid = max($maxWid, $p->width);
-                $maxHei = max($maxHei, $p->height);
-                $totalVol += ($p->length * $p->width * $p->height) * $i->quantity;
-            }
+            // 2) Delegate box/envelope selection to PackagingService
+            $boxes    = config('shipping.boxes');
+            $envelope = config('shipping.envelope', null);
+            $package  = PackagingService::selectPackage($items, $boxes, $envelope);
+            $dims     = $package['dims'];
 
-            // pick smallest box
-            $boxes = config('shipping.boxes');
-            usort($boxes, fn($a,$b) =>
-                ($a['length'] * $a['width'] * $a['height'])
-                <=> ($b['length'] * $b['width'] * $b['height'])
-            );
-
-            $selected = null;
-            foreach ($boxes as $b) {
-                $vol = $b['length'] * $b['width'] * $b['height'];
-                if (
-                    $b['length'] >= $maxLen
-                    && $b['width']  >= $maxWid
-                    && $b['height'] >= $maxHei
-                    && $vol >= $totalVol
-                ) {
-                    $selected = $b;
-                    break;
-                }
-            }
-            if (! $selected) {
-                // fallback to largest
-                $selected = end($boxes);
-            }
-
-            // call UPS
-            $shipTo = ['AddressLine' => $data['shipping_address']];
-            $fee = $this->ups->getRate(
-                $shipTo,
-                $weight,
-                ['length' => $selected['length'], 'width' => $selected['width'], 'height' => $selected['height']]
-            );
+            // 3) UPS rate lookup
+            $shipTo = [
+                'AddressLine'       => $data['shipping_address'],
+                'City'              => $data['city'] ?? null,
+                'StateProvinceCode' => $data['state'] ?? null,
+                'PostalCode'        => $data['postal_code'] ?? null,
+                'CountryCode'       => $data['country'] ?? 'US',
+            ];
+            $fee = $this->ups->getRate($shipTo, $weight, $dims);
         }
 
         session(['shipping_fee' => $fee]);
@@ -126,17 +99,23 @@ class CheckoutController extends Controller
      */
     public function paymentIntent(Request $request)
     {
-        $cart     = $this->getCart($request);
-        $items    = $cart->cartItems()->get();
+        $cart  = $this->getCart($request);
+        $items = $cart->cartItems()->with('product')->get();
+
         if ($items->isEmpty()) {
             return response()->json(['error' => 'Your cart is empty'], 422);
         }
 
-        $subtotal      = $items->sum(fn($i) => $i->price * $i->quantity);
-        $discount      = $cart->discount ?? 0;
-        $tax           = round(($subtotal - $discount) * config('cart.tax_rate', 0), 2);
-        $shippingFee   = session('shipping_fee', 0);
-        $amountCents   = (int) round($subtotal - $discount + $tax + $shippingFee);
+        $subtotal    = $items->sum(fn($i) => $i->price * $i->quantity);
+        $discount    = $cart->discount ?? 0;
+        $tax         = round(($subtotal - $discount) * config('cart.tax_rate', 0), 2);
+        $shippingFee = session('shipping_fee', 0);
+
+        // ---- THIS IS THE FIX: multiply by 100 to get cents ----
+        $amountCents = (int) round(
+            ($subtotal - $discount + $tax + $shippingFee)
+            * 100
+        );
 
         Stripe::setApiKey(config('services.stripe.secret'));
         $intent = PaymentIntent::create([
@@ -152,6 +131,7 @@ class CheckoutController extends Controller
 
         return response()->json([
             'clientSecret' => $intent->client_secret,
+            // return dollars for your frontend total display
             'amount'       => $amountCents / 100,
         ]);
     }
@@ -171,18 +151,13 @@ class CheckoutController extends Controller
         Stripe::setApiKey(config('services.stripe.secret'));
 
         // confirm existing PaymentIntent
-        if ($request->expectsJson()) {
-            $pi = PaymentIntent::retrieve($data['payment_intent']);
-            if ($pi->status !== 'succeeded') {
-                return response()->json(['error' => 'Payment not successful'], 422);
-            }
-            $stripePaymentId = $data['payment_intent'];
-        } else {
-            // unlikely in AJAX flow, but stubbed for completeness
-            $stripePaymentId = $data['payment_intent'];
+        $pi = PaymentIntent::retrieve($data['payment_intent']);
+        if ($pi->status !== 'succeeded') {
+            return response()->json(['error' => 'Payment not successful'], 422);
         }
+        $stripePaymentId = $pi->id;
 
-        // re‑gather
+        // re‑gather everything
         $cart     = $this->getCart($request);
         $items    = $cart->cartItems()->with('product')->get();
         $subtotal = $items->sum(fn($i) => $i->price * $i->quantity);
@@ -197,7 +172,7 @@ class CheckoutController extends Controller
             $stripePaymentId,
             & $order
         ) {
-            // 1) create order
+            // create the order
             $order = Order::create([
                 'user_id'          => auth()->id(),
                 'shipping_address' => $data['shipping_address'],
@@ -209,14 +184,14 @@ class CheckoutController extends Controller
                 'meta'             => json_encode(['payment_intent' => $stripePaymentId]),
             ]);
 
-            // 2) payment record
+            // ---- PASS CENTS, NOT DOLLARS, INTO recordPayment() ----
             app(PaymentController::class)->recordPayment(
                 $order,
                 $stripePaymentId,
-                intval($total)
+                (int) round($total * 100)
             );
 
-            // 3) line‐items
+            // persist line items…
             foreach ($items as $i) {
                 $order->orderItems()->create([
                     'product_id' => $i->product_id,
@@ -227,29 +202,28 @@ class CheckoutController extends Controller
                 ]);
             }
 
-            // 4) promo usage
+            // promo usage, clear cart, emails…
             if ($code = $cart->promo_code) {
                 PromoCode::where('code', $code)->increment('used_count');
             }
-
-            // 5) clear cart
             CartItem::where('cart_id', $cart->id)->delete();
             $cart->update(['promo_code' => null, 'discount' => 0]);
 
-            // 6) emails
-            Mail::to($order->email)->queue(new OrderConfirmationMailable($order));
+            Mail::to($order->email)
+                ->queue(new OrderConfirmationMailable($order));
             if ($admin = config('mail.admin_address')) {
-                Mail::to($admin)->queue(new AdminOrderNotificationMail($order));
+                Mail::to($admin)
+                    ->queue(new AdminOrderNotificationMail($order));
             }
             Mail::to($order->email)
                 ->later(now()->addDays(7), new ReviewRequestMailable($order));
         });
 
-        if ($request->expectsJson()) {
-            return response()->json(['success' => true, 'order_id' => $order->id]);
-        }
-        return redirect()->route('checkout.success');
+        return $request->expectsJson()
+            ? response()->json(['success' => true, 'order_id' => $order->id])
+            : redirect()->route('checkout.success');
     }
+
 
     public function applyPromo(Request $request)
     {

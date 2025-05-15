@@ -286,4 +286,90 @@ class CheckoutTest extends TestCase
             ->assertOk()
             ->assertViewIs('pages.checkout.success');
     }
+
+    /** @test */
+    public function test_calculate_shipping_free_above_threshold()
+    {
+        // threshold is 50 by default
+        Config::set('shipping.free_threshold', 50);
+
+        $user = User::factory()->create();
+        $cart = Cart::create(['user_id' => $user->id]);
+
+        // subtotal = 60, above threshold => free shipping
+        $product = Product::factory()->create([
+            'price'    => 60,
+            'weight'   => 2,
+            'length'   => 10,
+            'width'    => 5,
+            'height'   => 3,
+        ]);
+        CartItem::create([
+            'cart_id'    => $cart->id,
+            'product_id' => $product->id,
+            'name'       => $product->name,
+            'price'      => 60,
+            'quantity'   => 1,
+            'total'      => 60,
+        ]);
+
+        // swap in a UPSService mock that must NOT be called
+        $ups = Mockery::mock(UPSService::class);
+        $ups->shouldNotReceive('getRate');
+        $this->app->instance(UPSService::class, $ups);
+
+        $response = $this->actingAs($user)
+            ->postJson(route('checkout.shipping'), ['shipping_address' => '123 Lane'])
+            ->assertOk()
+            ->assertJson(['shipping' => 0]);
+
+        // session should store 0
+        $this->assertEquals(0, session('shipping_fee'));
+    }
+
+    /** @test */
+    public function test_calculate_shipping_uses_ups_service_when_below_threshold()
+    {
+        // raise free threshold so our subtotal (20) is below it
+        Config::set('shipping.free_threshold', 100);
+
+        $user = User::factory()->create();
+        $cart = Cart::create(['user_id' => $user->id]);
+
+        $product = Product::factory()->create([
+            'price'    => 20,
+            'weight'   => 2.5,
+            'length'   => 10,
+            'width'    => 8,
+            'height'   => 4,
+        ]);
+        CartItem::create([
+            'cart_id'    => $cart->id,
+            'product_id' => $product->id,
+            'name'       => $product->name,
+            'price'      => 20,
+            'quantity'   => 1,
+            'total'      => 20,
+        ]);
+
+        // mock UPSService to assert correct args and return 12.34
+        $ups = Mockery::mock(UPSService::class);
+        $ups->shouldReceive('getRate')
+            ->once()
+            ->with(
+                ['AddressLine' => '123 Lane'],
+                2.5,
+                ['length' => 10, 'width' => 8, 'height' => 4]
+            )
+            ->andReturn(12.34);
+        $this->app->instance(UPSService::class, $ups);
+
+        $response = $this->actingAs($user)
+            ->postJson(route('checkout.shipping'), ['shipping_address' => '123 Lane'])
+            ->assertOk()
+            ->assertJson(['shipping' => 12.34]);
+
+        // session should store 12.34
+        $this->assertEquals(12.34, session('shipping_fee'));
+    }
 }

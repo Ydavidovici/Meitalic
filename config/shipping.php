@@ -30,14 +30,14 @@ return [
     | Shipper / Origin Address
     |--------------------------------------------------------------------------
     | This is your warehouse or “Ship From” address—UPS needs it to rate.
-    | Fill these out in .env once you have them.
+    | Fill these out in your .env (see below).
     */
     'shipper_address' => [
-        'line'            => env('SHIPPING_ORIGIN_LINE', ''),      // e.g. "123 Warehouse Rd"
-        'city'            => env('SHIPPING_ORIGIN_CITY', ''),      // e.g. "Raleigh"
-        'state'           => env('SHIPPING_ORIGIN_STATE', ''),     // e.g. "NC"
-        'postal'          => env('SHIPPING_ORIGIN_POSTAL', ''),    // e.g. "27601"
-        'country'         => env('SHIPPING_ORIGIN_COUNTRY', 'US'), // ISO country code
+        'line'    => env('SHIPPING_ORIGIN_LINE',   '131 Spook Rock Rd'),
+        'city'    => env('SHIPPING_ORIGIN_CITY',   'Suffern'),
+        'state'   => env('SHIPPING_ORIGIN_STATE',  'NY'),
+        'postal'  => env('SHIPPING_ORIGIN_POSTAL', '10901'),
+        'country' => env('SHIPPING_ORIGIN_COUNTRY','US'),
     ],
 
     /*
@@ -46,13 +46,21 @@ return [
     |--------------------------------------------------------------------------
     | We’ll pick the smallest one that fits your items.
     |
+    | Client‑provided specs:
+    |  • small box:  8½″ × 3½″ × 3½″  (104 cu in)
+    |  • big box:    9″ × 6½″ × 3½″   (204 cu in)
     */
     'boxes' => [
-        ['length' => 12, 'width' =>  9, 'height' =>  4],
-        ['length' => 16, 'width' => 12, 'height' =>  8],
-        ['length' => 18, 'width' => 12, 'height' => 12],
-        ['length' => 24, 'width' => 18, 'height' => 12],
-        // …add more if you need…
+        [
+            'length' => 8.5,
+            'width'  => 3.5,
+            'height' => 3.5,
+        ],
+        [
+            'length' => 9.0,
+            'width'  => 6.5,
+            'height' => 3.5,
+        ],
     ],
 
 ];
