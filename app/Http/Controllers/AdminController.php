@@ -31,11 +31,14 @@ class AdminController extends Controller
             'avg_order_value' => Order::whereDate('created_at', today())->avg('total'),
         ];
 
-        // 2) Pending / Unfulfilled counts
-        $counts = [
-            'pending'     => Order::where('status', 'pending')->count(),
-            'unfulfilled' => Order::where('status', 'unfulfilled')->count(),
-        ];
+        // 2) Counts for all statuses
+        $allStatuses = ['pending','shipped','delivered','unfulfilled','canceled','returned'];
+        $counts = collect($allStatuses)
+            ->mapWithKeys(fn($st) => [
+                $st => Order::where('status', $st)->count()
+            ])
+            ->all();
+
 
         // 3) Recent orders with filters
         $orderQ = Order::query();
@@ -312,6 +315,24 @@ class AdminController extends Controller
 
         return view('pages.admin.reviews.index', compact('reviews'));
     }
+
+    public function reviewsShow(Review $review)
+    {
+        abort_if(! auth()->user()?->is_admin, 403);
+        return response()->json($review);
+    }
+
+    public function reviewsUpdate(Request $request, Review $review)
+    {
+        $data = $request->validate([
+            'rating' => 'required|integer|min:1|max:5',
+            'body'   => 'required|string',
+            'status' => ['required', Rule::in(['pending','approved','rejected'])],
+        ]);
+        $review->update($data);
+        return response()->json(['success' => true]);
+    }
+
 
     /**
      * PATCH /admin/reviews/{review}/approve

@@ -27,42 +27,66 @@
             @endforeach
         </div>
 
-        {{-- KPI MODALS --}}
-        @foreach([
-          'orders-today'    => 'Orders Today',
-          'orders-week'     => 'Orders This Week',
-          'orders-month'    => 'Orders This Month',
-          'revenue-today'   => 'Revenue Today',
-          'revenue-week'    => 'Revenue This Week',
-          'revenue-month'   => 'Revenue This Month',
-          'avg-order-value' => 'Average Order Value',
-        ] as $key => $label)
-            <x-modal name="{{ $key }}" maxWidth="lg">
-                <x-slot name="title">{{ $label }} Details</x-slot>
-                <p class="text-gray-600">More detailed breakdown…</p>
-                <x-slot name="footer">
-                    <button @click="$dispatch('close-modal','{{ $key }}')" class="btn-secondary">Close</button>
-                </x-slot>
-            </x-modal>
-        @endforeach
+
 
         {{-- 2. ORDER MANAGEMENT --}}
         <div class="order-management">
 
-            <div class="order-management__header">
-                <h3>Order Management</h3>
-                <div class="order-management__badges">
-            <span class="order-management__badge--pending">
-                Pending: {{ $counts['pending'] }}
-            </span>
-                    <span class="order-management__badge--unfulfilled">
-                Unfulfilled: {{ $counts['unfulfilled'] }}
-            </span>
-                    <div class="order-management__bulk-actions">
-                        <button @click="markBulk('shipped')">Mark Selected Shipped</button>
-                        <button @click="markBulk('delivered')">Mark Selected Delivered</button>
-                    </div>
-                </div>
+            <div class="order-management__header grid grid-cols-4 grid-rows-2 gap-1 items-center">
+                {{-- 1) Header spans both rows in column 1 --}}
+                <h3 class="col-start-1 row-span-2 font-bold">Order Management</h3>
+
+                {{-- 2) Row 1, cols 2–4 --}}
+                <button
+                    type="button"
+                    class="order-management__badge order-management__badge--shipped col-start-2"
+                >
+                    Shipped: {{ $counts['shipped'] ?? 0 }}
+                </button>
+                <button
+                    type="button"
+                    class="order-management__badge order-management__badge--delivered col-start-3"
+                >
+                    Delivered: {{ $counts['delivered'] ?? 0 }}
+                </button>
+                <button
+                    type="button"
+                    class="order-management__badge order-management__badge--unfulfilled col-start-4"
+                >
+                    Unfulfilled: {{ $counts['unfulfilled'] ?? 0 }}
+                </button>
+
+                {{-- 3) Row 2, cols 2–4 --}}
+                {{-- Swap here: bulk “Delivered” button moves into row 2, col 2 --}}
+                <button
+                    @click="markBulk('delivered')"
+                    class="btn-secondary text-xs px-2 py-1 col-start-2"
+                >
+                    Mark Selected Delivered
+                </button>
+
+                {{-- Now bring Pending badge down into row 2, col 3 --}}
+                <button
+                    type="button"
+                    class="order-management__badge order-management__badge--pending col-start-3"
+                >
+                    Pending: {{ $counts['pending'] ?? 0 }}
+                </button>
+
+                {{-- And the other two status/bulk items fill cols 4 & 5 (but we only have 4 cols, so col 4 here) --}}
+                <button
+                    type="button"
+                    class="order-management__badge order-management__badge--canceled col-start-4"
+                >
+                    Canceled: {{ $counts['canceled'] ?? 0 }}
+                </button>
+                <button
+                    @click="markBulk('shipped')"
+                    class="btn-secondary text-xs px-2 py-1 col-start-4 row-start-2 self-end"
+                    style="justify-self:end;"
+                >
+                    Mark Selected Shipped
+                </button>
             </div>
 
             {{-- Filters --}}
@@ -102,25 +126,14 @@
                             </td>
                             <td>{{ $order->id }}</td>
                             <td>{{ optional($order->user)->name ?? 'Guest' }}</td>
-                            <td>
-                            <span class="orders-table__status">
-                                {{ ucfirst($order->status) }}
-                            </span>
-                            </td>
+                            <td><span class="orders-table__status">{{ ucfirst($order->status) }}</span></td>
                             <td>${{ number_format($order->shipping_fee, 2) }}</td>
                             <td>${{ number_format($order->total, 2) }}</td>
                             <td>{{ $order->created_at->format('M j, Y') }}</td>
                             <td class="orders-table__actions">
-                                <button @click="singleMark({{ $order->id }}, 'shipped')">
-                                    Mark Shipped
-                                </button>
-                                <button @click="singleMark({{ $order->id }}, 'delivered')">
-                                    Mark Delivered
-                                </button>
-                                <button @click.stop="openOrderEdit({{ $order->id }})">
-                                    Edit
-                                </button>
-                                {{-- pending_return actions… --}}
+                                <button @click="singleMark({{ $order->id }}, 'shipped')">Mark Shipped</button>
+                                <button @click="singleMark({{ $order->id }}, 'delivered')">Mark Delivered</button>
+                                <button @click.stop="openOrderEdit({{ $order->id }})">Edit</button>
                             </td>
                         </tr>
                     @endforeach
@@ -133,111 +146,7 @@
             </div>
         </div>
 
-        {{-- Edit Order Modal --}}
-        <x-modal name="order-edit" maxWidth="lg">
-            <x-slot name="title">
-                Edit Order # <span x-text="selectedOrder.id"></span>
-            </x-slot>
 
-            <x-form
-                method="PATCH"
-                x-bind:action="'/admin/orders/' + selectedOrder.id"
-                @submit.prevent="updateOrder()"
-                class="modal-body"
-            >
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {{-- Status --}}
-                    <div class="form-group">
-                        <x-input-label for="status" value="Status" />
-                        <select
-                            id="status"
-                            name="status"
-                            x-model="selectedOrder.status"
-                            required
-                            class="form-select"
-                        >
-                            @foreach(['pending','shipped','delivered','unfulfilled','canceled','returned'] as $st)
-                                <option value="{{ $st }}">{{ ucfirst($st) }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    {{-- Shipping Fee --}}
-                    <div class="form-group">
-                        <x-input-label for="shipping_fee" value="Shipping Fee" />
-                        <input
-                            id="shipping_fee"
-                            name="shipping_fee"
-                            type="number"
-                            step="0.01"
-                            x-model="selectedOrder.shipping_fee"
-                            required
-                            class="form-input"
-                        />
-                    </div>
-
-                    {{-- Total --}}
-                    <div class="form-group">
-                        <x-input-label for="total" value="Total" />
-                        <input
-                            id="total"
-                            name="total"
-                            type="number"
-                            step="0.01"
-                            x-model="selectedOrder.total"
-                            required
-                            class="form-input"
-                        />
-                    </div>
-
-                    {{-- Shipping Address --}}
-                    <div class="form-group field-group-full">
-                        <x-input-label for="shipping_address" value="Shipping Address" />
-                        <textarea
-                            id="shipping_address"
-                            name="shipping_address"
-                            rows="2"
-                            x-model="selectedOrder.shipping_address"
-                            required
-                            class="form-textarea"
-                        ></textarea>
-                    </div>
-
-                    {{-- Email --}}
-                    <div class="form-group">
-                        <x-input-label for="email" value="Email" />
-                        <input
-                            id="email"
-                            name="email"
-                            type="email"
-                            x-model="selectedOrder.email"
-                            class="form-input"
-                        />
-                    </div>
-
-                    {{-- Phone --}}
-                    <div class="form-group">
-                        <x-input-label for="phone" value="Phone" />
-                        <input
-                            id="phone"
-                            name="phone"
-                            type="text"
-                            x-model="selectedOrder.phone"
-                            class="form-input"
-                        />
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <x-secondary-button type="button" @click="$dispatch('close-modal','order-edit')">
-                        Cancel
-                    </x-secondary-button>
-                    <x-primary-button type="submit">
-                        Save Changes
-                    </x-primary-button>
-                </div>
-            </x-form>
-        </x-modal>
 
 
 
@@ -285,20 +194,40 @@
                                     <td>{{ $r->user->name }}</td>
                                     <td>{{ $r->rating }} ★</td>
                                     <td>{{ Str::limit($r->body, 50) }}</td>
-                                    <td class="review-table__actions">
-                                        @if($st === 'pending')
-                                            <x-form method="PATCH" action="{{ route('admin.reviews.approve',$r) }}" class="inline">
-                                                <button>Approve</button>
-                                            </x-form>
-                                            <x-form method="PATCH" action="{{ route('admin.reviews.reject',$r) }}" class="inline">
-                                                <button>Reject</button>
-                                            </x-form>
-                                        @else
-                                            <x-form method="DELETE" action="{{ route('admin.reviews.destroy',$r) }}" class="inline">
-                                                <button>Delete</button>
-                                            </x-form>
-                                        @endif
-                                    </td>
+                                    {{-- inside your reviews table body, replace the existing “Actions” <td> with this: --}}
+                                        <td class="review-table__actions">
+                                              <div class="flex items-center space-x-2">
+                                                    @if($st === 'pending')
+                                                          <x-form method="PATCH" action="{{ route('admin.reviews.approve',$r) }}" class="inline">
+                                                                <button type="submit" class="btn-primary btn-sm">Approve</button>
+                                                              </x-form>
+                                                          <x-form method="PATCH" action="{{ route('admin.reviews.reject',$r) }}" class="inline">
+                                                                <button type="submit" class="btn-danger btn-sm">Reject</button>
+                                                              </x-form>
+                                                        @elseif($st === 'approved')
+                                                          <x-form method="PATCH" action="{{ route('admin.reviews.reject',$r) }}" class="inline">
+                                                                <button type="submit" class="btn-danger btn-sm">Reject</button>
+                                                              </x-form>
+                                                          <x-form method="DELETE" action="{{ route('admin.reviews.destroy',$r) }}" class="inline" onsubmit="return confirm('Delete this review?')">
+                                                                <button type="submit" class="btn-secondary btn-sm">Delete</button>
+                                                              </x-form>
+                                                        @elseif($st === 'rejected')
+                                                          <x-form method="PATCH" action="{{ route('admin.reviews.approve',$r) }}" class="inline">
+                                                                <button type="submit" class="btn-primary btn-sm">Approve</button>
+                                                              </x-form>
+                                                          <x-form method="DELETE" action="{{ route('admin.reviews.destroy',$r) }}" class="inline" onsubmit="return confirm('Delete this review?')">
+                                                                <button type="submit" class="btn-secondary btn-sm">Delete</button>
+                                                              </x-form>
+                                                        @endif
+
+                                                    {{-- new “Edit” button --}}
+                                                    <button
+                                                          type="button"
+                                                          @click="openReviewEdit({{ $r->id }})"
+                                                          class="btn-secondary btn-sm"
+                                                        >Edit</button>
+                                                  </div>
+                                            </td>
                                 </tr>
                             @endforeach
                             </tbody>
@@ -338,13 +267,8 @@
             </x-form>
 
             {{-- Product Grid --}}
-            <div class="inventory-grid">
                 @include('partials.admin.product-grid')
-            </div>
 
-            <div class="inventory-pagination">
-                {{ $products->links() /* or $products->links() */ }}
-            </div>
         </div>
 
         {{-- 7. CUSTOMER INSIGHTS --}}
@@ -405,67 +329,7 @@
             </div>
         </div>
 
-        {{-- Create Promo Modal --}}
-        <x-modal name="promo-create" maxWidth="md">
-            <x-slot name="title">New Promo Code</x-slot>
-            <x-form method="POST" action="{{ route('admin.promo.store') }}" @submit.prevent="validateAndSubmit($el)" class="space-y-4 p-6">
-                <div class="form-group">
-                    <label class="block font-medium">Code</label>
-                    <input name="code" value="{{ old('code') }}" required class="form-input"/>
-                    @error('code') <p class="text-red-600">{{ $message }}</p> @enderror
-                </div>
-                <div class="form-group">
-                    <label class="block font-medium">Type</label>
-                    <select name="type" required class="form-select">
-                        <option value="fixed"   @selected(old('type')=='fixed')>Fixed</option>
-                        <option value="percent" @selected(old('type')=='percent')>Percent</option>
-                    </select>
-                    @error('type') <p class="text-red-600">{{ $message }}</p> @enderror
-                </div>
-                <div class="form-group">
-                    <label class="block font-medium">Discount</label>
-                    <input name="discount" type="number" step="0.01" value="{{ old('discount') }}" required class="form-input"/>
-                    @error('discount') <p class="text-red-600">{{ $message }}</p> @enderror
-                </div>
-                <div class="form-group">
-                    <label class="block font-medium">Max Uses</label>
-                    <input name="max_uses" type="number" value="{{ old('max_uses') }}" class="form-input"/>
-                    @error('max_uses') <p class="text-red-600">{{ $message }}</p> @enderror
-                </div>
-                <div class="form-group">
-                    <label class="block font-medium">Expires At</label>
-                    <input name="expires_at" type="date" value="{{ old('expires_at') }}" class="form-input"/>
-                    @error('expires_at') <p class="text-red-600">{{ $message }}</p> @enderror
-                </div>
-                <div class="flex items-center">
-                    <input id="promo-active" name="active" type="checkbox" value="1" @checked(old('active',true)) class="mr-2"/>
-                    <label for="promo-active" class="font-medium">Active</label>
-                </div>
-            </x-form>
-            <x-slot name="footer">
-                <button @click="$dispatch('close-modal','promo-create')" class="btn-secondary">Cancel</button>
-                <button type="submit" form="promo-create-form" class="btn-primary">Create</button>
-            </x-slot>
-        </x-modal>
 
-        {{-- Edit Promo Modals --}}
-        @foreach($activePromos as $promo)
-            <x-modal name="promo-edit-{{ $promo->id }}" maxWidth="md">
-                <x-slot name="title">Edit Promo “{{ $promo->code }}”</x-slot>
-                <x-form method="PUT" action="{{ route('admin.promo.update',$promo) }}" @submit.prevent="validateAndSubmit($el)" class="space-y-4 p-6">
-                    <div class="form-group">
-                        <label class="block font-medium">Code</label>
-                        <input name="code" value="{{ old('code',$promo->code) }}" required class="form-input"/>
-                        @error('code') <p class="text-red-600">{{ $message }}</p> @enderror
-                    </div>
-                    <!-- repeat fields as above with old($promo->…) -->
-                </x-form>
-                <x-slot name="footer">
-                    <button @click="$dispatch('close-modal','promo-edit-{{ $promo->id }}')" class="btn-secondary">Cancel</button>
-                    <button type="submit" form="promo-edit-{{ $promo->id }}" class="btn-primary">Save Changes</button>
-                </x-slot>
-            </x-modal>
-        @endforeach
 
         {{-- 6. DEV METRICS --}}
         <div x-show="devMetricsVisible" class="metrics-card">
@@ -621,7 +485,262 @@
             <x-slot name="footer"></x-slot>
         </x-modal>
 
+        {{-- Create Promo Modal --}}
+        <x-modal name="promo-create" maxWidth="md">
+            <x-slot name="title">New Promo Code</x-slot>
+            <x-form method="POST" action="{{ route('admin.promo.store') }}" @submit.prevent="validateAndSubmit($el)" class="space-y-4 p-6">
+                <div class="form-group">
+                    <label class="block font-medium">Code</label>
+                    <input name="code" value="{{ old('code') }}" required class="form-input"/>
+                    @error('code') <p class="text-red-600">{{ $message }}</p> @enderror
+                </div>
+                <div class="form-group">
+                    <label class="block font-medium">Type</label>
+                    <select name="type" required class="form-select">
+                        <option value="fixed"   @selected(old('type')=='fixed')>Fixed</option>
+                        <option value="percent" @selected(old('type')=='percent')>Percent</option>
+                    </select>
+                    @error('type') <p class="text-red-600">{{ $message }}</p> @enderror
+                </div>
+                <div class="form-group">
+                    <label class="block font-medium">Discount</label>
+                    <input name="discount" type="number" step="0.01" value="{{ old('discount') }}" required class="form-input"/>
+                    @error('discount') <p class="text-red-600">{{ $message }}</p> @enderror
+                </div>
+                <div class="form-group">
+                    <label class="block font-medium">Max Uses</label>
+                    <input name="max_uses" type="number" value="{{ old('max_uses') }}" class="form-input"/>
+                    @error('max_uses') <p class="text-red-600">{{ $message }}</p> @enderror
+                </div>
+                <div class="form-group">
+                    <label class="block font-medium">Expires At</label>
+                    <input name="expires_at" type="date" value="{{ old('expires_at') }}" class="form-input"/>
+                    @error('expires_at') <p class="text-red-600">{{ $message }}</p> @enderror
+                </div>
+                <div class="flex items-center">
+                    <input id="promo-active" name="active" type="checkbox" value="1" @checked(old('active',true)) class="mr-2"/>
+                    <label for="promo-active" class="font-medium">Active</label>
+                </div>
+            </x-form>
+            <x-slot name="footer">
+                <button @click="$dispatch('close-modal','promo-create')" class="btn-secondary">Cancel</button>
+                <button type="submit" form="promo-create-form" class="btn-primary">Create</button>
+            </x-slot>
+        </x-modal>
+
+        {{-- Edit Promo Modals --}}
+        @foreach($activePromos as $promo)
+            <x-modal name="promo-edit-{{ $promo->id }}" maxWidth="md">
+                <x-slot name="title">Edit Promo “{{ $promo->code }}”</x-slot>
+                <x-form method="PUT" action="{{ route('admin.promo.update',$promo) }}" @submit.prevent="validateAndSubmit($el)" class="space-y-4 p-6">
+                    <div class="form-group">
+                        <label class="block font-medium">Code</label>
+                        <input name="code" value="{{ old('code',$promo->code) }}" required class="form-input"/>
+                        @error('code') <p class="text-red-600">{{ $message }}</p> @enderror
+                    </div>
+                    <!-- repeat fields as above with old($promo->…) -->
+                </x-form>
+                <x-slot name="footer">
+                    <button @click="$dispatch('close-modal','promo-edit-{{ $promo->id }}')" class="btn-secondary">Cancel</button>
+                    <button type="submit" form="promo-edit-{{ $promo->id }}" class="btn-primary">Save Changes</button>
+                </x-slot>
+            </x-modal>
+        @endforeach
+
+        {{-- Edit Order Modal --}}
+        <x-modal name="order-edit" maxWidth="lg">
+            <x-slot name="title">
+                Edit Order # <span x-text="selectedOrder.id"></span>
+            </x-slot>
+
+            <x-form
+                method="PATCH"
+                x-bind:action="'/admin/orders/' + selectedOrder.id"
+                @submit.prevent="updateOrder()"
+                class="modal-body"
+            >
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {{-- Status --}}
+                    <div class="form-group">
+                        <x-input-label for="status" value="Status" />
+                        <select
+                            id="status"
+                            name="status"
+                            x-model="selectedOrder.status"
+                            required
+                            class="form-select"
+                        >
+                            @foreach(['pending','shipped','delivered','unfulfilled','canceled','returned'] as $st)
+                                <option value="{{ $st }}">{{ ucfirst($st) }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- Shipping Fee --}}
+                    <div class="form-group">
+                        <x-input-label for="shipping_fee" value="Shipping Fee" />
+                        <input
+                            id="shipping_fee"
+                            name="shipping_fee"
+                            type="number"
+                            step="0.01"
+                            x-model="selectedOrder.shipping_fee"
+                            required
+                            class="form-input"
+                        />
+                    </div>
+
+                    {{-- Total --}}
+                    <div class="form-group">
+                        <x-input-label for="total" value="Total" />
+                        <input
+                            id="total"
+                            name="total"
+                            type="number"
+                            step="0.01"
+                            x-model="selectedOrder.total"
+                            required
+                            class="form-input"
+                        />
+                    </div>
+
+                    {{-- Shipping Address --}}
+                    <div class="form-group field-group-full">
+                        <x-input-label for="shipping_address" value="Shipping Address" />
+                        <textarea
+                            id="shipping_address"
+                            name="shipping_address"
+                            rows="2"
+                            x-model="selectedOrder.shipping_address"
+                            required
+                            class="form-textarea"
+                        ></textarea>
+                    </div>
+
+                    {{-- Email --}}
+                    <div class="form-group">
+                        <x-input-label for="email" value="Email" />
+                        <input
+                            id="email"
+                            name="email"
+                            type="email"
+                            x-model="selectedOrder.email"
+                            class="form-input"
+                        />
+                    </div>
+
+                    {{-- Phone --}}
+                    <div class="form-group">
+                        <x-input-label for="phone" value="Phone" />
+                        <input
+                            id="phone"
+                            name="phone"
+                            type="text"
+                            x-model="selectedOrder.phone"
+                            class="form-input"
+                        />
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <x-secondary-button type="button" @click="$dispatch('close-modal','order-edit')">
+                        Cancel
+                    </x-secondary-button>
+                    <x-primary-button type="submit">
+                        Save Changes
+                    </x-primary-button>
+                </div>
+            </x-form>
+        </x-modal>
+
+        {{-- KPI MODALS --}}
+        @foreach([
+          'orders-today'    => 'Orders Today',
+          'orders-week'     => 'Orders This Week',
+          'orders-month'    => 'Orders This Month',
+          'revenue-today'   => 'Revenue Today',
+          'revenue-week'    => 'Revenue This Week',
+          'revenue-month'   => 'Revenue This Month',
+          'avg-order-value' => 'Average Order Value',
+        ] as $key => $label)
+            <x-modal name="{{ $key }}" maxWidth="lg">
+                <x-slot name="title">{{ $label }} Details</x-slot>
+                <p class="text-gray-600">More detailed breakdown…</p>
+                <x-slot name="footer">
+                    <button @click="$dispatch('close-modal','{{ $key }}')" class="btn-secondary">Close</button>
+                </x-slot>
+            </x-modal>
+        @endforeach
+
+        {{-- Review Edit Modal --}}
+        <x-modal name="review-edit" maxWidth="md">
+            <x-slot name="title">
+                Edit Review #<span x-text="selectedReview.id"></span>
+            </x-slot>
+
+            <x-form
+                method="PATCH"
+                x-bind:action="`/admin/reviews/${selectedReview.id}`"
+                @submit.prevent="updateReview()"
+                class="space-y-4 p-6"
+            >
+                @csrf {{-- if you need it for non-AJAX fallbacks --}}
+                <div>
+                    <label for="rating" class="block font-medium">Rating</label>
+                    <input
+                        id="rating"
+                        name="rating"
+                        type="number"
+                        min="1"
+                        max="5"
+                        x-model.number="selectedReview.rating"
+                        required
+                        class="form-input"
+                    />
+                </div>
+
+                <div>
+                    <label for="body" class="block font-medium">Comment</label>
+                    <textarea
+                        id="body"
+                        name="body"
+                        rows="4"
+                        x-model="selectedReview.body"
+                        required
+                        class="form-textarea"
+                    ></textarea>
+                </div>
+
+                <div>
+                    <label for="status" class="block font-medium">Status</label>
+                    <select
+                        id="status"
+                        name="status"
+                        x-model="selectedReview.status"
+                        required
+                        class="form-select"
+                    >
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+
+                <div class="modal-footer">
+                    <button
+                        type="button"
+                        @click="$dispatch('close-modal','review-edit')"
+                        class="btn-secondary"
+                    >Cancel</button>
+                    <button type="submit" class="btn-primary">Save Changes</button>
+                </div>
+            </x-form>
+        </x-modal>
+
     </div>
+
+
+
 
     @vite('resources/js/admin-dashboard.js')
 @endsection

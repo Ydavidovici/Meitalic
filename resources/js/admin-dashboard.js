@@ -1,4 +1,3 @@
-
 // ── Core Imports ──
 import './bootstrap';
 import Alpine from 'alpinejs';
@@ -7,23 +6,14 @@ import Alpine from 'alpinejs';
 window.Alpine = Alpine;
 
 // ── CSS Imports ──
-// Global styles
-//import '../css/globals.css';
-//import '../css/layouts/app.css';
-// Admin page styles
 import '../css/pages/admin/dashboard.css';
-
-// Partials
 import '../css/partials/admin_product-grid.css';
 
-
 // ── Alpine Stores ──
-// Auth store (for admin auth state)
 Alpine.store('auth', {
     isAuthenticated: window.isAuthenticated
 });
 
-// Dashboard store for modals and dev metrics
 Alpine.store('dashboard', {
     devMetricsVisible: false,
     activeModal: null,
@@ -50,6 +40,7 @@ function adminDashboard() {
     return {
         devMetricsVisible: Alpine.store('dashboard').devMetricsVisible,
         selectedOrders: [],
+        selectedReview: {},
         selectedOrder: null,
 
         openModal(name) {
@@ -71,7 +62,7 @@ function adminDashboard() {
             })
                 .then(res => {
                     if (!res.ok) throw new Error('Update failed');
-                    location.reload(); // Reload after update
+                    location.reload();
                 })
                 .catch(err => {
                     console.error(err);
@@ -93,7 +84,7 @@ function adminDashboard() {
 
         async openOrderEdit(id) {
             const resp = await fetch(`/admin/orders/${id}`, {
-                headers: { 'Accept': 'application/json' }
+                headers: { Accept: 'application/json' }
             });
             if (!resp.ok) return alert('Failed to load order');
             this.selectedOrder = await resp.json();
@@ -125,7 +116,43 @@ function adminDashboard() {
                     console.error(err);
                     alert('Failed to save changes');
                 });
-        }
+        },
+
+        async openReviewEdit(id) {
+            const resp = await fetch(`/admin/reviews/${id}`, {
+                method:      'GET',
+                credentials: 'same-origin',
+                headers:     { 'Accept': 'application/json' }
+            });
+            if (!resp.ok) return alert('Failed to load review');
+            this.selectedReview = await resp.json();
+            this.openModal('review-edit');
+        },
+
+        updateReview() {
+            fetch(`/admin/reviews/${this.selectedReview.id}`, {
+                method:      'PATCH',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    rating: this.selectedReview.rating,
+                    body:   this.selectedReview.body,
+                    status: this.selectedReview.status
+                })
+            })
+                .then(r => {
+                    if (!r.ok) throw new Error('Save failed');
+                    this.closeModal('review-edit');
+                    location.reload();
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('Failed to save review');
+                });
+        },
     };
 }
 

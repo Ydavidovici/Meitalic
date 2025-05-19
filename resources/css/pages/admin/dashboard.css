@@ -16,7 +16,7 @@
 /* 2. Page scaffold */
 @layer components {
     .admin-dashboard {
-        @apply py-12 container px-4 sm:px-6 lg:px-8 space-y-12;
+        @apply py-12 container mx-auto px-4 sm:px-6 lg:px-8 space-y-12;
     }
 }
 
@@ -36,39 +36,50 @@
     }
 }
 
-/* 4. Order Management */
+
 @layer components {
+    /* 4. Order Management */
     .order-management {
         @apply bg-white rounded-lg shadow p-6 space-y-4;
     }
     .order-management__header {
-        @apply flex justify-between items-center;
+        display: grid;
+        /* 5 columns: 1 for the title, 4 for badges/actions */
+        grid-template-columns: auto repeat(4, minmax(0, 1fr));
+        grid-auto-rows: auto;
+        align-items: center;       /* vertical align */
+        column-gap: 0.5rem;        /* space between columns */
+        row-gap: 0.25rem;          /* small gap between rows */
+        margin-bottom: 1rem;
     }
+
+    /* Title sits in column 1, spans both rows */
+    .order-management__header > h3 {
+        grid-column: 1 / 2;
+        grid-row: 1 / span 2;
+    }
+
+    /* Badges go in the first row, columns 2–5 */
     .order-management__badges {
-        @apply space-x-2;
+        display: contents; /* let its spans fill the grid cells directly */
     }
-    .order-management__badge--pending {
-        @apply px-2 py-1 bg-yellow-100 text-yellow-700 rounded;
+    .order-management__badges > span {
+        /* each badge will auto-flow into column 2,3,4,5 of row 1 */
+        grid-row: 1;
     }
-    .order-management__badge--unfulfilled {
-        @apply px-2 py-1 bg-red-100 text-red-700 rounded;
+
+    /* Bulk-action buttons go in row 2, columns 2 and 3 */
+    .order-management__bulk-actions {
+        grid-row: 2;
+        grid-column: 2 / span 2;
+        display: flex;
+        gap: 0.5rem;
     }
     .order-management__bulk-actions button {
-        @apply text-sm hover:underline;
+        @apply btn-secondary text-xs px-2 py-1;
     }
-    .order-filters {
-        @apply mb-4 flex flex-wrap items-center space-x-2;
-    }
-    .order-filters label {
-        @apply font-medium;
-    }
-    .order-filters select,
-    .order-filters input {
-        @apply form-input;
-    }
-    .order-filters .btn-secondary {
-        @apply whitespace-nowrap;
-    }
+
+    /* Table and row buttons */
     .orders-table {
         @apply w-full text-left border-collapse;
     }
@@ -82,15 +93,22 @@
     .orders-table tbody tr {
         @apply border-t;
     }
+
+    /* Compact inline buttons for each row */
+    .orders-table__actions {
+        @apply flex space-x-1;
+    }
+    .orders-table__actions button {
+        @apply btn-secondary text-xs px-2 py-1;
+    }
+
     .orders-table__checkbox {
         @apply p-2;
     }
     .orders-table__status {
         @apply px-2 py-1 bg-gray-100 rounded text-sm inline-block;
     }
-    .orders-table__actions button {
-        @apply text-sm hover:underline;
-    }
+
     .orders-pagination {
         @apply mt-4;
     }

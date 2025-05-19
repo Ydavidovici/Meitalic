@@ -157,6 +157,10 @@ Route::middleware('auth')->group(function () {
             ->name('reviews.reject');
         Route::delete('reviews/{review}',        [AdminController::class,'reviewsDestroy'])
             ->name('reviews.destroy');
+        Route::get('reviews/{review}',       [AdminController::class,'reviewsShow'])
+            ->name('admin.reviews.show');
+        Route::patch('reviews/{review}',     [AdminController::class,'reviewsUpdate'])
+            ->name('admin.reviews.update');
 
 
         Route::post   ('promo',         [PromoCodeController::class,'store'])->name('promo.store');

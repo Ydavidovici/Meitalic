@@ -150,10 +150,16 @@
 
     /* —— Logo —— */
     .site-header__logo {
-        @apply h-8;
+        /* allow the image to scale in both dimensions */
+        max-height: 2.5rem;
+        max-width: 10rem;
+        height: auto;
+        width: auto;
+        display: block;   /* remove any stray inline spacing */
     }
+
     .site-header__logo-link {
-        @apply no-underline;
+        @apply inline-block; /* ensure no extra padding or line-height from parent */
     }
 
     /* —— Nav —— */
@@ -262,6 +268,41 @@
     .btn-danger {
         @apply inline-block px-4 py-2 bg-red-600 text-white rounded-lg
         hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500;
+    }
+
+
+    @layer components {
+        /* Base UL wrapper */
+        .pagination {
+            @apply flex items-center justify-center space-x-2 my-4;
+        }
+
+        /* Each page item */
+        .pagination li {
+            @apply list-none;
+        }
+
+        /* Clickable links */
+        .pagination li a,
+        .pagination li span {
+            @apply block px-3 py-1 border border-gray-300 rounded text-sm;
+        }
+
+        /* Active page */
+        .pagination li.active span {
+            @apply bg-accent text-white border-accent;
+        }
+
+        /* Disabled arrows */
+        .pagination li.disabled span {
+            @apply text-gray-400 border-gray-200;
+            @apply cursor-not-allowed;
+        }
+
+        /* Hover state */
+        .pagination li:not(.active):not(.disabled) a:hover {
+            @apply bg-gray-100;
+        }
     }
 
 
