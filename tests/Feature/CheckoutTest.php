@@ -19,6 +19,7 @@ use Mockery;
 use App\Mail\OrderConfirmationMailable;
 use App\Mail\AdminOrderNotificationMail;
 use App\Mail\ReviewRequestMailable;
+use App\Services\UPSService;
 
 class CheckoutTest extends TestCase
 {
@@ -288,21 +289,21 @@ class CheckoutTest extends TestCase
     }
 
     /** @test */
-    public function test_calculate_shipping_free_above_threshold()
+    public function calculate_shipping_free_above_threshold()
     {
-        // threshold is 50 by default
+        // Given a free‐shipping threshold of $50
         Config::set('shipping.free_threshold', 50);
 
         $user = User::factory()->create();
         $cart = Cart::create(['user_id' => $user->id]);
 
-        // subtotal = 60, above threshold => free shipping
+        // Add a single item with price 60 (subtotal = 60)
         $product = Product::factory()->create([
             'price'    => 60,
-            'weight'   => 2,
-            'length'   => 10,
+            'weight'   => 1,
+            'length'   => 5,
             'width'    => 5,
-            'height'   => 3,
+            'height'   => 5,
         ]);
         CartItem::create([
             'cart_id'    => $cart->id,
@@ -313,35 +314,39 @@ class CheckoutTest extends TestCase
             'total'      => 60,
         ]);
 
-        // swap in a UPSService mock that must NOT be called
+        // Swap in a UPSService mock that must NOT be called
         $ups = Mockery::mock(UPSService::class);
         $ups->shouldNotReceive('getRate');
         $this->app->instance(UPSService::class, $ups);
 
+        // When we calculate shipping
         $response = $this->actingAs($user)
-            ->postJson(route('checkout.shipping'), ['shipping_address' => '123 Lane'])
+            ->postJson(route('checkout.shipping'), [
+                'shipping_address' => '123 Lane'
+            ]);
+
+        // Then we get free shipping (0) and it's saved to session
+        $response
             ->assertOk()
             ->assertJson(['shipping' => 0]);
 
-        // session should store 0
         $this->assertEquals(0, session('shipping_fee'));
     }
 
     /** @test */
-    public function test_calculate_shipping_uses_ups_service_when_below_threshold()
+    public function calculate_shipping_uses_ups_service_when_below_threshold()
     {
-        // raise free threshold so our subtotal (20) is below it
         Config::set('shipping.free_threshold', 100);
 
         $user = User::factory()->create();
         $cart = Cart::create(['user_id' => $user->id]);
 
         $product = Product::factory()->create([
-            'price'    => 20,
-            'weight'   => 2.5,
-            'length'   => 10,
-            'width'    => 8,
-            'height'   => 4,
+            'price'  => 20,
+            'weight' => 2.5,
+            'length' => 10,
+            'width'  => 8,
+            'height' => 4,
         ]);
         CartItem::create([
             'cart_id'    => $cart->id,
@@ -352,24 +357,137 @@ class CheckoutTest extends TestCase
             'total'      => 20,
         ]);
 
-        // mock UPSService to assert correct args and return 12.34
+        // figure out which box PackagingService will pick
+        $box         = config('shipping.boxes')[1];
+        $expectedDims = [
+            'length' => $box['length'],
+            'width'  => $box['width'],
+            'height' => $box['height'],
+        ];
+
         $ups = Mockery::mock(UPSService::class);
         $ups->shouldReceive('getRate')
             ->once()
-            ->with(
-                ['AddressLine' => '123 Lane'],
-                2.5,
-                ['length' => 10, 'width' => 8, 'height' => 4]
-            )
+            ->withArgs(function ($shipTo, $weight, $dims) use ($expectedDims) {
+                return $shipTo === ['AddressLine' => '123 Lane']
+                    && $weight  === 2.5
+                    && $dims    === $expectedDims;
+            })
             ->andReturn(12.34);
+
         $this->app->instance(UPSService::class, $ups);
 
         $response = $this->actingAs($user)
-            ->postJson(route('checkout.shipping'), ['shipping_address' => '123 Lane'])
+            ->postJson(route('checkout.shipping'), ['shipping_address' => '123 Lane']);
+
+        $response
             ->assertOk()
             ->assertJson(['shipping' => 12.34]);
 
-        // session should store 12.34
         $this->assertEquals(12.34, session('shipping_fee'));
+    }
+
+
+
+    /** @test */
+    public function calculate_shipping_fits_envelope_and_calls_ups()
+    {
+        Config::set('shipping.free_threshold', 100);
+
+        $user = User::factory()->create();
+        $cart = Cart::create(['user_id' => $user->id]);
+        $product = Product::factory()->create([
+            'price'  => 5,
+            'weight' => 0.2,
+            'length' => 8,
+            'width'  => 5,
+            'height' => 0.4,
+        ]);
+        CartItem::create([
+            'cart_id'    => $cart->id,
+            'product_id' => $product->id,
+            'name'       => $product->name,
+            'price'      => 5,
+            'quantity'   => 1,
+            'total'      => 5,
+        ]);
+
+        $envelope = config('shipping.envelope');
+
+        $ups = Mockery::mock(UPSService::class);
+        $ups->shouldReceive('getRate')
+            ->once()
+            ->withArgs(function($shipTo, $weight, $dims) use ($envelope) {
+                return $shipTo['AddressLine'] === '123 Lane'
+                    && $weight === 0.2
+                    && $dims === [
+                        'length' => $envelope['length'],
+                        'width'  => $envelope['width'],
+                        'height' => $envelope['height'],
+                    ];
+            })
+            ->andReturn(2.50);
+
+        $this->app->instance(UPSService::class, $ups);
+
+        $this->actingAs($user)
+            ->postJson(route('checkout.shipping'), ['shipping_address' => '123 Lane'])
+            ->assertOk()
+            ->assertJson(['shipping' => 2.50]);
+
+        $this->assertEquals(2.50, session('shipping_fee'));
+    }
+
+    /** @test */
+    public function calculate_shipping_requires_box_and_calls_ups()
+    {
+        Config::set('shipping.free_threshold', 100);
+
+        $user = User::factory()->create();
+        $cart = Cart::create(['user_id' => $user->id]);
+        $product = Product::factory()->create([
+            'price'  => 20,
+            'weight' => 2.5,
+            'length' => 12,
+            'width'  => 9,
+            'height' => 6,
+        ]);
+        CartItem::create([
+            'cart_id'    => $cart->id,
+            'product_id' => $product->id,
+            'name'       => $product->name,
+            'price'      => 20,
+            'quantity'   => 1,
+            'total'      => 20,
+        ]);
+
+        $boxes = config('shipping.boxes');
+        // pick the second box (12×9×6)
+        $box = $boxes[1];
+
+        $ups = Mockery::mock(UPSService::class);
+        // we only send length/width/height to UPS
+        $expectedDims = [
+            'length' => $box['length'],
+            'width'  => $box['width'],
+            'height' => $box['height'],
+        ];
+        $ups->shouldReceive('getRate')
+            ->once()
+            ->withArgs(function($shipTo, $weight, $dims) use ($expectedDims) {
+                return $shipTo['AddressLine'] === '123 Lane'
+                    && $weight === 2.5
+                    && $dims === $expectedDims;
+            })
+            ->andReturn(10.00);
+
+        $this->app->instance(UPSService::class, $ups);
+
+        $this->actingAs($user)
+            ->postJson(route('checkout.shipping'), ['shipping_address' => '123 Lane'])
+            ->assertOk()
+            ->assertJson(['shipping' => 10.00]);
+
+        $this->assertEquals(10.00, session('shipping_fee'));
     }
 }

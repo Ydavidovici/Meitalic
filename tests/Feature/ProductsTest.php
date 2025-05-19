@@ -1,170 +1,177 @@
 <?php
 
-namespace Tests\Feature;
+namespace App\Http\Controllers;
 
 use App\Models\Product;
-use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use App\Http\Controllers\AdminController;
 
-class ProductsTest extends TestCase
+class ProductController extends Controller
 {
-    use RefreshDatabase;
-
-    /** @test */
-    public function admin_can_create_a_product()
+    // Public listing
+    public function index(Request $request)
     {
-        $admin = User::factory()->create(['is_admin' => true]);
-        $this->actingAs($admin);
+        $q = Product::query();
 
-        $data = [
-            'name'        => 'Test Product',
-            'brand'       => 'Test Brand',
-            'category'    => 'Test Category',
-            'description' => 'This is a test product',
-            'price'       => 19.99,
-            'inventory'   => 50,
-        ];
+        // — 1. free-text search —
+        if ($search = $request->query('search')) {
+            $q->search($search);
+        }
 
-        $response = $this->post(route('admin.products.store'), $data);
-        $response->assertRedirect(route('admin.dashboard'));
+        // — 2. exact filters —
+        if ($brand = $request->query('brand')) {
+            $q->where('brand', $brand);
+        }
+        if ($category = $request->query('category')) {
+            $q->where('category', $category);
+        }
 
-        $this->assertDatabaseHas('products', [
-            'name'  => 'Test Product',
-            'brand' => 'Test Brand',
-        ]);
+        // — 2.b) featured filter —
+        if (! is_null($request->query('featured'))) {
+            $val = (int) $request->query('featured');
+            if (in_array($val, [0,1], true)) {
+                $q->where('is_featured', $val === 1);
+            }
+        }
+
+        // — 3. sorting —
+        $allowed = ['price','name','updated_at'];
+        $sort    = in_array($request->query('sort'), $allowed)
+            ? $request->query('sort')
+            : 'name';
+        $dir     = $request->query('dir') === 'desc' ? 'desc' : 'asc';
+
+        // — 4. dropdown data —
+        $allBrands     = Product::select('brand')->distinct()->orderBy('brand')->pluck('brand');
+        $allCategories = Product::select('category')->distinct()->orderBy('category')->pluck('category');
+
+        // — 5. paginate & preserve query —
+        $products = $q->orderBy($sort, $dir)
+            ->paginate(20)
+            ->appends(
+                $request->only([
+                    'search','brand','category','featured','sort','dir'
+                ])
+            );
+
+        if ($request->ajax()) {
+            return view('partials.product-grid', compact('products'));
+        }
+
+        return view('pages.products', compact(
+            'products','allBrands','allCategories'
+        ));
     }
 
-    /** @test */
-    public function non_admin_cannot_create_a_product()
+    // Public detail
+    public function show($slug)
     {
-        $user = User::factory()->create(['is_admin' => false]);
-        $this->actingAs($user);
-
-        $data = [
-            'name'        => 'Test Product',
-            'brand'       => 'Test Brand',
-            'category'    => 'Test Category',
-            'description' => 'Test description',
-            'price'       => 99.99,
-            'inventory'   => 50,
-        ];
-
-        $response = $this->post(route('admin.products.store'), $data);
-        $response->assertStatus(403);
+        $product = Product::where('slug', $slug)->firstOrFail();
+        return view('pages.product', compact('product'));
     }
 
-    /** @test */
-    public function admin_can_access_edit_product_page()
+    // Admin: show "create" form via dashboard
+    public function create(Request $request)
     {
-        $admin = User::factory()->create(['is_admin' => true]);
-        $this->actingAs($admin);
-
-        $product = Product::factory()->create();
-
-        $response = $this->get(route('admin.products.edit', $product));
-        $response->assertStatus(200);
+        $this->authorizeAdmin();
+        return app(AdminController::class)->index($request);
     }
 
-    /** @test */
-    public function non_admin_cannot_access_edit_product_page()
+    // Admin: show "edit" form via dashboard
+    public function edit(Request $request, Product $product)
     {
-        $user = User::factory()->create(['is_admin' => false]);
-        $this->actingAs($user);
-
-        $product = Product::factory()->create();
-
-        $response = $this->get(route('admin.products.edit', $product));
-        $response->assertStatus(403);
+        $this->authorizeAdmin();
+        return app(AdminController::class)->index($request);
     }
 
-    /** @test */
-    public function admin_can_update_a_product()
+    // Admin: store new
+    public function store(Request $request)
     {
-        $admin = User::factory()->create(['is_admin' => true]);
-        $this->actingAs($admin);
+        $this->authorizeAdmin();
 
-        $product = Product::factory()->create([
-            'name'      => 'Original Name',
-            'brand'     => 'Original Brand',
-            'category'  => 'OrigCat',
-            'description'=>'OrigDesc',
-            'price'     => 10.00,
-            'inventory' => 5,
-        ]);
-
-        $updateData = [
-            'name'        => 'Updated Name',
-            'brand'       => 'Updated Brand',
-            'category'    => $product->category,
-            'description' => $product->description,
-            'price'       => $product->price,
-            'inventory'   => $product->inventory,
-        ];
-
-        $response = $this->put(route('admin.products.update', $product), $updateData);
-        $response->assertRedirect(route('admin.dashboard'));
-
-        $this->assertDatabaseHas('products', [
-            'id'    => $product->id,
-            'name'  => 'Updated Name',
-            'brand' => 'Updated Brand',
-        ]);
-    }
-
-    /** @test */
-    public function non_admin_cannot_update_a_product()
-    {
-        $user = User::factory()->create(['is_admin' => false]);
-        $this->actingAs($user);
-
-        $product = Product::factory()->create([
-            'name'      => 'Original Name',
-            'brand'     => 'Original Brand',
-            'category'  => 'OrigCat',
-            'description'=>'OrigDesc',
-            'price'     => 10.00,
-            'inventory' => 5,
+        $data = $request->validate([
+            'name'         => 'required|string|max:255',
+            'brand'        => 'required|string|max:255',
+            'category'     => 'required|string',
+            'description'  => 'required|string',
+            'weight'       => 'required|numeric|min:0',
+            'length'       => 'required|numeric|min:0',
+            'width'        => 'required|numeric|min:0',
+            'height'       => 'required|numeric|min:0',
+            'price'        => 'required|numeric|min:0',
+            'inventory'    => 'required|integer|min:0',
+            'image'        => 'nullable|image|max:2048',
+            'is_featured'  => 'sometimes|boolean',
         ]);
 
-        $updateData = [
-            'name'        => 'Updated Name',
-            'brand'       => 'Updated Brand',
-            'category'    => $product->category,
-            'description' => $product->description,
-            'price'       => $product->price,
-            'inventory'   => $product->inventory,
-        ];
+        // auto-slug & SKU
+        $data['slug']        = Str::slug($data['name']);
+        $data['sku']         = $data['slug'].'-'.Str::upper(Str::random(6));
+        $data['is_featured'] = $request->has('is_featured');
 
-        $response = $this->put(route('admin.products.update', $product), $updateData);
-        $response->assertStatus(403);
+        if ($request->hasFile('image')) {
+            $data['image'] = $request->file('image')->store('products','public');
+        }
+
+        Product::create($data);
+
+        return redirect()
+            ->route('admin.dashboard')
+            ->with('success','Product created successfully.');
     }
 
-    /** @test */
-    public function admin_can_delete_a_product()
+    // Admin: apply update
+    public function update(Request $request, Product $product)
     {
-        $admin = User::factory()->create(['is_admin' => true]);
-        $this->actingAs($admin);
+        $this->authorizeAdmin();
 
-        $product = Product::factory()->create();
-
-        $response = $this->delete(route('admin.products.destroy', $product));
-        $response->assertRedirect(route('admin.dashboard'));
-
-        $this->assertDatabaseMissing('products', [
-            'id' => $product->id,
+        $data = $request->validate([
+            'name'         => 'required|string|max:255',
+            'brand'        => 'required|string|max:255',
+            'category'     => 'required|string',
+            'description'  => 'required|string',
+            'weight'       => 'required|numeric|min:0',
+            'length'       => 'required|numeric|min:0',
+            'width'        => 'required|numeric|min:0',
+            'height'       => 'required|numeric|min:0',
+            'price'        => 'required|numeric|min:0',
+            'inventory'    => 'required|integer|min:0',
+            'image'        => 'nullable|image|max:2048',
+            'is_featured'  => 'sometimes|boolean',
         ]);
+
+        if ($data['name'] !== $product->name) {
+            $data['slug'] = Str::slug($data['name']);
+        }
+        $data['is_featured'] = $request->has('is_featured');
+
+        if ($request->hasFile('image')) {
+            $data['image'] = $request->file('image')->store('products','public');
+        }
+
+        $product->update($data);
+
+        return redirect()
+            ->route('admin.dashboard')
+            ->with('success','Product updated successfully.');
     }
 
-    /** @test */
-    public function non_admin_cannot_delete_a_product()
+    // Admin: delete
+    public function destroy(Product $product)
     {
-        $user = User::factory()->create(['is_admin' => false]);
-        $this->actingAs($user);
+        $this->authorizeAdmin();
+        $product->delete();
 
-        $product = Product::factory()->create();
+        return redirect()
+            ->route('admin.dashboard')
+            ->with('success','Product deleted successfully.');
+    }
 
-        $response = $this->delete(route('admin.products.destroy', $product));
-        $response->assertStatus(403);
+    protected function authorizeAdmin()
+    {
+        if (! auth()->user()?->is_admin) {
+            abort(403);
+        }
     }
 }

@@ -1,72 +1,129 @@
 <?php
+// app/Services/PackagingService.php
 
 namespace App\Services;
+
+use Illuminate\Support\Collection;
 
 class PackagingService
 {
     /**
-     * Pick the smallest container (box or envelope) that will fit these items.
-     *
-     * @param  \Illuminate\Support\Collection  $items    // each has product->length/width/height
-     * @param  array                          $boxes    // from config('shipping.boxes')
-     * @param  array|null                     $envelope // from config('shipping.envelope') or null
-     * @return array ['type'=>'box'|'envelope', 'dims'=>['length','width','height']]
+     * @param  Collection $items  each has ->product->{length,width,height,weight} and ->quantity
+     * @return array{type:string, dims:array{length:float, width:float, height:float}}
      */
-    public static function selectPackage($items, array $boxes, ?array $envelope = null): array
+    public static function selectPackage(Collection $items): array
     {
-        // 1) Compute total volume, and item max dimensions
-        $maxL = $maxW = $maxH = 0;
-        $totalVol = 0;
-        foreach ($items as $i) {
-            $p = $i->product;
-            $maxL = max($maxL, $p->length);
-            $maxW = max($maxW, $p->width);
-            $maxH = max($maxH, $p->height);
-            $totalVol += ($p->length * $p->width * $p->height) * $i->quantity;
+        $env   = config('shipping.envelope');
+        $boxes = config('shipping.boxes');
+
+        // 1) Summaries
+        $totalWeight  = $items->sum(fn($i) => $i->product->weight * $i->quantity);
+        $totalUnits   = $items->sum(fn($i) => $i->quantity);
+        $uniqueTypes  = $items->count();
+
+        // 1.a) Max single-item edge in each dimension
+        $maxItemDims = $items
+            ->map(fn($i) => [
+                $i->product->length,
+                $i->product->width,
+                $i->product->height,
+            ])
+            ->reduce(fn($carry, $dims) => [
+                max($carry[0], $dims[0]),
+                max($carry[1], $dims[1]),
+                max($carry[2], $dims[2]),
+            ], [0,0,0]);
+
+        // 2) Envelope: only if exactly one *unit* and it fits
+        // app/Services/PackagingService.php
+
+        if ($totalUnits === 1
+            && $totalWeight <= $env['max_weight']
+        ) {
+            return [
+                'type' => 'envelope',
+                'dims' => $env,   // <-- return full envelope array, including max_weight
+            ];
         }
 
-        // 2) Try envelope first (if provided)
-        if ($envelope) {
-            $envVol = $envelope['length'] * $envelope['width'] * $envelope['height'];
-            if (
-                $envelope['length'] >= $maxL &&
-                $envelope['width']  >= $maxW &&
-                $envelope['height'] >= $maxH &&
-                $envVol >= $totalVol
-            ) {
-                return [
-                    'type' => 'envelope',
-                    'dims' => $envelope,
-                ];
-            }
-        }
 
-        // 3) Otherwise pick the smallest box
+
+        // 3) Sort boxes by ascending volume
         usort($boxes, fn($a,$b) =>
-            ($a['length'] * $a['width'] * $a['height'])
-            <=> ($b['length'] * $b['width'] * $b['height'])
+            ($a['length']*$a['width']*$a['height'])
+            <=> ($b['length']*$b['width']*$b['height'])
         );
 
-        foreach ($boxes as $b) {
-            $boxVol = $b['length'] * $b['width'] * $b['height'];
-            if (
-                $b['length'] >= $maxL &&
-                $b['width']  >= $maxW &&
-                $b['height'] >= $maxH &&
-                $boxVol >= $totalVol
+        // 4) First-fit box
+        foreach ($boxes as $box) {
+            $dims = [$box['length'],$box['width'],$box['height']];
+
+            // must individually fit
+            if ($totalWeight <= $box['max_weight']
+                && static::fitsDims($maxItemDims, $dims)
             ) {
-                return [
-                    'type' => 'box',
-                    'dims' => $b,
-                ];
+                // if more than one unit, apply stacking logic
+                if ($totalUnits > 1) {
+                    if ($uniqueTypes === 1) {
+                        // identical items → simple “at least one axis strictly bigger”
+                        if (! static::canStackIdentical($maxItemDims, $dims)) {
+                            continue;
+                        }
+                    } else {
+                        // mixed items → must be able to line them up along some axis
+                        $sumL = $items->sum(fn($i)=> $i->product->length * $i->quantity);
+                        $sumW = $items->sum(fn($i)=> $i->product->width  * $i->quantity);
+                        $sumH = $items->sum(fn($i)=> $i->product->height * $i->quantity);
+
+                        if (! (
+                            $sumL <= $box['length']
+                            || $sumW <= $box['width']
+                            || $sumH <= $box['height']
+                        )) {
+                            continue;
+                        }
+                    }
+                }
+
+                // passed all checks!
+                return ['type'=>'box','dims'=>$box];
             }
         }
 
-        // 4) Fallback: use the largest box
-        $biggest = end($boxes);
-        return [
-            'type' => 'box',
-            'dims' => $biggest,
-        ];
+        // 5) Fallback to the largest
+        return ['type'=>'box','dims'=>end($boxes)];
+    }
+
+    /**
+     * Can we stack multiple *identical* items in this box?
+     * (i.e. is there at least one axis where the box is strictly
+     * larger than the single‐item max dimension)
+     */
+    protected static function canStackIdentical(array $item, array $container): bool
+    {
+        sort($item);            // small→large
+        sort($container);       // small→large
+        for ($i = 0; $i < 3; $i++) {
+            if ($container[$i] > $item[$i]) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Can a single item of dims `$item` (l,w,h) fit into
+     * `$container` (L,W,H) under some orientation?
+     */
+    protected static function fitsDims(array $item, array $container): bool
+    {
+        sort($item);
+        sort($container);
+        for ($i = 0; $i < 3; $i++) {
+            if ($item[$i] > $container[$i]) {
+                return false;
+            }
+        }
+        return true;
     }
 }

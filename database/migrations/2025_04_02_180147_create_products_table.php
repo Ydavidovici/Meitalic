@@ -15,10 +15,10 @@ class CreateProductsTable extends Migration
             $table->string('brand');
             $table->string('category');
             $table->text('description');
-            $table->decimal('weight', 8, 2)->default(0);    // pounds
-            $table->unsignedInteger('length')->default(0);  // inches
-            $table->unsignedInteger('width')->default(0);   // inches
-            $table->unsignedInteger('height')->default(0);  // inches
+            $table->decimal('weight', 8, 2)->default(0);
+            $table->decimal('length', 8, 2)->default(0);
+            $table->decimal('width',  8, 2)->default(0);
+            $table->decimal('height', 8, 2)->default(0);
             $table->decimal('price', 8, 2);
             $table->string('image')->nullable();
             $table->string('sku')->unique();

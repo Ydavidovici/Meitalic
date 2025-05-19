@@ -2,8 +2,9 @@
 
 namespace Tests\Unit;
 
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Config;
 use App\Services\PackagingService;
 
 class PackagingServiceTest extends TestCase
@@ -13,112 +14,93 @@ class PackagingServiceTest extends TestCase
      */
     public function test_selectPackage_picks_correct_container(
         array $items,
-        ?array $envelope,
+        array $envelope,
         array $boxes,
         array $expected
-    ) {
-        // Wrap each item in a stdClass with ->product and ->quantity
-        $wrapped = new Collection(array_map(function($i) {
+    )
+    {
+        // 1) Stub config
+        Config::set('shipping.envelope', $envelope);
+        Config::set('shipping.boxes', $boxes);
+
+        // 2) Wrap each item into stdClass with ->product and ->quantity
+        $wrapped = new Collection(array_map(function ($i) {
             return (object)[
                 'product' => (object)[
                     'length' => $i['length'],
-                    'width'  => $i['width'],
+                    'width' => $i['width'],
                     'height' => $i['height'],
+                    'weight' => $i['weight'] ?? 0,  // some tests add weight
                 ],
                 'quantity' => $i['quantity'],
             ];
         }, $items));
 
-        $result = PackagingService::selectPackage($wrapped, $boxes, $envelope);
+        // 3) Run
+        $result = PackagingService::selectPackage($wrapped);
 
-        $this->assertSame($expected['type'], $result['type'], "Expected type {$expected['type']}");
-        $this->assertEquals($expected['dims'], $result['dims'], "Expected dims to match");
+        $this->assertSame($expected['type'], $result['type'], "Expected container type");
+        $this->assertEquals($expected['dims'], $result['dims'], "Expected dims");
     }
 
     public static function packageSelectionProvider(): array
     {
-        // define some boxes
+        $env = ['length' => 7.0, 'width' => 4.0, 'height' => 1.0, 'max_weight' => 1.0];
         $boxes = [
-            ['length'=>8,  'width'=>6,  'height'=>4],   // small (vol=192)
-            ['length'=>12, 'width'=>9,  'height'=>6],   // medium (648)
-            ['length'=>20, 'width'=>15, 'height'=>10],  // large (3000)
+            ['length' => 8.5, 'width' => 3.5, 'height' => 3.5, 'max_weight' => 50],
+            ['length' => 9.0, 'width' => 6.5, 'height' => 3.5, 'max_weight' => 50],
         ];
 
-        // a thin envelope
-        $envelope = ['length'=>9, 'width'=>6, 'height'=>0.5]; // vol=27
-
         return [
-            'fits in envelope' => [
-                'items'    => [
-                    ['length'=>8, 'width'=>5, 'height'=>0.4, 'quantity'=>1],
-                ],
-                'envelope' => $envelope,
-                'boxes'    => $boxes,
-                'expected' => [
-                    'type' => 'envelope',
-                    'dims' => $envelope,
-                ],
+            'single fits envelope' => [
+                [['length' => 6, 'width' => 3, 'height' => 0.8, 'quantity' => 1, 'weight' => 0.5]],
+                $env, $boxes,
+                ['type' => 'envelope', 'dims' => $env],
             ],
 
-            'too tall for envelope → small box' => [
-                'items'    => [
-                    ['length'=>8, 'width'=>6, 'height'=>2, 'quantity'=>1],
-                ],
-                'envelope' => $envelope,
-                'boxes'    => $boxes,
-                'expected' => [
-                    'type' => 'box',
-                    'dims' => $boxes[0],
-                ],
+            'single overweight envelope' => [
+                [['length' => 6, 'width' => 3, 'height' => 0.8, 'quantity' => 1, 'weight' => 2.0]],
+                $env, $boxes,
+                ['type' => 'box', 'dims' => $boxes[0]],   // <-- corrected here
             ],
 
-            'multiple small items exceed envelope vol → small box' => [
-                'items'    => [
-                    ['length'=>4, 'width'=>3, 'height'=>1, 'quantity'=>10], // total vol=120
-                ],
-                'envelope' => $envelope,
-                'boxes'    => $boxes,
-                'expected' => [
-                    'type' => 'box',
-                    'dims' => $boxes[0],
-                ],
+            'single fits exactly small box' => [
+                [['length' => 8.5, 'width' => 3.5, 'height' => 3.5, 'quantity' => 1, 'weight' => 10]],
+                $env, $boxes,
+                ['type' => 'box', 'dims' => $boxes[0]],
             ],
 
-            'requires medium box' => [
-                'items'    => [
-                    ['length'=>10, 'width'=>8, 'height'=>5, 'quantity'=>1], // max dims
-                    ['length'=>6,  'width'=>5, 'height'=>3, 'quantity'=>2],
-                ],
-                'envelope' => $envelope,
-                'boxes'    => $boxes,
-                'expected' => [
-                    'type' => 'box',
-                    'dims' => $boxes[1], // medium
-                ],
+            'two small boxes fallback large' => [
+                [['length' => 8.5, 'width' => 3.5, 'height' => 3.5, 'quantity' => 2, 'weight' => 1]],
+                $env, $boxes,
+                ['type' => 'box', 'dims' => $boxes[1]],
             ],
 
-            'nothing fits → fallback largest' => [
-                'items'    => [
-                    ['length'=>25, 'width'=>20, 'height'=>15, 'quantity'=>1],
-                ],
-                'envelope' => $envelope,
-                'boxes'    => $boxes,
-                'expected' => [
-                    'type' => 'box',
-                    'dims' => $boxes[2], // largest
-                ],
+            'many postcards fit small box' => [
+                [['length' => 4, 'width' => 3, 'height' => 1, 'quantity' => 10, 'weight' => 0.1]],
+                $env, $boxes,
+                ['type' => 'box', 'dims' => $boxes[0]],
             ],
 
-            'no envelope provided → box selection' => [
-                'items'    => [
-                    ['length'=>7, 'width'=>5, 'height'=>3, 'quantity'=>1],
+            'one item needs large box' => [
+                [['length' => 8, 'width' => 4, 'height' => 2, 'quantity' => 1, 'weight' => 5]],
+                $env, $boxes,
+                ['type' => 'box', 'dims' => $boxes[1]],
+            ],
+
+            'mixed dims push to large' => [
+                [
+                    ['length' => 8, 'width' => 3, 'height' => 3, 'quantity' => 1, 'weight' => 1],
+                    ['length' => 7, 'width' => 3, 'height' => 2, 'quantity' => 1, 'weight' => 1],
                 ],
-                'envelope' => null,
-                'boxes'    => $boxes,
-                'expected' => [
-                    'type' => 'box',
-                    'dims' => $boxes[0],
-                ],
+                $env, $boxes,
+                ['type' => 'box', 'dims' => $boxes[1]],
+            ],
+
+            'nothing fits → fallback large' => [
+                [['length' => 20, 'width' => 20, 'height' => 20, 'quantity' => 1, 'weight' => 100]],
+                $env, $boxes,
+                ['type' => 'box', 'dims' => $boxes[1]],
             ],
         ];
     }

@@ -33,6 +33,10 @@ class Product extends Model
     protected $casts = [
         'options'      => 'array',
         'is_featured'  => 'boolean',
+        'weight' => 'float',
+        'length' => 'float',
+        'width'  => 'float',
+        'height' => 'float',
     ];
 
     /**
