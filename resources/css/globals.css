@@ -32,6 +32,101 @@
     [x-cloak] { display: none !important; }
 }
 
+
+@layer components {
+    /* —— Cart overlay & sidebar —— */
+    .cart-overlay {
+        @apply fixed inset-0 z-40;
+    }
+
+    .cart-backdrop {
+        @apply absolute inset-0 bg-black bg-opacity-50;
+    }
+
+    .cart-panel {
+        @apply fixed top-20 right-0 bottom-0
+        w-96 max-w-full bg-white shadow-xl
+        flex flex-col overflow-y-auto z-50;
+    }
+
+    /* —— Cart header —— */
+    .cart-header {
+        @apply sticky top-0 bg-white z-10
+        flex items-center justify-between
+        px-6 py-4 border-b;
+    }
+
+    .cart-title {
+        @apply text-lg font-semibold;
+    }
+
+    .cart-close-btn {
+        @apply text-gray-600 hover:text-gray-800;
+    }
+
+    /* —— Cart body —— */
+    .cart-body {
+        @apply flex-1 overflow-auto px-6 py-4;
+    }
+
+    .cart-list {
+        @apply space-y-4;
+    }
+
+    .cart-item {
+        @apply flex items-center;
+    }
+
+    .cart-item-img {
+        @apply w-16 h-16 object-cover rounded;
+    }
+
+    .cart-item-info {
+        @apply ml-4 flex-1;
+    }
+
+    .cart-item-name {
+        @apply font-medium;
+    }
+
+    .cart-item-meta {
+        @apply text-sm text-gray-500;
+    }
+
+    .cart-item-remove {
+        @apply ml-4 text-red-500 hover:text-red-700;
+    }
+
+    /* —— Cart footer —— */
+    .cart-footer {
+        @apply border-t px-6 py-4 flex flex-col;
+    }
+
+    /* —— Each row spreads label and value to the extremes —— */
+    .cart-summary-row,
+    .cart-total-row {
+        @apply flex items-center justify-between w-full mb-2;
+    }
+
+    /* —— Label stays on the left —— */
+    .cart-summary-label,
+    .cart-total-label {
+        @apply font-medium;   /* no more mr-4 or text-left needed */
+    }
+
+    /* —— Value sticks to the right —— */
+    .cart-summary-value,
+    .cart-total-value {
+        @apply font-semibold text-right;
+    }
+
+
+    .cart-checkout-btn {
+        @apply block w-full text-center
+        bg-indigo-600 hover:bg-indigo-700
+        text-white py-3 rounded;
+    }
+
 @layer components {
     /* —— Modal overlay & panel —— */
     .modal-wrapper {
@@ -84,53 +179,6 @@
     .cart-overlay  { @apply fixed inset-0 z-40; }
     .cart-backdrop { @apply absolute inset-0 bg-black bg-opacity-50; }
 
-    /* —— Cart header, body & footer —— */
-    .cart-header {
-        @apply sticky top-0 bg-white z-10 flex items-center justify-between
-        px-6 py-4 border-b;
-    }
-    .cart-title     { @apply text-lg font-semibold; }
-    .cart-close-btn { @apply text-gray-600 hover:text-gray-800; }
-
-    .cart-body      { @apply flex-1 overflow-auto px-6 py-4; }
-    .cart-list      { @apply space-y-4; }
-    .cart-item      { @apply flex items-center; }
-    .cart-item-img  { @apply w-16 h-16 object-cover rounded; }
-    .cart-item-info { @apply ml-4 flex-1; }
-    .cart-item-name { @apply font-medium; }
-    .cart-item-meta { @apply text-sm text-gray-500; }
-    .cart-item-remove { @apply ml-4 text-red-500 hover:text-red-700; }
-
-    .cart-footer    { @apply border-t px-6 py-4; }
-    .cart-summary-row   { @apply flex justify-between mb-2; }
-    .cart-summary-label { @apply font-medium; }
-    .cart-summary-value { @apply font-medium; }
-    .cart-total-row     { @apply flex justify-between mb-4; }
-    .cart-total-label   { @apply font-semibold; }
-    .cart-total-value   { @apply font-semibold; }
-    .cart-checkout-btn  { @apply block w-full text-center
-    bg-indigo-600 hover:bg-indigo-700
-    text-white py-3 rounded; }
-
-    /* ── Bare‑bones cart icon only ── */
-    .cart-toggle {
-        @apply p-0 bg-transparent shadow-none;
-        border: none;
-    }
-    .cart-toggle:hover,
-    .cart-toggle:focus {
-        @apply bg-transparent shadow-none;
-    }
-
-    /* hide the “badge” */
-    .cart-toggle__badge {
-        @apply hidden !important;
-    }
-
-    .cart-panel {
-        @apply fixed top-20 right-0 bottom-0
-        w-96 max-w-full bg-white shadow-xl
-        flex flex-col overflow-y-auto z-50;
     }
 
 
