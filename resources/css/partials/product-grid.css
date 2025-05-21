@@ -5,14 +5,21 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer components {
     /* Container grid */
-    .product-grid {
-        @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8;
-    }
+    @layer components {
+        .product-grid {
+            @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8;
+        }
 
-    /* Pagination wrapper spans full width */
-    .product-grid__pagination {
-        @apply col-span-full mt-8;
+        .product-card {
+            @apply bg-white rounded-lg shadow p-4 flex flex-col overflow-hidden;
+        }
+
+        .product-card__image-wrap {
+            @apply w-full h-32 overflow-hidden rounded-lg bg-gray-100;
+        }
+
+        .product-card__image {
+            @apply w-full h-full object-cover;
+        }
     }
-}

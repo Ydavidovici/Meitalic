@@ -127,6 +127,7 @@ class CheckoutController extends Controller
         $intent = PaymentIntent::create([
             'amount'   => $amountCents,
             'currency' => 'usd',
+            'payment_method_types' => ['card'],
             'metadata' => [
                 'cart_id'      => $cart->id,
                 'discount'     => $discount,
@@ -150,6 +151,8 @@ class CheckoutController extends Controller
      */
     public function placeOrder(Request $request)
     {
+        \Log::info('placeOrder payload', $request->all());
+
         $data = $request->validate([
             'shipping_address' => 'required|string',
             'email'            => 'required|email',

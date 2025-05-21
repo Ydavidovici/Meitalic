@@ -32,71 +32,50 @@
         {{-- 2. ORDER MANAGEMENT --}}
         <div class="order-management">
 
-            <div class="order-management__header grid grid-cols-4 grid-rows-2 gap-1 items-center">
-                {{-- 1) Header spans both rows in column 1 --}}
-                <h3 class="col-start-1 row-span-2 font-bold">Order Management</h3>
-
-                {{-- 2) Row 1, cols 2–4 --}}
-                <button
-                    type="button"
-                    class="order-management__badge order-management__badge--shipped col-start-2"
-                >
-                    Shipped: {{ $counts['shipped'] ?? 0 }}
-                </button>
-                <button
-                    type="button"
-                    class="order-management__badge order-management__badge--delivered col-start-3"
-                >
-                    Delivered: {{ $counts['delivered'] ?? 0 }}
-                </button>
-                <button
-                    type="button"
-                    class="order-management__badge order-management__badge--unfulfilled col-start-4"
-                >
-                    Unfulfilled: {{ $counts['unfulfilled'] ?? 0 }}
-                </button>
-
-                {{-- 3) Row 2, cols 2–4 --}}
-                {{-- Swap here: bulk “Delivered” button moves into row 2, col 2 --}}
-                <button
-                    @click="markBulk('delivered')"
-                    class="btn-secondary text-xs px-2 py-1 col-start-2"
-                >
-                    Mark Selected Delivered
-                </button>
-
-                {{-- Now bring Pending badge down into row 2, col 3 --}}
-                <button
-                    type="button"
-                    class="order-management__badge order-management__badge--pending col-start-3"
-                >
-                    Pending: {{ $counts['pending'] ?? 0 }}
-                </button>
-
-                {{-- And the other two status/bulk items fill cols 4 & 5 (but we only have 4 cols, so col 4 here) --}}
-                <button
-                    type="button"
-                    class="order-management__badge order-management__badge--canceled col-start-4"
-                >
-                    Canceled: {{ $counts['canceled'] ?? 0 }}
-                </button>
-                <button
-                    @click="markBulk('shipped')"
-                    class="btn-secondary text-xs px-2 py-1 col-start-4 row-start-2 self-end"
-                    style="justify-self:end;"
-                >
-                    Mark Selected Shipped
-                </button>
+            {{-- Header: title + bulk actions --}}
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold">Order Management</h3>
+                <div class="space-x-2">
+                    <button
+                        @click="markBulk('delivered')"
+                        class="btn-secondary text-xs px-2 py-1"
+                    >Mark Selected Delivered</button>
+                    <button
+                        @click="markBulk('shipped')"
+                        class="btn-secondary text-xs px-2 py-1"
+                    >Mark Selected Shipped</button>
+                </div>
             </div>
 
-            {{-- Filters --}}
+            {{-- Filters: search, status, customer --}}
             <x-form
                 id="orders-filters-form"
                 method="GET"
                 action="{{ route('admin.dashboard') }}"
-                class="order-filters"
+                class="filters-form"
             >
-                <!-- existing filters… -->
+                <input
+                    type="text"
+                    name="q"
+                    value="{{ request('q') }}"
+                    placeholder="Search orders…"
+                />
+                <select name="status">
+                    <option value="">All Statuses</option>
+                    @foreach(['all','pending','shipped','delivered','unfulfilled','canceled','returned'] as $st)
+                        <option
+                            value="{{ $st }}"
+                            @selected(request('status') === $st)
+                        >{{ ucfirst($st) }}</option>
+                    @endforeach
+                </select>
+                <input
+                    type="text"
+                    name="customer"
+                    value="{{ request('customer') }}"
+                    placeholder="Customer name…"
+                />
+                <button type="submit" class="filters-submit">Apply</button>
             </x-form>
 
             {{-- Orders Table --}}
@@ -126,14 +105,27 @@
                             </td>
                             <td>{{ $order->id }}</td>
                             <td>{{ optional($order->user)->name ?? 'Guest' }}</td>
-                            <td><span class="orders-table__status">{{ ucfirst($order->status) }}</span></td>
+                            <td>
+              <span class="orders-table__status">
+                {{ ucfirst($order->status) }}
+              </span>
+                            </td>
                             <td>${{ number_format($order->shipping_fee, 2) }}</td>
                             <td>${{ number_format($order->total, 2) }}</td>
                             <td>{{ $order->created_at->format('M j, Y') }}</td>
                             <td class="orders-table__actions">
-                                <button @click="singleMark({{ $order->id }}, 'shipped')">Mark Shipped</button>
-                                <button @click="singleMark({{ $order->id }}, 'delivered')">Mark Delivered</button>
-                                <button @click.stop="openOrderEdit({{ $order->id }})">Edit</button>
+                                <button
+                                    @click="singleMark({{ $order->id }}, 'shipped')"
+                                    class="btn-secondary text-xs px-2 py-1"
+                                >Mark Shipped</button>
+                                <button
+                                    @click="singleMark({{ $order->id }}, 'delivered')"
+                                    class="btn-secondary text-xs px-2 py-1"
+                                >Mark Delivered</button>
+                                <button
+                                    @click.stop="openOrderEdit({{ $order->id }})"
+                                    class="btn-secondary text-xs px-2 py-1"
+                                >Edit</button>
                             </td>
                         </tr>
                     @endforeach
@@ -144,11 +136,8 @@
                     {{ $recentOrders->links() }}
                 </div>
             </div>
+
         </div>
-
-
-
-
 
 
         {{-- 5. REVIEW MANAGEMENT --}}
@@ -268,6 +257,271 @@
 
             {{-- Product Grid --}}
                 @include('partials.admin.product-grid')
+            {{-- Create Inventory Modal --}}
+            <x-modal name="inventory-create" maxWidth="lg">
+                <x-slot name="title">New Product</x-slot>
+
+                <x-form
+                    method="POST"
+                    action="{{ route('admin.products.store') }}"
+                    enctype="multipart/form-data"
+                    class="modal-body--product-edit"
+                    @submit.prevent="validateAndSubmit($el)"
+                >
+                    <div class="modal-body">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Core fields -->
+                            <div class="form-group">
+                                <x-input-label for="new-name" value="Name" />
+                                <input id="new-name" name="name" type="text" required class="form-input" />
+                            </div>
+                            <div class="form-group">
+                                <x-input-label for="new-brand" value="Brand" />
+                                <input id="new-brand" name="brand" type="text" required class="form-input" />
+                            </div>
+                            <div class="form-group">
+                                <x-input-label for="new-category" value="Category" />
+                                <input id="new-category" name="category" type="text" required class="form-input" />
+                            </div>
+                            <div class="form-group">
+                                <x-input-label for="new-price" value="Price" />
+                                <input id="new-price" name="price" type="number" step="0.01" required class="form-input" />
+                            </div>
+                            <div class="form-group">
+                                <x-input-label for="new-inventory" value="Inventory" />
+                                <input id="new-inventory" name="inventory" type="number" required class="form-input" />
+                            </div>
+
+                            <!-- Shipping fields -->
+                            <div class="form-group">
+                                <x-input-label for="new-weight" value="Weight (lb)" />
+                                <input id="new-weight" name="weight" type="number" step="0.01" required class="form-input" />
+                            </div>
+                            <div class="form-group">
+                                <x-input-label for="new-length" value="Length (in)" />
+                                <input id="new-length" name="length" type="number" required class="form-input" />
+                            </div>
+                            <div class="form-group">
+                                <x-input-label for="new-width" value="Width (in)" />
+                                <input id="new-width" name="width" type="number" required class="form-input" />
+                            </div>
+                            <div class="form-group">
+                                <x-input-label for="new-height" value="Height (in)" />
+                                <input id="new-height" name="height" type="number" required class="form-input" />
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="form-group">
+                            <x-input-label for="new-description" value="Description" />
+                            <textarea id="new-description" name="description" rows="4" required class="form-textarea"></textarea>
+                        </div>
+
+                        <!-- Image -->
+                        <div class="form-group">
+                            <x-input-label for="new-image" value="Product Image" />
+                            <input id="new-image" name="image" type="file" accept="image/*" class="form-input" />
+                        </div>
+
+                        <!-- Featured toggle -->
+                        <div class="form-group flex items-center">
+                            <input id="new-is_featured" name="is_featured" type="checkbox" value="1" class="form-input w-auto mr-2" />
+                            <label for="new-is_featured">Featured</label>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <x-secondary-button type="button" @click="$dispatch('close-modal','inventory-create')">
+                            Cancel
+                        </x-secondary-button>
+                        <x-primary-button type="submit">
+                            Create Product
+                        </x-primary-button>
+                    </div>
+                </x-form>
+            </x-modal>
+
+            {{-- Edit‑modals for each product --}}
+            @foreach($products as $prod)
+                <x-modal name="product-edit-{{ $prod->id }}" maxWidth="lg">
+                    <x-form
+                        method="PUT"
+                        action="{{ route('admin.products.update', $prod) }}"
+                        enctype="multipart/form-data"
+                        class="modal-body--product-edit"
+                        @submit.prevent="validateAndSubmit($el)"
+                    >
+                        <h3 class="modal-title">Edit {{ $prod->name }}</h3>
+
+                        <div class="modal-body">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Core fields -->
+                                <div class="form-group">
+                                    <x-input-label for="name-{{ $prod->id }}" value="Name" />
+                                    <input
+                                        id="name-{{ $prod->id }}"
+                                        name="name"
+                                        type="text"
+                                        value="{{ old('name',$prod->name) }}"
+                                        required
+                                        class="form-input"
+                                    />
+                                </div>
+                                <div class="form-group">
+                                    <x-input-label for="brand-{{ $prod->id }}" value="Brand" />
+                                    <input
+                                        id="brand-{{ $prod->id }}"
+                                        name="brand"
+                                        type="text"
+                                        value="{{ old('brand',$prod->brand) }}"
+                                        required
+                                        class="form-input"
+                                    />
+                                </div>
+                                <div class="form-group">
+                                    <x-input-label for="category-{{ $prod->id }}" value="Category" />
+                                    <input
+                                        id="category-{{ $prod->id }}"
+                                        name="category"
+                                        type="text"
+                                        value="{{ old('category',$prod->category) }}"
+                                        required
+                                        class="form-input"
+                                    />
+                                </div>
+                                <div class="form-group">
+                                    <x-input-label for="price-{{ $prod->id }}" value="Price" />
+                                    <input
+                                        id="price-{{ $prod->id }}"
+                                        name="price"
+                                        type="number"
+                                        step="0.01"
+                                        value="{{ old('price',$prod->price) }}"
+                                        required
+                                        class="form-input"
+                                    />
+                                </div>
+                                <div class="form-group">
+                                    <x-input-label for="inventory-{{ $prod->id }}" value="Inventory" />
+                                    <input
+                                        id="inventory-{{ $prod->id }}"
+                                        name="inventory"
+                                        type="number"
+                                        value="{{ old('inventory',$prod->inventory) }}"
+                                        required
+                                        class="form-input"
+                                    />
+                                </div>
+
+                                <!-- Shipping fields -->
+                                <div class="form-group">
+                                    <x-input-label for="weight-{{ $prod->id }}" value="Weight (lb)" />
+                                    <input
+                                        id="weight-{{ $prod->id }}"
+                                        name="weight"
+                                        type="number"
+                                        step="0.01"
+                                        value="{{ old('weight',$prod->weight) }}"
+                                        required
+                                        class="form-input"
+                                    />
+                                </div>
+                                <div class="form-group">
+                                    <x-input-label for="length-{{ $prod->id }}" value="Length (in)" />
+                                    <input
+                                        id="length-{{ $prod->id }}"
+                                        name="length"
+                                        type="number"
+                                        value="{{ old('length',$prod->length) }}"
+                                        required
+                                        class="form-input"
+                                    />
+                                </div>
+                                <div class="form-group">
+                                    <x-input-label for="width-{{ $prod->id }}" value="Width (in)" />
+                                    <input
+                                        id="width-{{ $prod->id }}"
+                                        name="width"
+                                        type="number"
+                                        value="{{ old('width',$prod->width) }}"
+                                        required
+                                        class="form-input"
+                                    />
+                                </div>
+                                <div class="form-group">
+                                    <x-input-label for="height-{{ $prod->id }}" value="Height (in)" />
+                                    <input
+                                        id="height-{{ $prod->id }}"
+                                        name="height"
+                                        type="number"
+                                        value="{{ old('height',$prod->height) }}"
+                                        required
+                                        class="form-input"
+                                    />
+                                </div>
+                            </div>
+
+                            <!-- Description -->
+                            <div class="form-group">
+                                <x-input-label for="description-{{ $prod->id }}" value="Description" />
+                                <textarea
+                                    id="description-{{ $prod->id }}"
+                                    name="description"
+                                    rows="4"
+                                    required
+                                    class="form-textarea"
+                                >{{ old('description',$prod->description) }}</textarea>
+                            </div>
+
+                            <!-- Image upload & preview -->
+                            <div class="form-group">
+                                <x-input-label for="image-{{ $prod->id }}" value="Product Image" />
+                                @if($prod->image)
+                                    <img
+                                        src="{{ Str::startsWith($prod->image,['http://','https://'])
+                              ? $prod->image
+                              : asset('storage/'.$prod->image) }}"
+                                        alt="{{ $prod->name }}"
+                                        class="image-preview mb-2"
+                                    >
+                                @endif
+                                <input
+                                    id="image-{{ $prod->id }}"
+                                    name="image"
+                                    type="file"
+                                    accept="image/*"
+                                    class="form-input"
+                                />
+                            </div>
+
+                            <!-- Featured toggle -->
+                            <div class="form-group flex items-center">
+                                <input
+                                    id="is_featured-{{ $prod->id }}"
+                                    name="is_featured"
+                                    type="checkbox"
+                                    value="1"
+                                    @checked(old('is_featured',$prod->is_featured))
+                                    class="form-checkbox h-5 w-5 text-indigo-600 mr-2"
+                                />
+                                <label for="is_featured-{{ $prod->id }}">Featured</label>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <x-secondary-button
+                                type="button"
+                                @click="$dispatch('close-modal','product-edit-{{ $prod->id }}')"
+                            >
+                                Cancel
+                            </x-secondary-button>
+                            <x-primary-button type="submit">
+                                Save Changes
+                            </x-primary-button>
+                        </div>
+                    </x-form>
+                </x-modal>
+            @endforeach
 
         </div>
 
@@ -353,7 +607,7 @@
         </div>
 
         {{-- 8. NEWSLETTER MANAGEMENT --}}
-        <div class="newsletter-section mt-12">
+        <div class="newsletter-section mt-12" x-data="adminDashboard()">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-xl font-bold">Newsletters</h3>
                 <button @click="openModal('newsletter-create')" class="btn-primary">+ New Newsletter</button>
@@ -369,23 +623,35 @@
                         <th class="px-2 py-1">Subject</th>
                         <th class="px-2 py-1">Status</th>
                         <th class="px-2 py-1">Scheduled At</th>
+                        <th class="px-2 py-1">Actions</th>
                     </tr>
                     </thead>
                     <tbody>
                     @foreach($newsletters as $nl)
                         <tr class="border-t">
                             <td class="px-2 py-1">{{ $nl->id }}</td>
-                            <td class="px-2 py-1">{{ $nl->subject }}</td>
+                            <td class="px-2 py-1">{{ Str::limit($nl->subject, 30) }}</td>
                             <td class="px-2 py-1">{{ ucfirst($nl->status) }}</td>
                             <td class="px-2 py-1">
                                 {{ $nl->scheduled_at
                                    ? $nl->scheduled_at->format('M j, Y g:ia')
                                    : '—' }}
                             </td>
+                            <td class="px-2 py-1 space-x-2">
+                                <button
+                                    @click="openModal('newsletter-edit-{{ $nl->id }}')"
+                                    class="btn-secondary btn-sm"
+                                >Edit</button>
+                                <button
+                                    @click="openModal('newsletter-delete-{{ $nl->id }}')"
+                                    class="btn-danger btn-sm"
+                                >Delete</button>
+                            </td>
                         </tr>
                     @endforeach
                     </tbody>
                 </table>
+
                 <div>{{ $newsletters->links() }}</div>
             @endif
         </div>
@@ -736,6 +1002,151 @@
                 </div>
             </x-form>
         </x-modal>
+
+        {{-- Edit Newsletter Modal --}}
+        @foreach($newsletters as $nl)
+        <x-modal name="newsletter-edit-{{ $nl->id }}" maxWidth="lg">
+            <x-slot name="title">Edit Newsletter #{{ $nl->id }}</x-slot>
+
+            <x-form
+                id="newsletter-edit-form-{{ $nl->id }}"
+                method="POST"
+                action="{{ route('admin.newsletter.update', $nl) }}"
+                @submit.prevent="validateAndSubmit($el)"
+                x-data="{
+      // current template key & its field list
+      template: '{{ $nl->template_key }}',
+      fields: @json(array_keys($templates[$nl->template_key]['fields'])),
+      // one single object holding all the existing values
+      values: {!! json_encode(array_merge(
+        // all template fields => their current $nl->field values
+        $nl->only(array_keys($templates[$nl->template_key]['fields'])),
+        // add promo_code + scheduled_at
+        ['promo_code'    => $nl->promo_code,
+         'scheduled_at'  => $nl->scheduled_at
+                            ? $nl->scheduled_at->format('Y-m-d\TH:i')
+                            : null]
+      )) !!}
+    }"
+                class="space-y-4 p-6"
+            >
+                @csrf
+                @method('PUT')
+
+                {{-- Template selector (unchanged) --}}
+                <div>
+                    <label for="template_key" class="block font-medium">Template</label>
+                    <select
+                        id="template_key"
+                        name="template_key"
+                        x-model="template"
+                        @change="fields = @json($templates)[template].fields"
+                        class="w-full border rounded px-3 py-2"
+                    >
+                        @foreach($templates as $key => $cfg)
+                            <option value="{{ $key }}" @selected($nl->template_key === $key)>
+                                {{ $cfg['name'] }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Dynamic fields --}}
+                <template x-for="field in fields" :key="field">
+                    <div>
+                        <label
+                            :for="field"
+                            class="block font-medium"
+                            x-text="field.replace('_',' ').toUpperCase()"
+                        ></label>
+
+                        <template x-if="field!=='body_text'">
+                            <input
+                                :id="field"
+                                :name="field"
+                                type="text"
+                                x-model="values[field]"
+                                required
+                                class="w-full border rounded px-3 py-2"
+                            />
+                        </template>
+
+                        <template x-if="field==='body_text'">
+          <textarea
+              :id="field"
+              :name="field"
+              rows="4"
+              x-model="values[field]"
+              required
+              class="w-full border rounded px-3 py-2"
+          ></textarea>
+                        </template>
+                    </div>
+                </template>
+
+                {{-- Promo code --}}
+                <div>
+                    <label for="promo_code" class="block font-medium">Promo Code (optional)</label>
+                    <input
+                        id="promo_code"
+                        name="promo_code"
+                        type="text"
+                        x-model="values.promo_code"
+                        class="w-full border rounded px-3 py-2"
+                    />
+                </div>
+
+                {{-- Scheduled at --}}
+                <div>
+                    <label for="scheduled_at" class="block font-medium">Send At (optional)</label>
+                    <input
+                        id="scheduled_at"
+                        name="scheduled_at"
+                        type="datetime-local"
+                        x-model="values.scheduled_at"
+                        class="w-full border rounded px-3 py-2"
+                    />
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-4">
+                    <button
+                        type="button"
+                        @click="$dispatch('close-modal','newsletter-edit-{{ $nl->id }}')"
+                        class="btn-secondary"
+                    >Cancel</button>
+                    <button type="submit" class="btn-primary">Save Changes</button>
+                </div>
+            </x-form>
+        </x-modal>
+
+
+        {{-- Delete confirmation modal --}}
+            <x-modal name="newsletter-delete-{{ $nl->id }}" maxWidth="sm">
+                <x-slot name="title">Delete Newsletter #{{ $nl->id }}?</x-slot>
+                <div class="p-6">
+                    Are you sure you want to permanently delete this newsletter?
+                </div>
+                <x-slot name="footer">
+                    <button
+                        type="button"
+                        @click="$dispatch('close-modal','newsletter-delete-{{ $nl->id }}')"
+                        class="btn-secondary"
+                    >
+                        Cancel
+                    </button>
+                    <x-form
+                        method="POST"
+                        action="{{ route('admin.newsletter.destroy', $nl) }}"
+                        class="inline"
+                    >
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn-danger">Delete</button>
+                    </x-form>
+                </x-slot>
+            </x-modal>
+        @endforeach
+
 
     </div>
 

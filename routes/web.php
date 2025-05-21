@@ -178,5 +178,9 @@ Route::middleware('auth')->group(function () {
             ->name('newsletter.create');
         Route::post  ('newsletter',        [NewsletterController::class,'store'])
             ->name('newsletter.store');
+        Route::match(['put','patch'], 'newsletter/{newsletter}', [NewsletterController::class,'update'])
+            ->name('newsletter.update');
+        Route::delete('newsletter/{newsletter}', [NewsletterController::class,'destroy'])
+            ->name('newsletter.destroy');
     });
 });

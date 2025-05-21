@@ -2,10 +2,7 @@
 
 /* 1. Base imports & layers */
 @import "../../globals.css";
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "../../partials/admin_product-grid.css";
 
 @layer base {
     [x-cloak] {
@@ -42,21 +39,9 @@
     .order-management {
         @apply bg-white rounded-lg shadow p-6 space-y-4;
     }
-    .order-management__header {
-        display: grid;
-        /* 5 columns: 1 for the title, 4 for badges/actions */
-        grid-template-columns: auto repeat(4, minmax(0, 1fr));
-        grid-auto-rows: auto;
-        align-items: center;       /* vertical align */
-        column-gap: 0.5rem;        /* space between columns */
-        row-gap: 0.25rem;          /* small gap between rows */
-        margin-bottom: 1rem;
-    }
 
-    /* Title sits in column 1, spans both rows */
-    .order-management__header > h3 {
-        grid-column: 1 / 2;
-        grid-row: 1 / span 2;
+    .order-management__header {
+        @apply grid grid-cols-4 grid-rows-2 gap-4 items-center mb-6;
     }
 
     /* Badges go in the first row, columns 2–5 */

@@ -54,3 +54,9 @@
     width: 100%;                /* w-full */
     margin-top: 1rem;           /* mt-4 */
 }
+/* responsive two-column grid for step 1 */
+.checkout-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+}
+
+

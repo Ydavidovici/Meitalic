@@ -7,7 +7,6 @@ window.Alpine = Alpine;
 
 // ── CSS Imports ──
 import '../css/pages/admin/dashboard.css';
-import '../css/partials/admin_product-grid.css';
 
 // ── Alpine Stores ──
 Alpine.store('auth', {

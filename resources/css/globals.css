@@ -1,4 +1,3 @@
-/* resources/css/globals.css */
 
 /* 0) Design tokens as CSS variables */
 :root {
@@ -20,7 +19,8 @@
 
 @tailwind base;
 @tailwind components;
-@tailwind utilities;
+@import "./partials/admin_product-grid.css";
+
 
 @layer base {
     html, body {
@@ -305,8 +305,40 @@
         }
     }
 
+    /* Make every form-group a little taller & spaced */
+    .form-group {
+        @apply flex flex-col space-y-2 mb-6;
+    }
+    /* If you still need your old single-field groups elsewhere, you can namespace: */
+    /* .checkout-card .form-group { … } */
+
+    /* Stripe Elements wrapper styling */
+    #card-number,
+    #card-expiry,
+    #card-cvc {
+        @apply border border-gray-300 rounded px-3 py-2 mb-0;
+        min-height: 2.75rem;  /* give them a bit of height so they line up */
+    }
+
+    /* Ensure the two-column grid under payment also gets bottom margin */
+    .checkout-card > .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;           /* same as gap-4 */
+        margin-bottom: 1.5rem; /* same as mb-6 */
+    }
+
+
+    /* Pay button gets a bit more breathing room */
+    .btn-pay {
+        @apply mt-4;
+    }
+
 
 }
+
+@tailwind utilities;
+
 
 @layer utilities {
     /* those two “@apply col-span-2” hacks must stay here */
