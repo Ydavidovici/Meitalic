@@ -151,7 +151,6 @@ class CheckoutController extends Controller
      */
     public function placeOrder(Request $request)
     {
-        \Log::info('placeOrder payload', $request->all());
 
         $data = $request->validate([
             'shipping_address' => 'required|string',

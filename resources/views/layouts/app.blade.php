@@ -51,9 +51,6 @@
             </header>
 
             <div class="cart-body">
-                <template x-if="loading">
-                    <p class="text-center text-gray-500">Loading…</p>
-                </template>
 
                 <template x-if="!loading && items.length === 0">
                     <p class="text-center text-gray-600">Your cart is empty.</p>
@@ -107,6 +104,12 @@
                 $<span x-text="total.toFixed(2)"></span>
               </span>
                     </div>
+                    <a
+                             href="{{ route('cart.index') }}"
+                             class="block w-full text-center mb-4 text-gray-700 hover:text-gray-900"
+                           >
+                             View Cart
+                           </a>
                     <a href="{{ route('checkout') }}" class="cart-checkout-btn">
                         Checkout
                     </a>
