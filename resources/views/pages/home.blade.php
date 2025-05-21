@@ -8,8 +8,28 @@
 
 @section('content')
     <!-- Hero -->
-    <section class="hero">
-        <div class="hero__inner">
+    {{--
+<section class="hero">
+    <div class="hero__inner">
+        <div class="hero__content">
+            <h1 class="hero__title">Meitalic</h1>
+            <p class="hero__subtitle">Where elegance meets skincare.</p>
+            <a href="{{ route('products.index') }}" class="hero__cta">Shop Now</a>
+        </div>
+
+        <figure class="hero__figure">
+            <img
+                src="{{ asset('images/hero-photo.png') }}"
+                alt="Elegant woman"
+                class="hero__image"
+            />
+            <figcaption class="sr-only">
+                Woman with glowing skin in a soft-lit portrait.
+            </figcaption>
+        </figure>
+    </div>
+</section>
+<div class="hero__inner">
             <div class="hero__content">
                 <h1 class="hero__title">Meitalic</h1>
                 <p class="hero__subtitle">Where elegance meets skincare.</p>
@@ -23,9 +43,19 @@
                     class="hero__image"
                 />
                 <figcaption class="sr-only">
-                    Woman with glowing skin in a soft‑lit portrait.
+                    Woman with glowing skin in a soft-lit portrait.
                 </figcaption>
             </figure>
+        </div>
+--}}
+
+    <section class="hero">
+        <div class="hero__banner">
+            <img
+                src="{{ asset('images/banner1.png') }}"
+                alt="Client Preferred Banner"
+                class="hero__banner-img"
+            />
         </div>
     </section>
 

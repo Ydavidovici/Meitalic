@@ -17,57 +17,37 @@
     }
 
     .hero {
-        @apply section;        /* w-full + py-16 */
+        @apply relative overflow-visible -mt-16;
     }
 
-    /* 2) Inner wrapper becomes our 2‑col grid */
+    .hero__banner {
+        @apply relative inset-x-0 top-0 left-1/2 w-screen -translate-x-1/2;
+    }
+    .hero__banner-img {
+        @apply block w-full h-auto object-cover;
+    }
     .hero__inner {
-        @apply max-w-screen-lg mx-auto
+        @apply relative z-10;
+    }
+
+    /* —— your existing inner grid etc. —— */
+    .hero__inner {
+        @apply relative z-10
+        pt-16             /* same as the -mt-16 above */
+        max-w-screen-lg
+        mx-auto
         grid grid-cols-1 lg:grid-cols-2
         items-center gap-8
         px-6 sm:px-8 lg:px-12;
     }
 
-    /* 3) Text block */
-    .hero__content {
-        @apply text-center lg:text-left space-y-4 lg:space-y-6;
-    }
-
-    .hero__title {
-        @apply text-4xl sm:text-5xl md:text-6xl font-bold text-text;
-    }
-
-    .hero__subtitle {
-        @apply text-lg sm:text-xl italic text-neutral-700 max-w-md mx-auto lg:mx-0;
-    }
-
-    .hero__cta {
-        @apply inline-block
-        bg-accent
-        text-white
-        font-medium
-        px-8 py-3
-        text-lg
-        rounded        /* <-- 0.25rem corners (same as your login/register) */
-        hover:bg-pink-400
-        transition;
-        /* remove mt-4 if you’d rather space it differently */
-        margin-top: 1rem;
-    }
-
-    .hero__figure {
-        @apply hidden lg:block;
-        /* make 100% sure it isn't getting any white bg/padding */
-        background: transparent !important;
-        padding: 0 !important;
-        box-shadow: none !important;
-    }
-
-    .hero__image {
-        @apply w-full h-auto
-        rounded-2xl   /* soft corners */
-        object-cover;
-    }
+    /* —— rest of your existing hero__content, hero__title, etc —— */
+    .hero__content { @apply text-center lg:text-left space-y-4 lg:space-y-6; }
+    .hero__title   { @apply text-4xl sm:text-5xl md:text-6xl font-bold text-text; }
+    .hero__subtitle{ @apply text-lg sm:text-xl italic text-neutral-700 max-w-md mx-auto lg:mx-0; }
+    .hero__cta     { @apply inline-block bg-accent text-white font-medium px-8 py-3 text-lg rounded hover:bg-pink-400 transition mt-4; }
+    .hero__figure  { @apply hidden lg:block bg-transparent p-0 shadow-none; }
+    .hero__image   { @apply w-full h-auto rounded-2xl object-cover; }
 
     /*—— 3) Everything else is just plain stripes ——*/
     .featured,
