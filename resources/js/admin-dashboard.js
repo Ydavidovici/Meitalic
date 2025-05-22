@@ -1,5 +1,6 @@
 // ── Core Imports ──
 import './bootstrap';
+import './globals.js'
 import Alpine from 'alpinejs';
 
 // Expose Alpine globally

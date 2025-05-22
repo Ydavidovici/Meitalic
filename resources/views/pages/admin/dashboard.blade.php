@@ -239,24 +239,69 @@
             <x-form
                 id="admin-filters-form"
                 method="GET"
-                action="{{ route('admin.products.index') }}"
-                class="filters-form"
+                action="{{ route('admin.dashboard') }}"
+                class="filters-form space-x-2 flex flex-wrap items-center"
             >
+                <!-- free-text search -->
                 <input
+                    type="text"
                     name="q"
                     value="{{ request('q') }}"
                     placeholder="Search products…"
+                    class="form-input"
                 />
-                <select name="brand"><option value="">All Brands</option></select>
-                <select name="category"><option value="">All Categories</option></select>
-                <select name="featured"><option value="">Featured?</option></select>
-                <select name="sort"><option value="">Sort By</option></select>
-                <select name="dir"><option value="">Direction</option></select>
-                <button type="submit" class="filters-submit">Apply</button>
+
+                <!-- brand -->
+                <select name="brand" class="form-select">
+                    <option value="">All Brands</option>
+                    @foreach($allBrands as $b)
+                        <option value="{{ $b }}" @selected(request('brand') === $b)>
+                            {{ $b }}
+                        </option>
+                    @endforeach
+                </select>
+
+                <!-- category -->
+                <select name="category" class="form-select">
+                    <option value="">All Categories</option>
+                    @foreach($allCategories as $c)
+                        <option value="{{ $c }}" @selected(request('category') === $c)>
+                            {{ $c }}
+                        </option>
+                    @endforeach
+                </select>
+
+                <!-- featured toggle -->
+                <select name="featured" class="form-select">
+                    <option value="">Featured?</option>
+                    <option value="1" @selected(request('featured') === '1')>Yes</option>
+                    <option value="0" @selected(request('featured') === '0')>No</option>
+                </select>
+
+                <!-- sort by -->
+                <select name="sort" class="form-select">
+                    <option value="">Sort By</option>
+                    <option value="name"        @selected(request('sort') === 'name')>Name</option>
+                    <option value="inventory"   @selected(request('sort') === 'inventory')>Inventory</option>
+                    <option value="updated_at"  @selected(request('sort') === 'updated_at')>Last Updated</option>
+                </select>
+
+                <!-- direction -->
+                <select name="dir" class="form-select">
+                    <option value="">Direction</option>
+                    <option value="asc"  @selected(request('dir') === 'asc')>Ascending</option>
+                    <option value="desc" @selected(request('dir') === 'desc')>Descending</option>
+                </select>
+
+                <button type="submit" class="filters-submit btn-primary">
+                    Apply
+                </button>
             </x-form>
 
-            {{-- Product Grid --}}
+
+
                 @include('partials.admin.product-grid')
+
             {{-- Create Inventory Modal --}}
             <x-modal name="inventory-create" maxWidth="lg">
                 <x-slot name="title">New Product</x-slot>

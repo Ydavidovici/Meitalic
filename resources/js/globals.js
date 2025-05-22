@@ -29,30 +29,44 @@ window.validateAndSubmit = formEl => {
     formEl.submit()
 }
 
-// 4) Filters‐form listener
 document.addEventListener('DOMContentLoaded', () => {
-    for (let id of ['filters-form','admin-filters-form']) {
-        let form = document.getElementById(id)
-        if (!form) continue
+    const adminForm = document.getElementById('admin-filters-form')
+    if (!adminForm) return
 
-        form.addEventListener('submit', async e => {
-            e.preventDefault()
-            let params = new URLSearchParams(new FormData(form))
-            let url    = `/admin?${params}`
-            let resp   = await fetch(url, { headers:{ 'X-Requested-With':'XMLHttpRequest' } })
-            let html   = await resp.text()
-            let doc    = new DOMParser().parseFromString(html,'text/html')
+    adminForm.addEventListener('submit', async e => {
+        e.preventDefault()
 
-            let section = doc.getElementById('admin-product-section')
-            if (section) {
-                document.getElementById('admin-product-section')
-                    .replaceWith(section)
-                Alpine.initTree(section)
-                history.pushState(null,'',url)
-            }
+        // build URL
+        const params = new URLSearchParams(new FormData(adminForm)).toString()
+        const url    = `${adminForm.action}?${params}`
+
+        // fetch only the partial
+        const resp = await fetch(url, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
-    }
+        if (!resp.ok) {
+            console.error('Admin filter fetch failed', resp)
+            return
+        }
+
+        const html = await resp.text()
+        const doc  = new DOMParser().parseFromString(html, 'text/html')
+
+        // swap grid + pagination
+        const newGrid = doc.getElementById('admin-product-grid')
+        const newPag  = doc.querySelector('.product-grid__pagination')
+        if (newGrid && newPag) {
+            document.getElementById('admin-product-grid').replaceWith(newGrid)
+            document
+                .querySelector('.product-grid__pagination')
+                .replaceWith(newPag)
+            Alpine.initTree(newGrid)
+            history.pushState(null, '', url)
+        }
+    })
 })
+
+
 
 // 5) Cart store & sidebar component (unchanged)
 Alpine.store('cart', {
@@ -317,5 +331,4 @@ Alpine.data('checkoutPage', () => ({
 
 Alpine.start()
 
-// 7) Finally, start Alpine once
-Alpine.start()
+
