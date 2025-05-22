@@ -122,7 +122,7 @@
                                     @click="singleMark({{ $order->id }}, 'delivered')"
                                     class="btn-secondary text-xs px-2 py-1"
                                 >Mark Delivered</button>
-                                <button
+                                <button type="button"
                                     @click.stop="openOrderEdit({{ $order->id }})"
                                     class="btn-secondary text-xs px-2 py-1"
                                 >Edit</button>
@@ -308,9 +308,9 @@
                 </button>
             </x-form>
 
+            @include('partials.admin.product-grid', ['products' => $products])
+            <pre>Filtered product IDs: {{ $products->pluck('id')->join(',') }}</pre>
 
-
-            @include('partials.admin.product-grid')
 
             {{-- Create Inventory Modal --}}
             <x-modal name="inventory-create" maxWidth="lg">
@@ -462,200 +462,198 @@
                     </div>
                 </x-form>
             </x-modal>
+        </div>
 
-            {{-- Edit‑modals for each product --}}
-            {{-- Edit-modals for each product --}}
-            @foreach($products as $prod)
-                <x-modal name="product-edit-{{ $prod->id }}" maxWidth="lg">
-                    <x-form
-                        method="PUT"
-                        action="{{ route('admin.products.update', $prod) }}"
-                        enctype="multipart/form-data"
-                        class="modal-body--product-edit"
-                        @submit.prevent="validateAndSubmit($el)"
-                    >
-                        <h3 class="modal-title">Edit {{ $prod->name }}</h3>
+        {{-- Edit-modals for each product --}}
+        @foreach($allProducts as $prod)
+            <x-modal name="product-edit-{{ $prod->id }}" maxWidth="lg">
+                <x-form
+                    method="PUT"
+                    action="{{ route('admin.products.update', $prod) }}"
+                    enctype="multipart/form-data"
+                    class="modal-body--product-edit"
+                    @submit.prevent="validateAndSubmit($el)"
+                >
+                    <h3 class="modal-title">Edit {{ $prod->name }}</h3>
 
-                        <div class="modal-body">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <!-- Core fields -->
-                                <div class="form-group">
-                                    <x-input-label for="name-{{ $prod->id }}" value="Name" />
-                                    <input
-                                        id="name-{{ $prod->id }}"
-                                        name="name"
-                                        type="text"
-                                        value="{{ old('name',$prod->name) }}"
-                                        required
-                                        class="form-input"
-                                    />
-                                </div>
-                                <div class="form-group">
-                                    <x-input-label for="brand-{{ $prod->id }}" value="Brand" />
-                                    <input
-                                        id="brand-{{ $prod->id }}"
-                                        name="brand"
-                                        type="text"
-                                        value="{{ old('brand',$prod->brand) }}"
-                                        required
-                                        class="form-input"
-                                    />
-                                </div>
-                                <div class="form-group">
-                                    <x-input-label for="category-{{ $prod->id }}" value="Category" />
-                                    <input
-                                        id="category-{{ $prod->id }}"
-                                        name="category"
-                                        type="text"
-                                        value="{{ old('category',$prod->category) }}"
-                                        required
-                                        class="form-input"
-                                    />
-                                </div>
-                                <div class="form-group">
-                                    <x-input-label for="line-{{ $prod->id }}" value="Line (optional)" />
-                                    <input
-                                        id="line-{{ $prod->id }}"
-                                        name="line"
-                                        type="text"
-                                        value="{{ old('line',$prod->line) }}"
-                                        class="form-input"
-                                        placeholder="e.g. Brightening line"
-                                    />
-                                </div>
-                                <div class="form-group">
-                                    <x-input-label for="price-{{ $prod->id }}" value="Price" />
-                                    <input
-                                        id="price-{{ $prod->id }}"
-                                        name="price"
-                                        type="number"
-                                        step="0.01"
-                                        value="{{ old('price',$prod->price) }}"
-                                        required
-                                        class="form-input"
-                                    />
-                                </div>
-                                <div class="form-group">
-                                    <x-input-label for="inventory-{{ $prod->id }}" value="Inventory" />
-                                    <input
-                                        id="inventory-{{ $prod->id }}"
-                                        name="inventory"
-                                        type="number"
-                                        value="{{ old('inventory',$prod->inventory) }}"
-                                        required
-                                        class="form-input"
-                                    />
-                                </div>
-
-                                <!-- Shipping fields -->
-                                <div class="form-group">
-                                    <x-input-label for="weight-{{ $prod->id }}" value="Weight (lb)" />
-                                    <input
-                                        id="weight-{{ $prod->id }}"
-                                        name="weight"
-                                        type="number"
-                                        step="0.01"
-                                        value="{{ old('weight',$prod->weight) }}"
-                                        required
-                                        class="form-input"
-                                    />
-                                </div>
-                                <div class="form-group">
-                                    <x-input-label for="length-{{ $prod->id }}" value="Length (in)" />
-                                    <input
-                                        id="length-{{ $prod->id }}"
-                                        name="length"
-                                        type="number"
-                                        value="{{ old('length',$prod->length) }}"
-                                        required
-                                        class="form-input"
-                                    />
-                                </div>
-                                <div class="form-group">
-                                    <x-input-label for="width-{{ $prod->id }}" value="Width (in)" />
-                                    <input
-                                        id="width-{{ $prod->id }}"
-                                        name="width"
-                                        type="number"
-                                        value="{{ old('width',$prod->width) }}"
-                                        required
-                                        class="form-input"
-                                    />
-                                </div>
-                                <div class="form-group">
-                                    <x-input-label for="height-{{ $prod->id }}" value="Height (in)" />
-                                    <input
-                                        id="height-{{ $prod->id }}"
-                                        name="height"
-                                        type="number"
-                                        value="{{ old('height',$prod->height) }}"
-                                        required
-                                        class="form-input"
-                                    />
-                                </div>
-                            </div>
-
-                            <!-- Description -->
+                    <div class="modal-body">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Core fields -->
                             <div class="form-group">
-                                <x-input-label for="description-{{ $prod->id }}" value="Description" />
-                                <textarea
-                                    id="description-{{ $prod->id }}"
-                                    name="description"
-                                    rows="4"
-                                    required
-                                    class="form-textarea"
-                                >{{ old('description',$prod->description) }}</textarea>
-                            </div>
-
-                            <!-- Image upload & preview -->
-                            <div class="form-group">
-                                <x-input-label for="image-{{ $prod->id }}" value="Product Image" />
-                                @if($prod->image)
-                                    <img
-                                        src="{{ Str::startsWith($prod->image,['http://','https://'])
-                    ? $prod->image
-                    : asset('storage/'.$prod->image) }}"
-                                        alt="{{ $prod->name }}"
-                                        class="image-preview mb-2"
-                                    >
-                                @endif
+                                <x-input-label for="name-{{ $prod->id }}" value="Name" />
                                 <input
-                                    id="image-{{ $prod->id }}"
-                                    name="image"
-                                    type="file"
-                                    accept="image/*"
+                                    id="name-{{ $prod->id }}"
+                                    name="name"
+                                    type="text"
+                                    value="{{ old('name',$prod->name) }}"
+                                    required
+                                    class="form-input"
+                                />
+                            </div>
+                            <div class="form-group">
+                                <x-input-label for="brand-{{ $prod->id }}" value="Brand" />
+                                <input
+                                    id="brand-{{ $prod->id }}"
+                                    name="brand"
+                                    type="text"
+                                    value="{{ old('brand',$prod->brand) }}"
+                                    required
+                                    class="form-input"
+                                />
+                            </div>
+                            <div class="form-group">
+                                <x-input-label for="category-{{ $prod->id }}" value="Category" />
+                                <input
+                                    id="category-{{ $prod->id }}"
+                                    name="category"
+                                    type="text"
+                                    value="{{ old('category',$prod->category) }}"
+                                    required
+                                    class="form-input"
+                                />
+                            </div>
+                            <div class="form-group">
+                                <x-input-label for="line-{{ $prod->id }}" value="Line (optional)" />
+                                <input
+                                    id="line-{{ $prod->id }}"
+                                    name="line"
+                                    type="text"
+                                    value="{{ old('line',$prod->line) }}"
+                                    class="form-input"
+                                    placeholder="e.g. Brightening line"
+                                />
+                            </div>
+                            <div class="form-group">
+                                <x-input-label for="price-{{ $prod->id }}" value="Price" />
+                                <input
+                                    id="price-{{ $prod->id }}"
+                                    name="price"
+                                    type="number"
+                                    step="0.01"
+                                    value="{{ old('price',$prod->price) }}"
+                                    required
+                                    class="form-input"
+                                />
+                            </div>
+                            <div class="form-group">
+                                <x-input-label for="inventory-{{ $prod->id }}" value="Inventory" />
+                                <input
+                                    id="inventory-{{ $prod->id }}"
+                                    name="inventory"
+                                    type="number"
+                                    value="{{ old('inventory',$prod->inventory) }}"
+                                    required
                                     class="form-input"
                                 />
                             </div>
 
-                            <!-- Featured toggle -->
-                            <div class="form-group flex items-center">
+                            <!-- Shipping fields -->
+                            <div class="form-group">
+                                <x-input-label for="weight-{{ $prod->id }}" value="Weight (lb)" />
                                 <input
-                                    id="is_featured-{{ $prod->id }}"
-                                    name="is_featured"
-                                    type="checkbox"
-                                    value="1"
-                                    @checked(old('is_featured',$prod->is_featured))
-                                    class="form-checkbox h-5 w-5 text-indigo-600 mr-2"
+                                    id="weight-{{ $prod->id }}"
+                                    name="weight"
+                                    type="number"
+                                    step="0.01"
+                                    value="{{ old('weight',$prod->weight) }}"
+                                    required
+                                    class="form-input"
                                 />
-                                <label for="is_featured-{{ $prod->id }}">Featured</label>
+                            </div>
+                            <div class="form-group">
+                                <x-input-label for="length-{{ $prod->id }}" value="Length (in)" />
+                                <input
+                                    id="length-{{ $prod->id }}"
+                                    name="length"
+                                    type="number"
+                                    value="{{ old('length',$prod->length) }}"
+                                    required
+                                    class="form-input"
+                                />
+                            </div>
+                            <div class="form-group">
+                                <x-input-label for="width-{{ $prod->id }}" value="Width (in)" />
+                                <input
+                                    id="width-{{ $prod->id }}"
+                                    name="width"
+                                    type="number"
+                                    value="{{ old('width',$prod->width) }}"
+                                    required
+                                    class="form-input"
+                                />
+                            </div>
+                            <div class="form-group">
+                                <x-input-label for="height-{{ $prod->id }}" value="Height (in)" />
+                                <input
+                                    id="height-{{ $prod->id }}"
+                                    name="height"
+                                    type="number"
+                                    value="{{ old('height',$prod->height) }}"
+                                    required
+                                    class="form-input"
+                                />
                             </div>
                         </div>
 
-                        <div class="modal-footer">
-                            <x-secondary-button
-                                type="button"
-                                @click="$dispatch('close-modal','product-edit-{{ $prod->id }}')"
-                            >
-                                Cancel
-                            </x-secondary-button>
-                            <x-primary-button type="submit">Save Changes</x-primary-button>
+                        <!-- Description -->
+                        <div class="form-group">
+                            <x-input-label for="description-{{ $prod->id }}" value="Description" />
+                            <textarea
+                                id="description-{{ $prod->id }}"
+                                name="description"
+                                rows="4"
+                                required
+                                class="form-textarea"
+                            >{{ old('description',$prod->description) }}</textarea>
                         </div>
-                    </x-form>
-                </x-modal>
-            @endforeach
 
-        </div>
+                        <!-- Image upload & preview -->
+                        <div class="form-group">
+                            <x-input-label for="image-{{ $prod->id }}" value="Product Image" />
+                            @if($prod->image)
+                                <img
+                                    src="{{ Str::startsWith($prod->image,['http://','https://'])
+                    ? $prod->image
+                    : asset('storage/'.$prod->image) }}"
+                                    alt="{{ $prod->name }}"
+                                    class="image-preview mb-2"
+                                >
+                            @endif
+                            <input
+                                id="image-{{ $prod->id }}"
+                                name="image"
+                                type="file"
+                                accept="image/*"
+                                class="form-input"
+                            />
+                        </div>
+
+                        <!-- Featured toggle -->
+                        <div class="form-group flex items-center">
+                            <input
+                                id="is_featured-{{ $prod->id }}"
+                                name="is_featured"
+                                type="checkbox"
+                                value="1"
+                                @checked(old('is_featured',$prod->is_featured))
+                                class="form-checkbox h-5 w-5 text-indigo-600 mr-2"
+                            />
+                            <label for="is_featured-{{ $prod->id }}">Featured</label>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <x-secondary-button
+                            type="button"
+                            @click="$dispatch('close-modal','product-edit-{{ $prod->id }}')"
+                        >
+                            Cancel
+                        </x-secondary-button>
+                        <x-primary-button type="submit">Save Changes</x-primary-button>
+                    </div>
+                </x-form>
+            </x-modal>
+        @endforeach
 
         {{-- 7. CUSTOMER INSIGHTS --}}
         <div class="insights-card">

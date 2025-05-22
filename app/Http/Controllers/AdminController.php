@@ -95,6 +95,7 @@ class AdminController extends Controller
         $products = $prodQ->orderBy($sort,$dir)
             ->paginate(20)
             ->appends($request->only(['q','brand','category','line','featured','sort','dir']));
+        $allProducts = Product::orderBy($sort,$dir)->get();
 
         $allBrands     = Product::select('brand')->distinct()->orderBy('brand')->pluck('brand');
         $allCategories = Product::select('category')->distinct()->orderBy('category')->pluck('category');
@@ -136,7 +137,7 @@ class AdminController extends Controller
             'kpis',
             'recentOrders','statuses',
             'lowStock','outOfStock',
-            'products','allBrands','allCategories','allLines',
+            'products','allProducts','allBrands','allCategories','allLines',
             'reviewCounts','pendingReviews','approvedReviews','rejectedReviews',
             'activePromos','expiringPromos',
             'newsletters','templates',

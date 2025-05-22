@@ -44,6 +44,7 @@ export default function adminDashboard() {
         selectedOrder: null,
 
         openModal(name) {
+            console.log('want to open modal:', name)
             Alpine.store('dashboard').openModal(name);
         },
 
