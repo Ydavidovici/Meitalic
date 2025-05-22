@@ -14,13 +14,15 @@ use App\Models\Newsletter;
 class AdminController extends Controller
 {
     /**
-     * Show the admin dashboard.
+     * Show the admin dashboard with KPIs, orders, inventory, products, reviews, promos, newsletters...
      */
     public function index(Request $request)
     {
         abort_if(! $request->user()?->is_admin, 403);
 
+        //
         // 1) KPIs
+        //
         $kpis = [
             'orders_today'    => Order::whereDate('created_at', today())->count(),
             'orders_week'     => Order::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
@@ -31,64 +33,96 @@ class AdminController extends Controller
             'avg_order_value' => Order::whereDate('created_at', today())->avg('total'),
         ];
 
-        // 2) Counts for all statuses
-        $allStatuses = ['pending','shipped','delivered','unfulfilled','canceled','returned'];
-        $counts = collect($allStatuses)
-            ->mapWithKeys(fn($st) => [
-                $st => Order::where('status', $st)->count()
-            ])
-            ->all();
-
-
-        // 3) Recent orders with filters
+        //
+        // 2) Recent orders with filters
+        //
+        $statuses = ['all','pending','shipped','delivered','unfulfilled','canceled','returned'];
         $orderQ = Order::query();
+
         if ($status = $request->query('status')) {
-            if ($status !== 'all') {
+            if ($status !== 'all' && in_array($status, $statuses, true)) {
                 $orderQ->where('status', $status);
             }
         }
-        if (! is_null($min = $request->query('min_amount'))) {
+        if ($min = $request->query('min_amount')) {
             $orderQ->where('total', '>=', $min);
         }
-        if (! is_null($max = $request->query('max_amount'))) {
+        if ($max = $request->query('max_amount')) {
             $orderQ->where('total', '<=', $max);
         }
         if ($num = $request->query('order_number')) {
             $orderQ->where('id', $num);
         }
-        $recentOrders = $orderQ
-            ->orderBy('created_at', 'desc')
+
+        $recentOrders = $orderQ->orderBy('created_at','desc')
             ->paginate(10)
             ->appends($request->only(['status','min_amount','max_amount','order_number']));
 
-        $allStatuses = ['all','pending','shipped','delivered','unfulfilled','canceled','returned'];
+        //
+        // 3) Inventory alerts
+        //
+        $threshold    = config('inventory.low_stock_threshold', 5);
+        $lowStock     = Product::where('inventory', '<=', $threshold)->get();
+        $outOfStock   = Product::where('inventory', 0)->get();
 
+        //
+        // 4) Product list & performance
+        //
+        $prodQ = Product::query();
 
-        // 4) Inventory alerts
-        $threshold  = config('inventory.low_stock_threshold', 5);
-        $lowStock   = Product::where('inventory', '<=', $threshold)->get();
-        $outOfStock = Product::where('inventory', 0)->get();
+        // 4.a) free-text search via “q”
+        if ($term = $request->query('q')) {
+            $prodQ->search($term);
+        }
+        // 4.b) exact filters
+        if ($b = $request->query('brand'))    { $prodQ->where('brand', $b); }
+        if ($c = $request->query('category')) { $prodQ->where('category', $c); }
+        if ($l = $request->query('line'))     { $prodQ->where('line', $l); }
+        // 4.c) featured
+        if (! is_null($request->query('featured'))) {
+            $val = (int) $request->query('featured');
+            if (in_array($val, [0,1], true)) {
+                $prodQ->where('is_featured', $val === 1);
+            }
+        }
+        // 4.d) sorting
+        $allowed = ['inventory','updated_at','name'];
+        $sort    = in_array($request->query('sort'), $allowed)
+            ? $request->query('sort')
+            : 'updated_at';
+        $dir     = $request->query('dir') === 'asc' ? 'asc' : 'desc';
 
-        // 5) Product performance
-        $topSellers = Product::select('products.*')
-            ->selectRaw('(SELECT COALESCE(SUM(quantity),0) FROM order_items WHERE order_items.product_id = products.id) AS sold')
-            ->orderByDesc('sold')
-            ->limit(5)
-            ->get();
+        $products = $prodQ->orderBy($sort,$dir)
+            ->paginate(20)
+            ->appends($request->only(['q','brand','category','line','featured','sort','dir']));
 
-        $topRevenue = Product::select('products.*')
-            ->selectRaw('(SELECT COALESCE(SUM(quantity * price),0) FROM order_items WHERE order_items.product_id = products.id) AS revenue')
-            ->orderByDesc('revenue')
-            ->limit(5)
-            ->get();
+        $allBrands     = Product::select('brand')->distinct()->orderBy('brand')->pluck('brand');
+        $allCategories = Product::select('category')->distinct()->orderBy('category')->pluck('category');
+        $allLines      = Product::whereNotNull('line')->distinct()->orderBy('line')->pluck('line');
 
-        $slowMovers = Product::select('products.*')
-            ->selectRaw('(SELECT COALESCE(SUM(quantity),0) FROM order_items WHERE order_items.product_id = products.id) AS sold')
-            ->orderBy('sold')
-            ->limit(5)
-            ->get();
+        //
+        // 5) Reviews
+        //
+        $reviewCounts = [
+            'pending'  => Review::where('status','pending')->count(),
+            'approved' => Review::where('status','approved')->count(),
+            'rejected' => Review::where('status','rejected')->count(),
+        ];
+        $pendingReviews  = Review::with('user','product')->where('status','pending')->latest()->take(10)->get();
+        $approvedReviews = Review::with('user','product')->where('status','approved')->latest()->take(10)->get();
+        $rejectedReviews = Review::with('user','product')->where('status','rejected')->latest()->take(10)->get();
 
-        // 6) Customer insights
+        //
+        // 6) Promotions & newsletters
+        //
+        $activePromos   = PromoCode::where('active', true)->get();
+        $expiringPromos = PromoCode::whereBetween('expires_at', [now(), now()->addDays(7)])->get();
+        $templates      = config('newsletters.templates');
+        $newsletters    = Newsletter::latest()->paginate(5);
+
+        //
+        // 7) Customer insights
+        //
         $newCustomersToday = User::whereDate('created_at', today())->count();
         $topCustomers = User::select('users.*')
             ->selectRaw('(SELECT COALESCE(SUM(total),0) FROM orders WHERE orders.user_id = users.id) AS lifetime_spend')
@@ -96,112 +130,17 @@ class AdminController extends Controller
             ->limit(5)
             ->get();
 
-        // 7) Marketing & promotions
-        $activePromos   = PromoCode::where('active', true)->get();
-        $expiringPromos = PromoCode::whereBetween('expires_at', [now(), now()->addDays(7)])->get();
-
-        // 8) Analytics HTML (stubbed out)
         $analyticsHtml = '';
-
-        // 9) Filterable product list
-        $q = Product::query();
-
-        // 9.a) free‑text search via “q”
-        if ($term = $request->query('q')) {
-            $q->search($term);
-        }
-
-        // 9.b) exact filters
-        if ($b = $request->query('brand')) {
-            $q->where('brand', $b);
-        }
-        if ($c = $request->query('category')) {
-            $q->where('category', $c);
-        }
-
-        // 🔥 9.c) featured filter
-        if (! is_null($request->query('featured'))) {
-            // only accept “0” or “1”
-            $val = (int) $request->query('featured');
-            if (in_array($val, [0,1], true)) {
-                $q->where('is_featured', $val === 1);
-            }
-        }
-
-        // 9.d) sorting
-        $allowed = ['inventory','updated_at','name'];
-        $sort    = in_array($request->query('sort'), $allowed) ? $request->query('sort') : 'updated_at';
-        $dir     = $request->query('dir') === 'asc' ? 'asc' : 'desc';
-
-        // 9.e) paginate & preserve **all** filters
-        $products = $q->orderBy($sort,$dir)
-            ->paginate(20)
-            ->appends($request->only([
-                'q','brand','category','featured','sort','dir'
-            ]));
-
-        $allBrands     = Product::select('brand')->distinct()->orderBy('brand')->pluck('brand');
-        $allCategories = Product::select('category')->distinct()->orderBy('category')->pluck('category');
-
-        if ($request->ajax()) {
-            return view('partials.admin.product-grid', compact(
-                'products','allBrands','allCategories'
-            ));
-        }
-
-        $reviewCounts = [
-            'pending'  => Review::where('status','pending')->count(),
-            'approved' => Review::where('status','approved')->count(),
-            'rejected' => Review::where('status','rejected')->count(),
-        ];
-
-// a small sample list for each status (or paginate if you prefer)
-        $pendingReviews  = Review::with('user','product','orderItem.order')
-            ->where('status','pending')
-            ->latest()
-            ->take(10)
-            ->get();
-
-        $approvedReviews = Review::with('user','product','orderItem.order')
-            ->where('status','approved')
-            ->latest()
-            ->take(10)
-            ->get();
-
-        $rejectedReviews = Review::with('user','product','orderItem.order')
-            ->where('status','rejected')
-            ->latest()
-            ->take(10)
-            ->get();
-
-
-        $templates   = config('newsletters.templates');
-        $newsletters = Newsletter::latest()->paginate(5);
 
         return view('pages.admin.dashboard', compact(
             'kpis',
-            'counts',
-            'recentOrders',
-            'allStatuses',
-            'lowStock',
-            'outOfStock',
-            'topSellers',
-            'topRevenue',
-            'slowMovers',
-            'newCustomersToday',
-            'topCustomers',
-            'activePromos',
-            'expiringPromos',
-            'analyticsHtml',
-            'products',
-            'allBrands',
-            'allCategories',
-            'reviewCounts',
-            'pendingReviews',
-            'approvedReviews',
-            'rejectedReviews',
-            'templates',
-            'newsletters',
+            'recentOrders','statuses',
+            'lowStock','outOfStock',
+            'products','allBrands','allCategories','allLines',
+            'reviewCounts','pendingReviews','approvedReviews','rejectedReviews',
+            'activePromos','expiringPromos',
+            'newsletters','templates',
+            'newCustomersToday','topCustomers','analyticsHtml',
         ));
     }
 

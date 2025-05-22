@@ -14,6 +14,7 @@ class CreateProductsTable extends Migration
             $table->string('slug')->unique();
             $table->string('brand');
             $table->string('category');
+            $table->string('line')->nullable();
             $table->text('description');
             $table->decimal('weight', 8, 2)->default(0);
             $table->decimal('length', 8, 2)->default(0);

@@ -111,6 +111,36 @@
         @apply card hover:shadow-lg transition;
     }
 
+    /* —— 13) Shop By Brand & Category cards —— */
+    .shop-by-brand,
+    .shop-by-category {
+        /* use your existing “section” spacing (py-16) & neutral bg (if you like) */
+        @apply section bg-transparent;
+    }
+
+    .shop-by-brand .section-title,
+    .shop-by-category .section-title {
+        /* reuse your Featured heading style */
+        @apply section__header;
+    }
+
+    /* Brand cards */
+    .shop-by-brand .brand-card {
+        @apply card hover:shadow-lg transition flex items-center justify-center;
+    }
+
+    /* Category cards */
+    .shop-by-category .category-card {
+        @apply card hover:shadow-lg transition flex items-center justify-center;
+    }
+
+    /* Optional: make the text a bit larger & bolder to match Featured card titles */
+    .shop-by-brand .brand-card,
+    .shop-by-category .category-card {
+        @apply text-lg font-medium;
+    }
+
+
     /*—— 9) About (no cards here unless you want individual ones) ——*/
     .about__stack {
         @apply max-w-screen-md mx-auto text-center space-y-6;

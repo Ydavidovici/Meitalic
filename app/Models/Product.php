@@ -16,6 +16,7 @@ class Product extends Model
         'name',
         'brand',
         'category',
+        'line',
         'description',
         'weight',
         'length',

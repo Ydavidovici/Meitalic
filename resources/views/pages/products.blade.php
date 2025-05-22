@@ -33,6 +33,7 @@
                 @endforeach
             </select>
 
+
             <select name="category" class="form-select">
                 <option value="">All Categories</option>
                 @foreach($allCategories as $c)
@@ -46,6 +47,27 @@
                 Filter
             </button>
         </x-form>
+
+        {{-- **NEW**: if user clicked “Skincare” as category, show lines --}}
+        @if(request('category') === 'Skincare')
+            <section class="skincare-lines mb-12">
+                <h3 class="section-subtitle text-xl font-semibold mb-4">Shop Skincare Lines</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    @foreach([
+                      'Brightening Line' => 'Brightening Line',
+                      'Acne Line'        => 'Acne Line',
+                      'Rosacea Line'     => 'Rosacea Line',
+                      'Makeup Line'      => 'Makeup Line',
+                    ] as $label => $line)
+                        <a href="{{ route('products.index', ['category'=>'Skincare','line'=>$line]) }}"
+                           class="line-card border p-3 text-center hover:shadow-md transition">
+                            {{ $label }}
+                        </a>
+                    @endforeach
+                </div>
+            </section>
+        @endif
+
 
 
         {{-- 2) Product Grid --}}

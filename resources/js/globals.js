@@ -329,6 +329,11 @@ Alpine.data('checkoutPage', () => ({
     }
 }))
 
+import adminDashboard from './admin-dashboard.js'
+// (or wherever you export that function)
+Alpine.data('adminDashboard', adminDashboard)
+
+// 3) NOW START ALPINE ONCE
 Alpine.start()
 
 

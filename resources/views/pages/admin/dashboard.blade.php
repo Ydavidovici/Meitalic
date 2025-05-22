@@ -271,7 +271,17 @@
                     @endforeach
                 </select>
 
-                <!-- featured toggle -->
+                <!-- NEW: line -->
+                <select name="line" class="form-select">
+                    <option value="">All Lines</option>
+                    @foreach($allLines as $l)
+                        <option value="{{ $l }}" @selected(request('line') === $l)>
+                            {{ $l }}
+                        </option>
+                    @endforeach
+                </select>
+
+                <!-- featured -->
                 <select name="featured" class="form-select">
                     <option value="">Featured?</option>
                     <option value="1" @selected(request('featured') === '1')>Yes</option>
@@ -281,9 +291,9 @@
                 <!-- sort by -->
                 <select name="sort" class="form-select">
                     <option value="">Sort By</option>
-                    <option value="name"        @selected(request('sort') === 'name')>Name</option>
-                    <option value="inventory"   @selected(request('sort') === 'inventory')>Inventory</option>
-                    <option value="updated_at"  @selected(request('sort') === 'updated_at')>Last Updated</option>
+                    <option value="name"       @selected(request('sort') === 'name')>Name</option>
+                    <option value="inventory"  @selected(request('sort') === 'inventory')>Inventory</option>
+                    <option value="updated_at" @selected(request('sort') === 'updated_at')>Last Updated</option>
                 </select>
 
                 <!-- direction -->
@@ -300,7 +310,7 @@
 
 
 
-                @include('partials.admin.product-grid')
+            @include('partials.admin.product-grid')
 
             {{-- Create Inventory Modal --}}
             <x-modal name="inventory-create" maxWidth="lg">
@@ -329,64 +339,132 @@
                                 <input id="new-category" name="category" type="text" required class="form-input" />
                             </div>
                             <div class="form-group">
+                                <x-input-label for="new-line" value="Line (optional)" />
+                                <input
+                                    id="new-line"
+                                    name="line"
+                                    type="text"
+                                    class="form-input"
+                                    placeholder="e.g. Brightening line"
+                                />
+                            </div>
+                            <div class="form-group">
                                 <x-input-label for="new-price" value="Price" />
-                                <input id="new-price" name="price" type="number" step="0.01" required class="form-input" />
+                                <input
+                                    id="new-price"
+                                    name="price"
+                                    type="number"
+                                    step="0.01"
+                                    required
+                                    class="form-input"
+                                />
                             </div>
                             <div class="form-group">
                                 <x-input-label for="new-inventory" value="Inventory" />
-                                <input id="new-inventory" name="inventory" type="number" required class="form-input" />
+                                <input
+                                    id="new-inventory"
+                                    name="inventory"
+                                    type="number"
+                                    required
+                                    class="form-input"
+                                />
                             </div>
 
                             <!-- Shipping fields -->
                             <div class="form-group">
                                 <x-input-label for="new-weight" value="Weight (lb)" />
-                                <input id="new-weight" name="weight" type="number" step="0.01" required class="form-input" />
+                                <input
+                                    id="new-weight"
+                                    name="weight"
+                                    type="number"
+                                    step="0.01"
+                                    required
+                                    class="form-input"
+                                />
                             </div>
                             <div class="form-group">
                                 <x-input-label for="new-length" value="Length (in)" />
-                                <input id="new-length" name="length" type="number" required class="form-input" />
+                                <input
+                                    id="new-length"
+                                    name="length"
+                                    type="number"
+                                    required
+                                    class="form-input"
+                                />
                             </div>
                             <div class="form-group">
                                 <x-input-label for="new-width" value="Width (in)" />
-                                <input id="new-width" name="width" type="number" required class="form-input" />
+                                <input
+                                    id="new-width"
+                                    name="width"
+                                    type="number"
+                                    required
+                                    class="form-input"
+                                />
                             </div>
                             <div class="form-group">
                                 <x-input-label for="new-height" value="Height (in)" />
-                                <input id="new-height" name="height" type="number" required class="form-input" />
+                                <input
+                                    id="new-height"
+                                    name="height"
+                                    type="number"
+                                    required
+                                    class="form-input"
+                                />
                             </div>
                         </div>
 
                         <!-- Description -->
                         <div class="form-group">
                             <x-input-label for="new-description" value="Description" />
-                            <textarea id="new-description" name="description" rows="4" required class="form-textarea"></textarea>
+                            <textarea
+                                id="new-description"
+                                name="description"
+                                rows="4"
+                                required
+                                class="form-textarea"
+                            ></textarea>
                         </div>
 
                         <!-- Image -->
                         <div class="form-group">
                             <x-input-label for="new-image" value="Product Image" />
-                            <input id="new-image" name="image" type="file" accept="image/*" class="form-input" />
+                            <input
+                                id="new-image"
+                                name="image"
+                                type="file"
+                                accept="image/*"
+                                class="form-input"
+                            />
                         </div>
 
                         <!-- Featured toggle -->
                         <div class="form-group flex items-center">
-                            <input id="new-is_featured" name="is_featured" type="checkbox" value="1" class="form-input w-auto mr-2" />
+                            <input
+                                id="new-is_featured"
+                                name="is_featured"
+                                type="checkbox"
+                                value="1"
+                                class="form-input w-auto mr-2"
+                            />
                             <label for="new-is_featured">Featured</label>
                         </div>
                     </div>
 
                     <div class="modal-footer">
-                        <x-secondary-button type="button" @click="$dispatch('close-modal','inventory-create')">
+                        <x-secondary-button
+                            type="button"
+                            @click="$dispatch('close-modal','inventory-create')"
+                        >
                             Cancel
                         </x-secondary-button>
-                        <x-primary-button type="submit">
-                            Create Product
-                        </x-primary-button>
+                        <x-primary-button type="submit">Create Product</x-primary-button>
                     </div>
                 </x-form>
             </x-modal>
 
             {{-- Edit‑modals for each product --}}
+            {{-- Edit-modals for each product --}}
             @foreach($products as $prod)
                 <x-modal name="product-edit-{{ $prod->id }}" maxWidth="lg">
                     <x-form
@@ -432,6 +510,17 @@
                                         value="{{ old('category',$prod->category) }}"
                                         required
                                         class="form-input"
+                                    />
+                                </div>
+                                <div class="form-group">
+                                    <x-input-label for="line-{{ $prod->id }}" value="Line (optional)" />
+                                    <input
+                                        id="line-{{ $prod->id }}"
+                                        name="line"
+                                        type="text"
+                                        value="{{ old('line',$prod->line) }}"
+                                        class="form-input"
+                                        placeholder="e.g. Brightening line"
                                     />
                                 </div>
                                 <div class="form-group">
@@ -524,8 +613,8 @@
                                 @if($prod->image)
                                     <img
                                         src="{{ Str::startsWith($prod->image,['http://','https://'])
-                              ? $prod->image
-                              : asset('storage/'.$prod->image) }}"
+                    ? $prod->image
+                    : asset('storage/'.$prod->image) }}"
                                         alt="{{ $prod->name }}"
                                         class="image-preview mb-2"
                                     >
@@ -560,9 +649,7 @@
                             >
                                 Cancel
                             </x-secondary-button>
-                            <x-primary-button type="submit">
-                                Save Changes
-                            </x-primary-button>
+                            <x-primary-button type="submit">Save Changes</x-primary-button>
                         </div>
                     </x-form>
                 </x-modal>

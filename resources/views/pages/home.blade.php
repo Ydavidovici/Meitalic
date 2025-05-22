@@ -88,27 +88,37 @@
         </section>
     @endif
 
-    <!-- Categories -->
-    <section class="categories">
-        <div class="categories__inner">
-            <div class="categories__stack">
-                <h2 class="section-title">Shop by Category</h2>
-                <div class="categories__grid">
-                    @foreach([
-                        'Essential Line',
-                        'Rosacea Line',
-                        'Makeup Line',
-                        'Acne Line',
-                        'Starter Kits'
-                    ] as $cat)
-                        <a
-                            href="{{ route('products.index', ['category' => $cat]) }}"
-                            class="categories__card"
-                        >
-                            {{ $cat }}
-                        </a>
-                    @endforeach
-                </div>
+    <!-- Shop by Brand -->
+    <section class="shop-by-brand py-16">
+        <div class="container mx-auto px-6">
+            <h2 class="section-title text-2xl font-bold mb-6 text-center">Shop by Brand</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                @foreach($allBrands as $brand)
+                    <a href="{{ route('products.index', ['brand' => $brand]) }}"
+                       class="brand-card border p-4 text-center hover:shadow-lg transition">
+                        {{ $brand }}
+                    </a>
+                @endforeach
+            </div>
+        </div>
+    </section>
+
+    <!-- Shop by Category -->
+    <section class="shop-by-category py-16">
+        <div class="container mx-auto px-6">
+            <h2 class="section-title text-2xl font-bold mb-6 text-center">Shop by Category</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-6">
+                @foreach([
+                  'Skincare'     => 'Skincare',
+                  'Makeup'       => 'Makeup',
+                  'Starter Kits' => 'Starter Kits',
+                  'Accessories'  => 'Accessories',
+                ] as $label => $cat)
+                    <a href="{{ route('products.index', ['category' => $cat]) }}"
+                       class="category-card border p-4 text-center hover:shadow-lg transition">
+                        {{ $label }}
+                    </a>
+                @endforeach
             </div>
         </div>
     </section>

@@ -1,11 +1,11 @@
 <?php
+// app/Http/Controllers/ProductController.php
 
 namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use App\Http\Controllers\AdminController;
 
 class ProductController extends Controller
 {
@@ -26,32 +26,51 @@ class ProductController extends Controller
         if ($category = $request->query('category')) {
             $q->where('category', $category);
         }
+        if ($line = $request->query('line')) {
+            $q->where('line', $line);
+        }
 
         // — 2.b) featured filter —
         if (! is_null($request->query('featured'))) {
             $val = (int) $request->query('featured');
-            if (in_array($val, [0,1], true)) {
+            if (in_array($val, [0, 1], true)) {
                 $q->where('is_featured', $val === 1);
             }
         }
 
         // — 3. sorting —
-        $allowed = ['price','name','updated_at'];
+        $allowed = ['price', 'name', 'updated_at'];
         $sort    = in_array($request->query('sort'), $allowed)
             ? $request->query('sort')
             : 'name';
         $dir     = $request->query('dir') === 'desc' ? 'desc' : 'asc';
 
         // — 4. dropdown data —
-        $allBrands     = Product::select('brand')->distinct()->orderBy('brand')->pluck('brand');
-        $allCategories = Product::select('category')->distinct()->orderBy('category')->pluck('category');
+        $allBrands     = Product::select('brand')
+            ->distinct()
+            ->orderBy('brand')
+            ->pluck('brand');
+        $allCategories = Product::select('category')
+            ->distinct()
+            ->orderBy('category')
+            ->pluck('category');
+        $allLines      = Product::whereNotNull('line')
+            ->distinct()
+            ->orderBy('line')
+            ->pluck('line');
 
         // — 5. paginate & preserve query —
         $products = $q->orderBy($sort, $dir)
             ->paginate(20)
             ->appends(
                 $request->only([
-                    'search','brand','category','featured','sort','dir'
+                    'search',
+                    'brand',
+                    'category',
+                    'line',
+                    'featured',
+                    'sort',
+                    'dir',
                 ])
             );
 
@@ -60,12 +79,15 @@ class ProductController extends Controller
         }
 
         return view('pages.products', compact(
-            'products','allBrands','allCategories'
+            'products',
+            'allBrands',
+            'allCategories',
+            'allLines'
         ));
     }
 
     // Public detail
-    public function show($slug)
+    public function show(string $slug)
     {
         $product = Product::where('slug', $slug)->firstOrFail();
         return view('pages.product', compact('product'));
@@ -75,26 +97,29 @@ class ProductController extends Controller
     public function create(Request $request)
     {
         $this->authorizeAdmin();
+        // Delegates to AdminController@index which renders the dashboard with modals
         return app(AdminController::class)->index($request);
     }
 
+    // Admin: store new product
     public function store(Request $request)
     {
         $this->authorizeAdmin();
 
         $data = $request->validate([
-            'name'         => 'required|string|max:255',
-            'brand'        => 'required|string|max:255',
-            'category'     => 'required|string',
-            'description'  => 'required|string',
-            'weight'       => 'required|numeric|min:0',
-            'length'       => 'required|numeric|min:0',
-            'width'        => 'required|numeric|min:0',
-            'height'       => 'required|numeric|min:0',
-            'price'        => 'required|numeric|min:0',
-            'inventory'    => 'required|integer|min:0',
-            'image'        => 'nullable|image|max:2048',
-            'is_featured'  => 'sometimes|boolean',
+            'name'        => 'required|string|max:255',
+            'brand'       => 'required|string|max:255',
+            'category'    => 'required|string',
+            'line'        => 'nullable|string',
+            'description' => 'required|string',
+            'weight'      => 'required|numeric|min:0',
+            'length'      => 'required|numeric|min:0',
+            'width'       => 'required|numeric|min:0',
+            'height'      => 'required|numeric|min:0',
+            'price'       => 'required|numeric|min:0',
+            'inventory'   => 'required|integer|min:0',
+            'image'       => 'nullable|image|max:2048',
+            'is_featured' => 'sometimes|boolean',
         ]);
 
         // auto-slug & SKU
@@ -102,34 +127,36 @@ class ProductController extends Controller
         $data['sku']         = $data['slug'].'-'.Str::upper(Str::random(6));
         $data['is_featured'] = $request->has('is_featured');
 
-        if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('products','public');
+        if ($file = $request->file('image')) {
+            $data['image'] = $file->store('products', 'public');
         }
 
         Product::create($data);
 
         return redirect()
             ->route('admin.dashboard')
-            ->with('success','Product created successfully.');
+            ->with('success', 'Product created successfully.');
     }
 
+    // Admin: update existing product
     public function update(Request $request, Product $product)
     {
         $this->authorizeAdmin();
 
         $data = $request->validate([
-            'name'         => 'required|string|max:255',
-            'brand'        => 'required|string|max:255',
-            'category'     => 'required|string',
-            'description'  => 'required|string',
-            'weight'       => 'required|numeric|min:0',
-            'length'       => 'required|numeric|min:0',
-            'width'        => 'required|numeric|min:0',
-            'height'       => 'required|numeric|min:0',
-            'price'        => 'required|numeric|min:0',
-            'inventory'    => 'required|integer|min:0',
-            'image'        => 'nullable|image|max:2048',
-            'is_featured'  => 'sometimes|boolean',
+            'name'        => 'required|string|max:255',
+            'brand'       => 'required|string|max:255',
+            'category'    => 'required|string',
+            'line'        => 'nullable|string',
+            'description' => 'required|string',
+            'weight'      => 'required|numeric|min:0',
+            'length'      => 'required|numeric|min:0',
+            'width'       => 'required|numeric|min:0',
+            'height'      => 'required|numeric|min:0',
+            'price'       => 'required|numeric|min:0',
+            'inventory'   => 'required|integer|min:0',
+            'image'       => 'nullable|image|max:2048',
+            'is_featured' => 'sometimes|boolean',
         ]);
 
         if ($data['name'] !== $product->name) {
@@ -137,18 +164,18 @@ class ProductController extends Controller
         }
         $data['is_featured'] = $request->has('is_featured');
 
-        if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('products','public');
+        if ($file = $request->file('image')) {
+            $data['image'] = $file->store('products', 'public');
         }
 
         $product->update($data);
 
         return redirect()
             ->route('admin.dashboard')
-            ->with('success','Product updated successfully.');
+            ->with('success', 'Product updated successfully.');
     }
 
-    // Admin: delete
+    // Admin: delete a product
     public function destroy(Product $product)
     {
         $this->authorizeAdmin();
@@ -156,9 +183,10 @@ class ProductController extends Controller
 
         return redirect()
             ->route('admin.dashboard')
-            ->with('success','Product deleted successfully.');
+            ->with('success', 'Product deleted successfully.');
     }
 
+    // Ensure only admins can hit these endpoints
     protected function authorizeAdmin()
     {
         if (! auth()->user()?->is_admin) {

@@ -36,7 +36,7 @@ Alpine.store('dashboard', {
 });
 
 // ── Admin Dashboard Component ──
-function adminDashboard() {
+export default function adminDashboard() {
     return {
         devMetricsVisible: Alpine.store('dashboard').devMetricsVisible,
         selectedOrders: [],
