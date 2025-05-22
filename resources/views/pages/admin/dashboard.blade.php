@@ -309,8 +309,6 @@
             </x-form>
 
             @include('partials.admin.product-grid', ['products' => $products])
-            <pre>Filtered product IDs: {{ $products->pluck('id')->join(',') }}</pre>
-
 
             {{-- Create Inventory Modal --}}
             <x-modal name="inventory-create" maxWidth="lg">
