@@ -129,7 +129,7 @@
             <!-- Main title & quote -->
             <h2 class="section-title">About the Brand</h2>
             <blockquote class="about__quote mb-12">
-                “A short and powerful quote to inspire customers.”
+                “Beauty is being comfortable and confident in your own skin”
             </blockquote>
 
             <!-- Our Philosophy -->
@@ -137,7 +137,7 @@
                 <h2 class="section-subtitle">Our Philosophy</h2>
                 <div class="philosophy__card">
                     <p class="philosophy__text">
-                        We believe in clean, effective skincare powered by nature and science.
+                        Meitalic theory is a clean environment, effective skincare powered by nature and science.
                         Our products feature natural botanicals, hydrating formulas,
                         cruelty‑free practices & dermatologist‑tested safety—
                         all rigorously blended to bring out your best skin.
@@ -150,7 +150,7 @@
                 <h2 class="section-subtitle">Our Mission</h2>
                 <div class="mission__card">
                     <p class="mission__text">
-                        From lab to bottle, every formulation is meticulously developed
+                        As a family owned business, from lab to bottle, every formulation is meticulously developed
                         and tested for maximum efficacy and safety—so you can trust
                         what you put on your skin.
                     </p>
@@ -171,13 +171,17 @@
                 {{-- Ideally loop through your actual reviews; here are two examples: --}}
                 <div class="reviews__card">
                     <p class="reviews__text">
-                        “A customer testimonial... no one ever raving any orates.”
+                        “Highly Recommend! So natural and full!”
                     </p>
                     <div class="reviews__stars">★★★★★</div>
                 </div>
                 <div class="reviews__card">
                     <p class="reviews__text">
-                        “Another glowing review praising the quality and results!”
+                        “I just wanted to say a huge thank you for the perfect purchase.
+                        Such a light, airy makeup—in 10 seconds I feel like a million dollars
+                        😍🥰😍🥰. The facial cleanser is absolutely perfect, wow, and the face
+                        cream I put on in the morning—what a combo! I seriously feel like I
+                        have brand-new skin!!!!!”
                     </p>
                     <div class="reviews__stars">★★★★★</div>
                 </div>

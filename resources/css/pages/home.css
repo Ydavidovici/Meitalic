@@ -165,9 +165,9 @@
        @apply text-xl font-semibold mb-2 text-center md:text-left;
        /* no md:w-1/2 so it sizes to its content */
      }
-     .about__philosophy .philosophy__card {
-       @apply card p-8 w-full md:w-1/2 self-center h-64;
-     }
+    .about__philosophy .philosophy__card {
+        @apply card p-8 w-full md:w-1/2 self-center;
+    }
 
      .about__mission {
        @apply md:flex-row-reverse;
@@ -176,9 +176,9 @@
        @apply text-xl font-semibold mb-2 text-center md:text-right;
        /* no md:w-1/2 here either */
      }
-     .about__mission .mission__card {
-       @apply card p-8 w-full md:w-1/2 self-center h-64;
-     }
+    .about__mission .mission__card {
+        @apply card p-8 w-full md:w-1/2 self-center;
+    }
 
     /* —— Subsection titles (smaller than H2) —— */
     .section-subtitle {
@@ -188,7 +188,7 @@
     /* —— Big, tall cards —— */
     .philosophy__card,
     .mission__card {
-        @apply bg-white rounded-2xl shadow-md p-8 h-64;
+        @apply bg-white rounded-2xl shadow-md p-8;
     }
 
     /* —— Card text color —— */
