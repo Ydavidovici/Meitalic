@@ -15,10 +15,15 @@ return [
     |--------------------------------------------------------------------------
     */
     'ups' => [
-        'license' => env('UPS_LICENSE'),
-        'user'    => env('UPS_USER'),
-        'pass'    => env('UPS_PASS'),
-        'account' => env('UPS_ACCOUNT'),
+        'account'         => env('UPS_ACCOUNT'),
+
+        // OAuth credentials from UPS Developer Portal
+        'client_id'       => env('UPS_CLIENT_ID'),
+        'client_secret'   => env('UPS_CLIENT_SECRET'),
+
+        // URLs for token‐exchange and rate calls
+        'oauth_token_url' => env('UPS_OAUTH_TOKEN_URL'),
+        'rate_endpoint'   => env('UPS_RATE_ENDPOINT'),
         // Dimensional weight divisor (imperial): cubic inches ÷ 139 → pounds
         'dim_divisor' => env('UPS_DIM_DIVISOR', 139),
     ],
