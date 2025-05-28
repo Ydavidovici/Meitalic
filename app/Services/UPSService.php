@@ -23,10 +23,11 @@ class UPSService
     {
         // Cache token for just under one hour (token TTL is typically 3600s)
         return Cache::remember('ups_oauth_token', 3500, function () {
-            $response = Http::withBasicAuth(
-                $this->cfg['client_id'],
-                $this->cfg['client_secret']
-            )
+            $response = Http::withLogging()
+                ->withBasicAuth(
+                    $this->cfg['client_id'],
+                    $this->cfg['client_secret']
+                )
                 ->asForm()
                 ->post($this->cfg['oauth_token_url'], [
                     'grant_type' => 'client_credentials',
@@ -73,7 +74,8 @@ class UPSService
             'TransactionSrc' => config('app.name', 'app'),
         ];
 
-        $response = Http::withToken($token)
+        $response = Http::withLogging()
+            ->withToken($token)
             ->post($this->cfg['rate_endpoint'], $payload);
 
         return (float) $response->json(

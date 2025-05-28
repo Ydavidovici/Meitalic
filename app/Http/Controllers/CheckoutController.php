@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
 use Stripe\Stripe;
@@ -124,6 +125,16 @@ class CheckoutController extends Controller
         );
 
         Stripe::setApiKey(config('services.stripe.secret'));
+
+        // 1) Log the outgoing Stripe create call
+        Log::channel('api')->info('Stripe ▶️ PaymentIntent.create', [
+            'amount_cents' => $amountCents,
+            'currency'     => 'usd',
+            'cart_id'      => $cart->id,
+            'user_id'      => auth()->id(),
+            'timestamp'    => now()->toIso8601String(),
+        ]);
+
         $intent = PaymentIntent::create([
             'amount'   => $amountCents,
             'currency' => 'usd',
@@ -134,6 +145,13 @@ class CheckoutController extends Controller
                 'shipping_fee' => $shippingFee,
                 'user_id'      => auth()->id(),
             ],
+        ]);
+
+        Log::channel('api')->info('Stripe ◀️ PaymentIntent.create', [
+            'id'        => $intent->id,
+            'status'    => $intent->status,
+            'client_secret' => $intent->client_secret,
+            'timestamp' => now()->toIso8601String(),
         ]);
 
         // 2) Return clientSecret + amount *per the test’s expectation*
@@ -160,7 +178,20 @@ class CheckoutController extends Controller
         ]);
 
         Stripe::setApiKey(config('services.stripe.secret'));
+
+        Log::channel('api')->info('Stripe ▶️ PaymentIntent.retrieve', [
+            'payment_intent_id' => $data['payment_intent'],
+            'timestamp'         => now()->toIso8601String(),
+        ]);
+
         $pi = PaymentIntent::retrieve($data['payment_intent']);
+
+        // 2) Log the Stripe response
+        Log::channel('api')->info('Stripe ◀️ PaymentIntent.retrieve', [
+            'id'        => $pi->id ?? null,
+            'status'    => $pi->status,
+            'timestamp' => now()->toIso8601String(),
+        ]);
 
         if ($pi->status !== 'succeeded') {
             return response()->json(['error' => 'Payment not successful'], 422);
