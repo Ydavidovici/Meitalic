@@ -13,7 +13,11 @@
 /* 2. Page scaffold */
 @layer components {
     .admin-dashboard {
-        @apply py-12 container mx-auto px-4 sm:px-6 lg:px-8 space-y-12;
+        @apply py-12
+        max-w-screen-xl    /* cap at a sensible max width */
+        mx-auto            /* center it */
+        px-4 sm:px-6 lg:px-8
+        space-y-12;
     }
 }
 
@@ -37,7 +41,7 @@
 @layer components {
     /* 4. Order Management */
     .order-management {
-        @apply bg-white rounded-lg shadow p-6 space-y-4;
+        @apply bg-white rounded-lg shadow p-6 space-y-4 overflow-x-auto;
     }
 
     .order-management__header {
@@ -102,7 +106,7 @@
 /* 5. Review Management */
 @layer components {
     .review-management {
-        @apply bg-white rounded-lg shadow p-6;
+        @apply bg-white rounded-lg shadow p-6 overflow-x-auto;
     }
     .review-management__tabs {
         @apply flex space-x-4 mb-4 border-b;
@@ -137,7 +141,7 @@
 /* 6. Inventory Management */
 @layer components {
     .inventory-section {
-        @apply bg-white rounded-lg shadow p-6 space-y-6;
+        @apply bg-white rounded-lg shadow p-6 space-y-6 overflow-x-auto;
     }
     .inventory-header {
         @apply flex justify-between items-center;
@@ -277,6 +281,12 @@
     }
     .metrics-card {
         @apply bg-white rounded-lg shadow p-6;
+    }
+
+    .kpi-section,
+    .inventory-grid,
+    .filters-form {
+        @apply w-full;
     }
 }
 

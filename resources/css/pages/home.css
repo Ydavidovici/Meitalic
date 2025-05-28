@@ -207,8 +207,14 @@
 
     /*—— 11) Reviews as a single card ——*/
     .reviews__stack {
-        @apply card rounded-2xl shadow-md p-6 max-w-screen-lg mx-auto;
-    }
+       @apply card rounded-2xl shadow-md p-6
+               max-w-md       /* cap at ~28rem (448px) */
+               w-full         /* but fluid below that */
+               mx-auto        /* center it */
+               px-4           /* 1rem breathing room on phones */
+      ;
+     }
+
     .reviews__stars {
         @apply text-yellow-400 text-2xl mt-4;
     }

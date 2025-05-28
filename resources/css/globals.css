@@ -26,7 +26,7 @@
     html, body {
         margin: 0;
         padding: 0;
-        width: 100%;
+        overflow-x: hidden;
     }
     /* Alpine’s [x‑cloak] support (shared) */
     [x-cloak] { display: none !important; }
@@ -128,13 +128,26 @@
         text-white py-3 rounded;
     }
 
-@layer components {
     /* —— Modal overlay & panel —— */
     .modal-wrapper {
-        @apply fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50;
+        @apply fixed inset-0 z-50
+        bg-black bg-opacity-50
+        overflow-y-auto;
     }
+
+    /* absolutely centered panel */
     .modal-panel {
-        @apply relative bg-white rounded p-6 max-w-md w-full mx-4 shadow-lg;
+        @apply bg-white rounded-lg p-6 shadow-lg
+        overflow-y-auto;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        /* size constraints */
+        width: 90vw;        /* no more than 90% of viewport width */
+        max-width: 28rem;   /* but never wider than 28rem (≈448px) */
+        max-height: 90vh;   /* no taller than 90% of viewport height */
+        /* true centering */
+        transform: translate(-50%, -50%);
     }
 
     /* —— Modal chrome —— */
@@ -172,7 +185,7 @@
     }
 
     /* —— Page scaffolding —— */
-    .layout-root          { @apply overflow-y-scroll font-sans antialiased text-text bg-gradient-to-br from-secondary via-primary; }
+    .layout-root          { @apply overflow-y-auto overflow-x-hidden font-sans antialiased text-text bg-gradient-to-br from-secondary via-primary; }
     .layout-vh            { @apply flex flex-col min-h-screen; }
     .layout-main          { @apply w-full pt-16 w-full px-4 sm:px-6 lg:px-8; }
 
@@ -184,59 +197,87 @@
 
     .card { @apply bg-white p-6 rounded-lg shadow hover:shadow-md transition; }
 
-    .
+.site-header {
+    @apply sticky top-0 z-50 bg-black bg-opacity-95 backdrop-blur-sm border-b border-primary;
+}
 
-    /* —— Site header wrapper —— */
-    .site-header {
-        /* was: @apply bg-white border-b border-primary; */
-        @apply sticky top-0 z-50 bg-black bg-opacity-95 backdrop-blur-sm border-b border-primary;
-    }
+.site-header__inner {
+    @apply flex items-center justify-between
+    max-w-screen-xl mx-auto
+    py-4 px-4 sm:px-6 lg:px-8;
+}
 
-    .site-header__inner {
-        @apply bg-black w-full flex items-center justify-between py-6 px-4 sm:px-6 lg:px-8;
-    }
+/* —— Logo —— */
+.site-header__logo-link {
+    @apply inline-block;
+}
+.site-header__logo {
+    @apply h-10 w-auto; /* 2.5rem height, width auto */
+}
 
-    /* —— Logo —— */
-    .site-header__logo {
-        /* allow the image to scale in both dimensions */
-        max-height: 2.5rem;
-        max-width: 10rem;
-        height: auto;
-        width: auto;
-        display: block;   /* remove any stray inline spacing */
-    }
+/* —— Desktop nav —— */
+.site-nav {
+    @apply hidden md:flex md:items-center md:space-x-6;
+}
+.site-nav__item { /* wrapper*/ }
+.site-nav__link {
+    @apply text-white font-medium px-4 py-2 rounded-md transition;
+}
+.site-nav__link:hover,
+.site-nav__link[aria-current="page"]:hover,
+.site-nav__link.active:hover {
+    @apply bg-neutral-200;
+}
 
-    .site-header__logo-link {
-        @apply inline-block; /* ensure no extra padding or line-height from parent */
-    }
+/* —— Call-to-action buttons —— */
+.site-nav__cta {
+    @apply inline-block bg-accent text-white font-semibold
+    px-6 py-2 rounded-md transition;
+}
+.site-nav__cta:hover {
+    @apply bg-pink-400;
+}
 
-    /* —— Nav —— */
-    .site-nav {
-        @apply flex items-center space-x-6;
-    }
-    .site-nav__item { /* e.g. wrappers around each <li> */ }
+/* —— Mobile toggle button —— */
+.site-nav-toggle {
+    @apply block md:hidden text-white text-2xl p-2;
+}
 
-    .site-nav__link {
-        @apply text-text font-medium px-4 py-2 rounded-md transition;
-    }
-    .site-nav__link:hover {
-        @apply bg-neutral-200;
-    }
+/* hide before Alpine kicks in */
+.mobile-nav[x-cloak] {
+    display: none !important;
+}
 
-    /* Make active links use the same bg on hover as inactive ones */
-    .site-nav__link[aria-current="page"]:hover,
-    .site-nav__link.active:hover {
-        @apply bg-neutral-200;
-    }
+/* —— Mobile menu overlay —— */
+.mobile-nav {
+    /* ALL of your Tailwind classes must live in one @apply statement */
+    @apply fixed inset-0 flex flex-col items-center pt-16
+    bg-black bg-opacity-90 text-white text-lg
+    overflow-y-auto;
+    /* then your semantic z-index */
+    z-index: 9999;
+}
 
+.mobile-nav__list {
+    @apply w-full max-w-xs px-4 space-y-4;
+}
 
-    .site-nav__cta {
-        /* remove any old styling you have here and replace with: */
-        @apply btn-primary;
-        /* if you need a smaller pill:
-           @apply btn-primary px-4 py-1 text-sm;
-        */
-    }
+/* 3. make sure the links themselves really pop in white */
+.mobile-nav__list .site-nav__link {
+    @apply text-white block px-4 py-2;
+}
+.mobile-nav__list .site-nav__link:hover {
+    @apply bg-white bg-opacity-20 rounded-md;
+}
+
+/* 4. CTA buttons (Login/Register/Logout) */
+.mobile-nav__list .site-nav__cta {
+    @apply mt-4 inline-block bg-accent text-white font-semibold
+    px-8 py-3 rounded-md transition;
+}
+.mobile-nav__list .site-nav__cta:hover {
+    @apply bg-pink-400;
+}
 
     /* —— Auth & CTA buttons —— */
     .btn-secondary, /* re‑define here if not in globals */
@@ -319,7 +360,6 @@
     }
 
 
-    @layer components {
         /* Base UL wrapper */
         .pagination {
             @apply flex items-center justify-center space-x-2 my-4;
@@ -351,7 +391,7 @@
         .pagination li:not(.active):not(.disabled) a:hover {
             @apply bg-gray-100;
         }
-    }
+
 
     /* Make every form-group a little taller & spaced */
     .form-group {
@@ -381,9 +421,6 @@
     .btn-pay {
         @apply mt-4;
     }
-
-
-}
 
 @tailwind utilities;
 

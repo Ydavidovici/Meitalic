@@ -25,21 +25,24 @@
     ])
     @stack('styles')
 </head>
-<body x-data="{}" class="layout-root">
+<body x-data="{ mobileMenuOpen: false }"
+      :class="mobileMenuOpen ? 'overflow-hidden' : ''"
+      class="layout-root">
 <div class="layout-vh">
 
     @include('partials.header')
 
     {{-- CART OVERLAY & SIDEBAR --}}
     <div
-        x-data="{}"
         x-show="$store.cart.open"
-        x-cloak                          {{-- ←–– hide initially, Alpine will remove when true --}}
-        x-on:keydown.window.escape="$store.cart.close()"
+        x-cloak=""
+        @keydown.window.escape="$store.cart.close()"
         class="cart-overlay"
     >
+        <!-- backdrop -->
         <div class="cart-backdrop" @click="$store.cart.close()"></div>
 
+        <!-- panel (this is the only Alpine component) -->
         <aside
             x-data="cartSidebar()"
             x-init="load()"
@@ -51,12 +54,13 @@
             </header>
 
             <div class="cart-body">
-
-                <template x-if="!loading && items.length === 0">
+                <!-- empty state -->
+                <template x-if="items.length === 0">
                     <p class="text-center text-gray-600">Your cart is empty.</p>
                 </template>
 
-                <template x-if="!loading && items.length">
+                <!-- items list -->
+                <template x-if="items.length > 0">
                     <ul class="cart-list">
                         <template x-for="item in items" :key="item.id">
                             <li class="cart-item">
@@ -78,46 +82,33 @@
                 </template>
             </div>
 
-            <template x-if="!loading">     {{-- wrap footer so no “$0.00” flash on load --}}
+            <!-- summary footer (only when there are items) -->
+            <template x-if="items.length > 0">
                 <footer class="cart-footer">
                     <div class="cart-summary-row">
-                        <span class="cart-summary-label">Subtotal:</span>
-                        <span class="cart-summary-value">
-                $<span x-text="subtotal.toFixed(2)"></span>
-              </span>
+                        <span>Subtotal:</span>
+                        <span>$<span x-text="subtotal.toFixed(2)"></span></span>
                     </div>
                     <div class="cart-summary-row">
-                        <span class="cart-summary-label">Discount:</span>
-                        <span class="cart-summary-value">
-                − $<span x-text="discount.toFixed(2)"></span>
-              </span>
+                        <span>Discount:</span>
+                        <span>− $<span x-text="discount.toFixed(2)"></span></span>
                     </div>
                     <div class="cart-summary-row">
-                        <span class="cart-summary-label">Tax:</span>
-                        <span class="cart-summary-value">
-                $<span x-text="tax.toFixed(2)"></span>
-              </span>
+                        <span>Tax:</span>
+                        <span>$<span x-text="tax.toFixed(2)"></span></span>
                     </div>
                     <div class="cart-total-row">
-                        <span class="cart-total-label">Total:</span>
-                        <span class="cart-total-value">
-                $<span x-text="total.toFixed(2)"></span>
-              </span>
+                        <span>Total:</span>
+                        <span>$<span x-text="total.toFixed(2)"></span></span>
                     </div>
-                    <a
-                             href="{{ route('cart.index') }}"
-                             class="block w-full text-center mb-4 text-gray-700 hover:text-gray-900"
-                           >
-                             View Cart
-                           </a>
-                    <a href="{{ route('checkout') }}" class="cart-checkout-btn">
-                        Checkout
-                    </a>
+                    <a href="/cart" class="block w-full text-center mb-4">View Cart</a>
+                    <a href="/checkout" class="cart-checkout-btn">Checkout</a>
                 </footer>
             </template>
         </aside>
     </div>
     {{-- END CART OVERLAY & SIDEBAR --}}
+
 
     <main class="layout-main">
         @yield('content')
