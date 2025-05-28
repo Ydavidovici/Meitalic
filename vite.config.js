@@ -1,4 +1,3 @@
-// vite.config.js
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import analyzer from 'rollup-plugin-analyzer';
@@ -7,8 +6,14 @@ export default defineConfig(({ command }) => {
     const isProd = command === 'build';
 
     return {
+        build: isProd
+            ? {
+                outDir: '/home/u161705717/domains/meitalic.com/public_html/build',
+                emptyOutDir: true,
+            }
+            : {},
+
         plugins: [
-            // Laravel/Vite plugin will handle HMR + Blade refresh automatically
             laravel({
                 input: [
                     // 1. foundation
@@ -37,7 +42,6 @@ export default defineConfig(({ command }) => {
                 refresh: true,
             }),
 
-            // Only run the analyzer in production builds
             isProd &&
             analyzer({
                 summaryOnly: true,
@@ -45,6 +49,5 @@ export default defineConfig(({ command }) => {
                 hideDeps: false,
             }),
         ].filter(Boolean),
-
     };
 });
