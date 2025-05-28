@@ -735,7 +735,7 @@
         </div>
 
         {{-- 8. NEWSLETTER MANAGEMENT --}}
-        <div class="newsletter-section mt-12" x-data="adminDashboard()">
+        <div class="newsletter-section mt-12">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-xl font-bold">Newsletters</h3>
                 <button @click="openModal('newsletter-create')" class="btn-primary">+ New Newsletter</button>
@@ -792,7 +792,10 @@
                 id="newsletter-create-form"
                 method="POST"
                 action="{{ route('admin.newsletter.store') }}"
-                x-data="{ template:'{{ array_key_first($templates) }}', fields:@json(array_values($templates)[0]['fields']) }"
+                 x-data="{
+                  template: '{{ array_key_first($templates) }}',
+                  fields: {{ json_encode(array_values($templates)[0]['fields'], JSON_UNESCAPED_SLASHES) }}
+                    }"
                 @submit.prevent="validateAndSubmit($el)"
                 class="space-y-4 p-6"
             >
@@ -926,20 +929,98 @@
         @foreach($activePromos as $promo)
             <x-modal name="promo-edit-{{ $promo->id }}" maxWidth="md">
                 <x-slot name="title">Edit Promo “{{ $promo->code }}”</x-slot>
-                <x-form method="PUT" action="{{ route('admin.promo.update',$promo) }}" @submit.prevent="validateAndSubmit($el)" class="space-y-4 p-6">
+
+                <x-form
+                    method="PUT"
+                    action="{{ route('admin.promo.update',$promo) }}"
+                    @submit.prevent="validateAndSubmit($el)"
+                    class="space-y-4 p-6"
+                >
+                    @csrf @method('PUT')
+
                     <div class="form-group">
                         <label class="block font-medium">Code</label>
-                        <input name="code" value="{{ old('code',$promo->code) }}" required class="form-input"/>
+                        <input
+                            name="code"
+                            value="{{ old('code', $promo->code) }}"
+                            required
+                            class="form-input"
+                        />
                         @error('code') <p class="text-red-600">{{ $message }}</p> @enderror
                     </div>
-                    <!-- repeat fields as above with old($promo->…) -->
+
+                    <div class="form-group">
+                        <label class="block font-medium">Type</label>
+                        <select name="type" required class="form-select">
+                            <option value="fixed"   @selected(old('type',$promo->type)=='fixed')>Fixed</option>
+                            <option value="percent" @selected(old('type',$promo->type)=='percent')>Percent</option>
+                        </select>
+                        @error('type') <p class="text-red-600">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label class="block font-medium">Discount</label>
+                        <input
+                            name="discount"
+                            type="number"
+                            step="0.01"
+                            value="{{ old('discount',$promo->discount) }}"
+                            required
+                            class="form-input"
+                        />
+                        @error('discount') <p class="text-red-600">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label class="block font-medium">Max Uses</label>
+                        <input
+                            name="max_uses"
+                            type="number"
+                            value="{{ old('max_uses',$promo->max_uses) }}"
+                            class="form-input"
+                        />
+                        @error('max_uses') <p class="text-red-600">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label class="block font-medium">Expires At</label>
+                        <input
+                            name="expires_at"
+                            type="date"
+                            value="{{ old('expires_at', optional($promo->expires_at)->format('Y-m-d')) }}"
+                            class="form-input"
+                        />
+                        @error('expires_at') <p class="text-red-600">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div class="form-group flex items-center">
+                        <input
+                            id="promo-active-{{ $promo->id }}"
+                            name="active"
+                            type="checkbox"
+                            value="1"
+                            @checked(old('active',$promo->active))
+                            class="mr-2"
+                        />
+                        <label for="promo-active-{{ $promo->id }}" class="font-medium">Active</label>
+                    </div>
+
                 </x-form>
+
                 <x-slot name="footer">
-                    <button @click="$dispatch('close-modal','promo-edit-{{ $promo->id }}')" class="btn-secondary">Cancel</button>
-                    <button type="submit" form="promo-edit-{{ $promo->id }}" class="btn-primary">Save Changes</button>
+                    <button
+                        @click="$dispatch('close-modal','promo-edit-{{ $promo->id }}')"
+                        class="btn-secondary"
+                    >Cancel</button>
+                    <button
+                        type="submit"
+                        form="promo-edit-{{ $promo->id }}"
+                        class="btn-primary"
+                    >Save Changes</button>
                 </x-slot>
             </x-modal>
         @endforeach
+
 
         {{-- Edit Order Modal --}}
         <x-modal name="order-edit" maxWidth="lg">
@@ -993,6 +1074,18 @@
                             type="number"
                             step="0.01"
                             x-model="selectedOrder.total"
+                            required
+                            class="form-input"
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <x-input-label for="customer_name" value="Customer Name" />
+                        <input
+                            id="customer_name"
+                            name="customer_name"
+                            type="text"
+                            x-model="selectedOrder.customer_name"
                             required
                             class="form-input"
                         />
@@ -1074,7 +1167,7 @@
 
             <x-form
                 method="PATCH"
-                x-bind:action="`/admin/reviews/${selectedReview.id}`"
+                x-bind:action="`/admin/reviews/' + ${selectedReview.id}"
                 @submit.prevent="updateReview()"
                 class="space-y-4 p-6"
             >

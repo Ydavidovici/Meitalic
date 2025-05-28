@@ -123,6 +123,39 @@ document.addEventListener('DOMContentLoaded', () => {
     })
 })
 
+// ——————————————
+// GLOBAL VALIDATORS
+
+/**
+ * Ensure each named field on formObj is non-empty.
+ * @param {Object} formObj - key→value map, e.g. Alpine this.form
+ * @param {string[]} fields - array of keys to validate
+ * @returns {boolean} - true if all filled, false (and alert) otherwise
+ */
+window.ensureFieldsFilled = function(formObj, fields) {
+    for (let name of fields) {
+        const val = formObj[name]
+        if (val == null || !val.toString().trim()) {
+            alert(`Please enter your ${name.replace('_',' ')}`)
+            return false
+        }
+    }
+    return true
+}
+
+/**
+ * Use native HTML5 constraint validation on a <form> element.
+ * @param {HTMLFormElement} formEl - the <form> to check
+ * @returns {boolean} - true if valid, false (and show bubbles) otherwise
+ */
+window.ensureFormValid = function(formEl) {
+    if (!formEl.checkValidity()) {
+        formEl.reportValidity()
+        return false
+    }
+    return true
+}
+
 // 7) Checkout page component
 import '../css/pages/checkout/index.css'
 import '../css/pages/checkout/success.css'
@@ -169,12 +202,11 @@ Alpine.data('checkoutPage', () => ({
 
     goToStep(n) {
         if (n === 2) {
-            for (let f of ['name','email','shipping_address','city','state','postal_code','country']) {
-                if (!this.form[f]?.trim()) {
-                    alert(`Please enter your ${f.replace('_',' ')}`)
-                    return
-                }
-            }
+            const required = [
+                'name','email','shipping_address','city',
+                'state','postal_code','country'
+            ]
+            if (!ensureFieldsFilled(this.form, required)) return
             this.calculateShipping()
         } else {
             this.step = n
@@ -228,6 +260,10 @@ Alpine.data('checkoutPage', () => ({
 
     async applyPromo() {
         this.promoError = ''
+        if (!this.promoCode.trim()) {
+            this.promoError = 'Please enter a promo code.'
+            return
+        }
         const res = await fetch('/checkout/apply-promo', {
             method:'POST',
             headers:{
