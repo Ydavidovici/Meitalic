@@ -3,7 +3,8 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "build:prod": "npm ci && npm run build"
     },
     "devDependencies": {
         "@tailwindcss/aspect-ratio": "^0.4.2",
