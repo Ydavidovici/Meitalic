@@ -2,9 +2,8 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build",
-        "dev": "vite",
-        "build:prod": "npm ci && npm run build"
+        "build": "npm ci && vite build --outDir build",
+        "build:prod": "npm ci && vite build --emptyOutDir --outDir /home/u161705717/domains/meitalic.com/public_html/build"
     },
     "devDependencies": {
         "@tailwindcss/aspect-ratio": "^0.4.2",

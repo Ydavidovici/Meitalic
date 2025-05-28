@@ -6,12 +6,6 @@ export default defineConfig(({ command }) => {
     const isProd = command === 'build';
 
     return {
-        build: isProd
-            ? {
-                outDir: '/home/u161705717/domains/meitalic.com/public_html/build',
-                emptyOutDir: true,
-            }
-            : {},
 
         plugins: [
             laravel({
