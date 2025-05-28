@@ -98,7 +98,7 @@
                 <div>Subtotal: $<span x-text="subtotal.toFixed(2)"></span></div>
                 <div>Discount: − $<span x-text="discount.toFixed(2)"></span></div>
                 <div>Tax: $<span x-text="tax.toFixed(2)"></span></div>
-                <div>Shipping: $<span x-text="shipping.toFixed(2)"></span></div>
+                <div>Shipping: $<span x-text="shippingFee.toFixed(2)"></span></div>
                 <div class="text-lg font-semibold">Total: $<span x-text="total.toFixed(2)"></span></div>
             </div>
 

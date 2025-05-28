@@ -159,6 +159,3 @@ export default function adminDashboard() {
 
 // Register Alpine component
 Alpine.data('adminDashboard', adminDashboard);
-
-// Initialize Alpine
-Alpine.start();

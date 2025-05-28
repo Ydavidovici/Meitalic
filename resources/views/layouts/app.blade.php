@@ -34,8 +34,7 @@
 
     {{-- CART OVERLAY & SIDEBAR --}}
     <div
-        x-show="$store.cart.open"
-        x-cloak=""
+        x-show="$store.cart.isOpen"
         @keydown.window.escape="$store.cart.close()"
         class="cart-overlay"
     >
@@ -45,8 +44,8 @@
         <!-- panel (this is the only Alpine component) -->
         <aside
             x-data="cartSidebar()"
-            x-init="load()"
             class="cart-panel"
+            x-cloak
         >
             <header class="cart-header">
                 <h2 class="cart-title">Your Cart</h2>

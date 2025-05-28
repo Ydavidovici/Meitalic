@@ -90,6 +90,3 @@ Alpine.data('userDashboard', () => ({
         else alert('Return request failed');
     }
 }));
-
-// Start Alpine
-Alpine.start();
