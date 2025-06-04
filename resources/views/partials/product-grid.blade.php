@@ -1,6 +1,6 @@
 {{-- resources/views/partials/product-grid.blade.php --}}
 <div id="product-grid" class="max-w-screen-lg mx-auto px-6 sm:px-8 lg:px-12 py-16">
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
         @foreach($products as $product)
             <div class="card hover:shadow-lg transition">
                 <a href="{{ route('products.show', $product->slug) }}">

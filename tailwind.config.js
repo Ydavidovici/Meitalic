@@ -22,6 +22,13 @@ module.exports = {
                     800: 'var(--color-neutral-800)',
                 },
                 dark:       'var(--color-dark)',
+                aqua: {
+                    100: '#E0FFFF', // Light Aqua
+                    200: '#B2FFFF', // Soft Aqua
+                    500: '#00FFFF', // True Aqua
+                    600: '#00E5EE', // Deep Aqua
+                    800: '#008B8B', // Dark Aqua
+                },
             },
             fontFamily: {
                 sans: ['var(--font-sans)', ...defaultTheme.fontFamily.sans],

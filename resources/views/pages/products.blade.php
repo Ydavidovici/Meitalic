@@ -109,10 +109,11 @@
                                 name="quantity"
                                 value="1"
                                 min="1"
-                                class="form-input w-16"
+                                class="product-card__qty-input"
                             />
 
-                            <button type="submit" class="btn-primary product-card__atc-btn">
+                            <button type="submit" class="product-card__atc-btn"                            class="btn-primary"
+                            >
                                 Add to Cart
                             </button>
                         </x-form>

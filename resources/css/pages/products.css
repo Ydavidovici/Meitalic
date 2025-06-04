@@ -13,10 +13,7 @@
 
     /* ── Grid itself ── */
     .product-grid {
-        @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8;
-    }
-    .product-card {
-        @apply card flex flex-col overflow-hidden transition-shadow hover:shadow-lg;
+        @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-8 min-w-[200px];
     }
 
     /* ── Image wrapper (4:3) ── */
@@ -29,28 +26,6 @@
     }
     .product-card__image {
         @apply absolute inset-0 w-full h-full object-cover;
-    }
-
-    /* ── Card content ── */
-    .product-card__body {
-        @apply p-4 flex-1 flex flex-col;
-    }
-    .product-card__title {
-        @apply font-semibold text-lg mb-1;
-    }
-    .product-card__price {
-        @apply text-gray-600 mb-4;
-    }
-
-    /* ── Add to Cart row sticks to bottom ── */
-    .product-card__atc-form {
-        @apply mt-auto flex items-center space-x-2;
-    }
-    .product-card__qty-input {
-        @apply w-16 px-2 py-1 border rounded focus:outline-none;
-    }
-    .product-card__atc-btn {
-        @apply btn-primary px-4 py-2;
     }
 
     /* ── View details link ── */
@@ -82,6 +57,61 @@
     .filter-input::-ms-clear,
     .filter-input::-ms-reveal {
         @apply hidden;
+    }
+
+    .product-card {
+        @apply card flex flex-col transition-shadow hover:shadow-lg;
+        /* (no overflow-hidden here, so nothing ever gets clipped) */
+    }
+
+   
+
+    /* ── Title & price styles (unchanged) ── */
+    .product-card__title {
+        @apply font-semibold text-lg mb-1;
+    }
+    .product-card__price {
+        @apply text-gray-600 mb-4;
+    }
+
+    .product-card__body {
+        @apply p-4 flex-1 flex flex-col items-start min-w-0;
+    }
+
+    /* ── Add-to-cart form: stack vertically and center ── */
+    .product-card__atc-form {
+        @apply
+        mt-auto             /* push to bottom of card body */
+        flex
+        flex-col            /* stack children (input + button) vertically */
+        items-center        /* center them horizontally */
+        space-y-2;          /* small vertical gap between input & button */
+    }
+
+    /* ── Quantity input: same fixed width for both elements ── */
+    .product-card__qty-input {
+        @apply
+        flex-none           /* do not grow or shrink */
+        w-24                /* fixed 6rem width (you can tweak this) */
+        h-10                /* 2.5rem tall */
+        border border-gray-300
+        rounded-md
+        text-center         /* center the “1” */
+        focus:outline-none focus:ring-2 focus:ring-accent;
+    }
+
+    /* ── “Add to Cart” button: match the same w-24 width ── */
+    .product-card__atc-btn {
+        @apply
+        flex-none           /* do not grow or shrink */
+        w-24                /* same 6rem width as the input */
+        h-10                /* 2.5rem tall */
+        bg-accent text-white font-medium
+        rounded-md
+        flex
+        items-center justify-center
+        whitespace-nowrap   /* never wrap “Add to Cart” */
+        transition hover:bg-pink-400;
     }
 
 }
