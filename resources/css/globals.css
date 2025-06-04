@@ -442,6 +442,27 @@
         @apply mt-4;
     }
 
+/* resources/css/app.css (or wherever you keep your custom overrides) */
+.line-card {
+    /* Use the CSS variables we set inline (with fallbacks) */
+    background-color: var(--card-bg, white);
+    color:           var(--card-text, black);
+
+    /* Optional: make it look more “card‐like” */
+    border-radius: 0.5rem;     /* e.g. rounded corners */
+    padding: 1rem;             /* same as your “p-3” in Tailwind */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* If you want to use Tailwind’s shadow on hover */
+    transition: box-shadow 0.2s ease-in-out;
+}
+
+.line-card:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* replicate “hover:shadow-md” */
+}
+
 @tailwind utilities;
 
 

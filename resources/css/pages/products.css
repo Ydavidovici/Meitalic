@@ -64,7 +64,7 @@
         /* (no overflow-hidden here, so nothing ever gets clipped) */
     }
 
-   
+
 
     /* ── Title & price styles (unchanged) ── */
     .product-card__title {
@@ -113,5 +113,8 @@
         whitespace-nowrap   /* never wrap “Add to Cart” */
         transition hover:bg-pink-400;
     }
+
+
+
 
 }
