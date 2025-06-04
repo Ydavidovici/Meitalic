@@ -9,7 +9,6 @@ class Order extends Model
 {
     use HasFactory;
 
-    // Assuming your orders table has these columns (user_id, shipping_address, total, status, etc.)
     protected $fillable = [
         'user_id',
         'shipping_address',

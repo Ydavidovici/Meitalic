@@ -119,8 +119,6 @@ export default function adminDashboard() {
                 'shipping_fee',
                 'total',
                 'shipping_address',
-                'email',
-                'phone'
             ]
             if (!ensureFieldsFilled(this.selectedOrder, required)) return
 

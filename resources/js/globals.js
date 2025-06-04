@@ -149,12 +149,32 @@ window.ensureFieldsFilled = function(formObj, fields) {
  * @returns {boolean} - true if valid, false (and show bubbles) otherwise
  */
 window.ensureFormValid = function(formEl) {
+    console.log('[validateAndSubmit] called for form:', formEl.id);
+
     if (!formEl.checkValidity()) {
         formEl.reportValidity()
         return false
     }
     return true
 }
+
+window.validateAndSubmit = function(formEl) {
+    // 1) Run HTML5 constraint validation on <form>
+    if (!window.ensureFormValid(formEl)) {
+        console.log('[validateAndSubmit] -- HTML5 validation failed for', formEl.id);
+        return;
+    }
+
+    // 2) (Optional) If you have a JS object backing that form (e.g., x-data="…"),
+    //    you could also check required fields via ensureFieldsFilled:
+    //    const alpineData = Alp‎ine.$data(formEl)
+    //    if (!window.ensureFieldsFilled(alpineData, ['name','price',…])) return
+
+    // 3) All good → submit the form normally
+    console.log('[validateAndSubmit] -- form is valid, calling form.submit() for', formEl.id);
+    formEl.submit()
+}
+
 
 // 7) Checkout page component
 import '../css/pages/checkout/index.css'

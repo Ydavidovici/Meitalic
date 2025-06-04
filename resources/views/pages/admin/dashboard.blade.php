@@ -669,10 +669,13 @@
 
         {{-- 8. PROMOTIONS --}}
         <div class="promotions-section">
-
             <div class="promotions-header">
                 <h3 class="promotions-title">Promo Codes</h3>
-                <button @click="openModal('promo-create')" class="btn-primary">+ New Promo</button>
+
+                <button
+                    @click="openModal('promo-create')"
+                    class="btn-primary"
+                >+ New Promo</button>
             </div>
 
             <div class="promotions-list">
@@ -690,7 +693,10 @@
                             @endif
                         </div>
                         <div class="promo-actions">
-                            <button @click="openModal('promo-edit-{{ $promo->id }}')">Edit</button>
+                            <button
+                                @click="openModal('promo-edit-{{ $promo->id }}')"
+                            >Edit</button>
+
                             <x-form
                                 method="DELETE"
                                 action="{{ route('admin.promo.destroy', $promo) }}"
@@ -710,7 +716,6 @@
                 @endforelse
             </div>
         </div>
-
 
 
         {{-- 6. DEV METRICS --}}
@@ -885,7 +890,10 @@
         {{-- Create Promo Modal --}}
         <x-modal name="promo-create" maxWidth="md">
             <x-slot name="title">New Promo Code</x-slot>
-            <x-form method="POST" action="{{ route('admin.promo.store') }}" @submit.prevent="validateAndSubmit($el)" class="space-y-4 p-6">
+            <x-form method="POST" action="{{ route('admin.promo.store') }}"
+                    @submit.prevent="validateAndSubmit($el)" class="space-y-4 p-6"
+                    id="promo-create-form"
+            >
                 <div class="form-group">
                     <label class="block font-medium">Code</label>
                     <input name="code" value="{{ old('code') }}" required class="form-input"/>
@@ -921,7 +929,9 @@
             </x-form>
             <x-slot name="footer">
                 <button @click="$dispatch('close-modal','promo-create')" class="btn-secondary">Cancel</button>
-                <button type="submit" form="promo-create-form" class="btn-primary">Create</button>
+                <button type="submit" form="promo-create-form"
+                        @click="console.log('[MODAL] promo-create button clicked')"
+                        class="btn-primary">Create</button>
             </x-slot>
         </x-modal>
 
@@ -935,6 +945,7 @@
                     action="{{ route('admin.promo.update',$promo) }}"
                     @submit.prevent="validateAndSubmit($el)"
                     class="space-y-4 p-6"
+                    id="promo-edit-{{ $promo->id }}"
                 >
                     @csrf @method('PUT')
 
@@ -1011,6 +1022,7 @@
                     <button
                         @click="$dispatch('close-modal','promo-edit-{{ $promo->id }}')"
                         class="btn-secondary"
+                        @click="console.log('[MODAL] promo-edit-{{ $promo->id }} button clicked')"
                     >Cancel</button>
                     <button
                         type="submit"
@@ -1060,7 +1072,6 @@
                             type="number"
                             step="0.01"
                             x-model="selectedOrder.shipping_fee"
-                            required
                             class="form-input"
                         />
                     </div>

@@ -28,6 +28,7 @@ class PromoCodeController extends Controller
     /** PUT  /admin/promo/{promo} */
     public function update(Request $request, PromoCode $promo)
     {
+        /*
         $data = $request->validate([
             'code'        => 'required|string|unique:promo_codes,code,' . $promo->id,
             'type'        => 'required|in:fixed,percent',
@@ -39,6 +40,19 @@ class PromoCodeController extends Controller
         ]);
 
         $promo->update($data);
+        */
+
+        $validated = $request->validate([
+            'code'      => 'required|string',
+            'type'      => 'required|in:fixed,percent',
+            'discount'  => 'required|numeric',
+            'max_uses'  => 'nullable|integer',
+            'expires_at'=> 'nullable|date',
+            'active'    => 'nullable|boolean',
+        ]);
+
+        $promo->update($validated);
+
 
         return redirect()->route('admin.dashboard')
             ->with('success','Promo code updated!');
