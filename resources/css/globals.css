@@ -270,6 +270,14 @@
     @apply bg-white bg-opacity-20 rounded-md;
 }
 
+/* Make all nav links pure white */
+.site-nav__link,
+.mobile-nav__list .site-nav__link {
+    @apply text-white !important;
+    color: #ffffff !important;
+}
+
+
 /* 4. CTA buttons (Login/Register/Logout) */
 .mobile-nav__list .site-nav__cta {
     @apply mt-4 inline-block bg-accent text-white font-semibold
