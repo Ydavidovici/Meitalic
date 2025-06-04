@@ -12,6 +12,17 @@
     --color-neutral-800:#333333;
     --color-dark:       #1F1F1F;
 
+    --color-aqua-100:  #E0FFFF;  /* Light Aqua */
+    --color-aqua-200:  #B2FFFF;  /* Soft Aqua  */
+    --color-aqua-500:  #00FFFF;  /* True Aqua  */
+    --color-aqua-600:  #00E5EE;  /* Deep Aqua  */
+    --color-aqua-800:  #008B8B;  /* Dark Aqua  */
+
+
+    --color-background: var(--color-aqua-500);
+
+
+
     /* font */
     --font-sans:        'Instrument Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
@@ -27,6 +38,7 @@
         margin: 0;
         padding: 0;
         overflow-x: hidden;
+        background-color: var(--color-background);
     }
     /* Alpine’s [x‑cloak] support (shared) */
     [x-cloak] { display: none !important; }
@@ -173,7 +185,7 @@
 
     /* —— Shared buttons —— */
     .btn-primary {
-        @apply bg-accent text-white font-medium px-6 py-3 rounded-full hover:bg-pink-400 transition;
+        @apply bg-accent text-white font-medium px-6 py-3 rounded hover:bg-pink-400 transition;
     }
     .btn-secondary {
         @apply bg-text text-white font-medium px-6 py-3 rounded-full hover:bg-gray-800 transition;
@@ -185,7 +197,7 @@
     }
 
     /* —— Page scaffolding —— */
-    .layout-root          { @apply overflow-y-auto overflow-x-hidden font-sans antialiased text-text bg-gradient-to-br from-secondary via-primary; }
+    .layout-root          { @apply overflow-y-auto overflow-x-hidden font-sans antialiased text-text; }
     .layout-vh            { @apply flex flex-col min-h-screen; }
     .layout-main          { @apply w-full pt-16 w-full px-4 sm:px-6 lg:px-8; }
 
