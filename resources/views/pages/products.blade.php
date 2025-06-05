@@ -117,7 +117,7 @@
                                 class="product-card__qty-input"
                             />
 
-                            <button type="submit" class="product-card__atc-btn"                            class="btn-primary"
+                            <button type="submit" class="product-card__atc-btn btn-primary"
                             >
                                 Add to Cart
                             </button>

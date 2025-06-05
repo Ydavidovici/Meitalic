@@ -106,12 +106,12 @@
         flex-none           /* do not grow or shrink */
         w-24                /* same 6rem width as the input */
         h-10                /* 2.5rem tall */
-        bg-accent text-white font-medium
+        text-white font-medium
         rounded-md
         flex
         items-center justify-center
         whitespace-nowrap   /* never wrap “Add to Cart” */
-        transition hover:bg-pink-400;
+        transition;
     }
 
 

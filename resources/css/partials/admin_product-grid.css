@@ -4,7 +4,7 @@
 @layer components {
     /* 1. Grid container */
     .product-grid {
-        @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8;
+        @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-8;
     }
 
     /* 2. “No products” empty state */
