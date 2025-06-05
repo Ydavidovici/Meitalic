@@ -12,15 +12,8 @@
     --color-neutral-800:#333333;
     --color-dark:       #1F1F1F;
 
-    --color-aqua-100:  #E0FFFF;  /* Light Aqua */
-    --color-aqua-200:  #B2FFFF;  /* Soft Aqua  */
-    --color-aqua-500:  #00FFFF;  /* True Aqua  */
-    --color-aqua-600:  #00E5EE;  /* Deep Aqua  */
-    --color-aqua-800:  #008B8B;  /* Dark Aqua  */
 
-
-    --color-background: var(--color-aqua-500);
-
+    --color-background:#FFFFFF;
 
 
     /* font */
@@ -238,16 +231,16 @@
 .site-nav__link:hover,
 .site-nav__link[aria-current="page"]:hover,
 .site-nav__link.active:hover {
-    @apply bg-neutral-200;
+    @apply bg-gray-700;
 }
 
 /* —— Call-to-action buttons —— */
 .site-nav__cta {
-    @apply inline-block bg-accent text-white font-semibold
+    @apply inline-block bg-gray-800 text-white font-semibold
     px-6 py-2 rounded-md transition;
 }
 .site-nav__cta:hover {
-    @apply bg-pink-400;
+    @apply bg-gray-800;
 }
 
 /* —— Mobile toggle button —— */
@@ -360,7 +353,7 @@
 
     /* Button */
     .btn-primary {
-        background-color: #000;        /* bg-black */
+        background-color: var(--color-neutral-600);        /* bg-black */
         color: #fff;                   /* text-white */
         padding: 0.5rem 1.5rem;        /* px-6 py-2 */
         border-radius: 0.375rem;       /* rounded */

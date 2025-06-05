@@ -21,10 +21,10 @@
     }
 
     .hero__banner {
-        @apply relative inset-x-0 top-0 left-1/2 w-screen -translate-x-1/2;
+        @apply relative inset-x-0 top-0 left-1/2 w-screen -translate-x-1/2 h-96;
     }
     .hero__banner-img {
-        @apply block w-full h-auto object-cover;
+        @apply block w-full h-full object-cover;
     }
     .hero__inner {
         @apply relative z-10;
