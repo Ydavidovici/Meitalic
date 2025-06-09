@@ -189,31 +189,55 @@
         </div>
     </section>
 
-    <!-- Newsletter -->
-    <section class="newsletter">
-        <div class="newsletter__inner">
-            <h2 class="section-title">Join Our Newsletter</h2>
 
-            <div class="newsletter__card">
-                <p class="newsletter__text mb-4">Get 10% off your first order</p>
-                <x-form
-                    method="POST"
-                    action="{{ route('newsletter.subscribe') }}"
-                    class="newsletter__form space-y-4"
-                >
-                    <input
-                        type="email"
-                        name="email"
-                        placeholder="Email address"
-                        required
-                        class="form-input newsletter__input"
-                    />
-                    <button type="submit" class="btn-primary newsletter__btn">
-                        Subscribe
-                    </button>
-                </x-form>
-            </div>
+    <section
+        class="newsletter"
+        x-data="{ open: false }"
+        x-init="setTimeout(() => open = true, 500)"   {{-- fire after 0.5s --}}
+        @keydown.window.escape="open = false"
+    >
+        <div class="newsletter__inner text-center">
+            <h2 class="section-title">Join Our Newsletter</h2>
+            <button @click="open = true" class="btn-primary newsletter__btn">
+                Sign Up
+            </button>
         </div>
+
+        <!-- Modal -->
+        <template x-if="open">
+            <div
+                class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+            >
+                <div
+                    class="bg-white rounded-2xl shadow-lg p-6 max-w-md mx-4 transform"
+                    x-transition:enter="transition ease-out duration-300"
+                    x-transition:enter-start="opacity-0 scale-90"
+                    x-transition:enter-end="opacity-100 scale-100"
+                    x-transition:leave="transition ease-in duration-200"
+                    x-transition:leave-start="opacity-100 scale-100"
+                    x-transition:leave-end="opacity-0 scale-90"
+                >
+                    <button @click="open = false" class="text-gray-500 hover:text-gray-700 float-right text-2xl leading-none">
+                        &times;
+                    </button>
+
+                    <h3 class="text-2xl font-semibold mb-4">Subscribe</h3>
+                    <p class="text-neutral-600 mb-4">Get 10% off your first order ✨</p>
+
+                    <x-form method="POST" action="{{ route('newsletter.subscribe') }}" class="space-y-4">
+                        <input
+                            type="email"
+                            name="email"
+                            placeholder="Your email address"
+                            required
+                            class="w-full px-6 py-3 border rounded focus:outline-none focus:ring-2 focus:ring-accent"
+                        />
+                        <button type="submit" class="btn-primary w-full">Subscribe</button>
+                    </x-form>
+                </div>
+            </div>
+        </template>
     </section>
+
 
 @endsection
