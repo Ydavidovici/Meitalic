@@ -97,10 +97,10 @@
                     <a href="{{ route('products.index', ['brand' => $brand]) }}"
                        class="brand-card border p-4 text-center hover:shadow-lg transition"
                     >
-                        {{-- Optional: show logo: --}}
-                        <img src="{{ asset('storage/'.config('brands')[$brand]['logo']) }}"
-                             alt="{{ $brand }} logo"
-                             class="mx-auto mb-2 w-16 h-auto"
+                        <img
+                            src="{{ asset(config('brands')[$brand]['logo']) }}"
+                            alt="{{ $brand }} logo"
+                            class="mx-auto mb-2 w-16 h-auto"
                         >
                         {{ $brand }}
                     </a>

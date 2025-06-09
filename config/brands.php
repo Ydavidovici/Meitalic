@@ -2,7 +2,7 @@
 return [
     'Meitalic' => [
         'slug'  => 'meitalic',
-        'logo'  => 'brands/meitalic.png',
+        'logo'  => 'images/brands/logo-meitalic.png',
         'lines' => [
             'Brightening line',
             'Acne line',
@@ -14,7 +14,7 @@ return [
     ],
     'Repechage' => [
         'slug'  => 'repechage',
-        'logo'  => 'brands/repechage.png',
+        'logo'  => 'images/brands/repechage.png',
         'lines' => [
             'Hydra Medic',
             'Biolight',
@@ -24,7 +24,7 @@ return [
     ],
     'Melaleuca' => [
         'slug'  => 'melaleuca',
-        'logo'  => 'brands/melaleuca.png',
+        'logo'  => 'images/brands/melaleuca.png',
         'lines' => [
             'Renew',
         ],
