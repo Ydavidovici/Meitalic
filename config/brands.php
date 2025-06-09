@@ -2,7 +2,7 @@
 return [
     'Meitalic' => [
         'slug'  => 'meitalic',
-        'logo'  => 'images/brands/logo-meitalic.png',
+        'logo'  => 'images/brands/logo-meitalic.pdf',
         'lines' => [
             'Brightening line',
             'Acne line',
