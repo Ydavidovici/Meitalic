@@ -452,6 +452,16 @@
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* replicate “hover:shadow-md” */
 }
 
+@layer components {
+    .reviews__card,
+    .featured__card,
+    .philosophy__card,
+    .mission__card {
+        @apply border-b-2 border-black shadow-none;
+    }
+}
+
+
 @tailwind utilities;
 
 
