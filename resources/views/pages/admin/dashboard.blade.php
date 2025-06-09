@@ -314,6 +314,11 @@
             <x-modal name="inventory-create" maxWidth="lg">
                 <x-slot name="title">New Product</x-slot>
 
+                {{-- inject your JS config once --}}
+                <script>
+                    window.config = { brands: @json(config('brands')) };
+                </script>
+
                 <x-form
                     method="POST"
                     action="{{ route('admin.products.store') }}"
@@ -321,31 +326,58 @@
                     class="modal-body--product-edit"
                     @submit.prevent="validateAndSubmit($el)"
                 >
-                    <div class="modal-body">
+                    <div class="modal-body"
+                         x-data="{ brand: '', lines: [] }"
+                    >
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Core fields -->
+                            <!-- Name -->
                             <div class="form-group">
                                 <x-input-label for="new-name" value="Name" />
                                 <input id="new-name" name="name" type="text" required class="form-input" />
                             </div>
+
+                            <!-- Brand -->
                             <div class="form-group">
                                 <x-input-label for="new-brand" value="Brand" />
-                                <input id="new-brand" name="brand" type="text" required class="form-input" />
+                                <select
+                                    id="new-brand"
+                                    name="brand"
+                                    required
+                                    class="form-select"
+                                    x-model="brand"
+                                    @change="lines = window.config.brands[brand]?.lines || []"
+                                >
+                                    <option value="">Choose a brand…</option>
+                                    @foreach(array_keys(config('brands')) as $b)
+                                        <option value="{{ $b }}">{{ $b }}</option>
+                                    @endforeach
+                                </select>
                             </div>
+
+                            <!-- Category -->
                             <div class="form-group">
                                 <x-input-label for="new-category" value="Category" />
                                 <input id="new-category" name="category" type="text" required class="form-input" />
                             </div>
+
+                            <!-- Line -->
                             <div class="form-group">
                                 <x-input-label for="new-line" value="Line (optional)" />
-                                <input
+                                <select
                                     id="new-line"
                                     name="line"
-                                    type="text"
-                                    class="form-input"
-                                    placeholder="e.g. Brightening line"
-                                />
+                                    class="form-select"
+                                    :disabled="!brand"
+                                    x-model="lines.includes($el.value)? $el.value : ''"
+                                >
+                                    <option value="">— none —</option>
+                                    <template x-for="l in lines" :key="l">
+                                        <option :value="l" x-text="l"></option>
+                                    </template>
+                                </select>
                             </div>
+
+                            <!-- Price -->
                             <div class="form-group">
                                 <x-input-label for="new-price" value="Price" />
                                 <input
@@ -357,6 +389,8 @@
                                     class="form-input"
                                 />
                             </div>
+
+                            <!-- Inventory -->
                             <div class="form-group">
                                 <x-input-label for="new-inventory" value="Inventory" />
                                 <input
@@ -368,7 +402,7 @@
                                 />
                             </div>
 
-                            <!-- Shipping fields -->
+                            <!-- Weight -->
                             <div class="form-group">
                                 <x-input-label for="new-weight" value="Weight (lb)" />
                                 <input
@@ -380,6 +414,8 @@
                                     class="form-input"
                                 />
                             </div>
+
+                            <!-- Length -->
                             <div class="form-group">
                                 <x-input-label for="new-length" value="Length (in)" />
                                 <input
@@ -390,6 +426,8 @@
                                     class="form-input"
                                 />
                             </div>
+
+                            <!-- Width -->
                             <div class="form-group">
                                 <x-input-label for="new-width" value="Width (in)" />
                                 <input
@@ -400,6 +438,8 @@
                                     class="form-input"
                                 />
                             </div>
+
+                            <!-- Height -->
                             <div class="form-group">
                                 <x-input-label for="new-height" value="Height (in)" />
                                 <input
@@ -460,11 +500,17 @@
                     </div>
                 </x-form>
             </x-modal>
-        </div>
 
-        {{-- Edit-modals for each product --}}
+            {{-- Edit-modals for each product --}}
         @foreach($allProducts as $prod)
             <x-modal name="product-edit-{{ $prod->id }}" maxWidth="lg">
+                <x-slot name="title">Edit {{ $prod->name }}</x-slot>
+
+                {{-- ensure the JS config is available --}}
+                <script>
+                    window.config = window.config || { brands: @json(config('brands')) };
+                </script>
+
                 <x-form
                     method="PUT"
                     action="{{ route('admin.products.update', $prod) }}"
@@ -472,11 +518,14 @@
                     class="modal-body--product-edit"
                     @submit.prevent="validateAndSubmit($el)"
                 >
-                    <h3 class="modal-title">Edit {{ $prod->name }}</h3>
-
-                    <div class="modal-body">
+                    <div class="modal-body"
+                         x-data="{
+             brand: '{{ old('brand',$prod->brand) }}',
+             lines: window.config.brands['{{ old('brand',$prod->brand) }}']?.lines || []
+           }"
+                    >
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Core fields -->
+                            <!-- Name -->
                             <div class="form-group">
                                 <x-input-label for="name-{{ $prod->id }}" value="Name" />
                                 <input
@@ -488,17 +537,26 @@
                                     class="form-input"
                                 />
                             </div>
+
+                            <!-- Brand -->
                             <div class="form-group">
                                 <x-input-label for="brand-{{ $prod->id }}" value="Brand" />
-                                <input
+                                <select
                                     id="brand-{{ $prod->id }}"
                                     name="brand"
-                                    type="text"
-                                    value="{{ old('brand',$prod->brand) }}"
                                     required
-                                    class="form-input"
-                                />
+                                    class="form-select"
+                                    x-model="brand"
+                                    @change="lines = window.config.brands[brand]?.lines || []"
+                                >
+                                    <option value="">Choose a brand…</option>
+                                    @foreach(array_keys(config('brands')) as $b)
+                                        <option value="{{ $b }}">{{ $b }}</option>
+                                    @endforeach
+                                </select>
                             </div>
+
+                            <!-- Category -->
                             <div class="form-group">
                                 <x-input-label for="category-{{ $prod->id }}" value="Category" />
                                 <input
@@ -510,17 +568,26 @@
                                     class="form-input"
                                 />
                             </div>
+
+                            <!-- Line -->
                             <div class="form-group">
                                 <x-input-label for="line-{{ $prod->id }}" value="Line (optional)" />
-                                <input
+                                <select
                                     id="line-{{ $prod->id }}"
                                     name="line"
-                                    type="text"
-                                    value="{{ old('line',$prod->line) }}"
-                                    class="form-input"
-                                    placeholder="e.g. Brightening line"
-                                />
+                                    class="form-select"
+                                    :disabled="!brand"
+                                    x-model="oldLine = '{{ old('line',$prod->line) }}'"
+                                    @change="oldLine = $event.target.value"
+                                >
+                                    <option value="">— none —</option>
+                                    <template x-for="l in lines" :key="l">
+                                        <option :value="l" x-text="l" :selected="l==='{{ old('line',$prod->line) }}'"></option>
+                                    </template>
+                                </select>
                             </div>
+
+                            <!-- Price -->
                             <div class="form-group">
                                 <x-input-label for="price-{{ $prod->id }}" value="Price" />
                                 <input
@@ -533,6 +600,8 @@
                                     class="form-input"
                                 />
                             </div>
+
+                            <!-- Inventory -->
                             <div class="form-group">
                                 <x-input-label for="inventory-{{ $prod->id }}" value="Inventory" />
                                 <input
@@ -545,7 +614,7 @@
                                 />
                             </div>
 
-                            <!-- Shipping fields -->
+                            <!-- Weight -->
                             <div class="form-group">
                                 <x-input-label for="weight-{{ $prod->id }}" value="Weight (lb)" />
                                 <input
@@ -558,6 +627,8 @@
                                     class="form-input"
                                 />
                             </div>
+
+                            <!-- Length -->
                             <div class="form-group">
                                 <x-input-label for="length-{{ $prod->id }}" value="Length (in)" />
                                 <input
@@ -569,6 +640,8 @@
                                     class="form-input"
                                 />
                             </div>
+
+                            <!-- Width -->
                             <div class="form-group">
                                 <x-input-label for="width-{{ $prod->id }}" value="Width (in)" />
                                 <input
@@ -580,6 +653,8 @@
                                     class="form-input"
                                 />
                             </div>
+
+                            <!-- Height -->
                             <div class="form-group">
                                 <x-input-label for="height-{{ $prod->id }}" value="Height (in)" />
                                 <input

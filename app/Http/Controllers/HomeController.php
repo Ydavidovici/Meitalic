@@ -14,11 +14,7 @@ class HomeController extends Controller
             ->take(4)
             ->get();
 
-        // 2) get all distinct brands for the “Shop by Brand” section
-        $allBrands = Product::select('brand')
-            ->distinct()
-            ->orderBy('brand')
-            ->pluck('brand');
+        $allBrands = array_keys(config('brands'));
 
         return view('pages.home', compact('featuredProducts', 'allBrands'));
     }

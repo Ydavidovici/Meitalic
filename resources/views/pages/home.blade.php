@@ -93,9 +93,15 @@
         <div class="container mx-auto px-6">
             <h2 class="section-title text-2xl font-bold mb-6 text-center">Shop by Brand</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                @foreach($allBrands as $brand)
+                @foreach(array_keys(config('brands')) as $brand)
                     <a href="{{ route('products.index', ['brand' => $brand]) }}"
-                       class="brand-card border p-4 text-center hover:shadow-lg transition">
+                       class="brand-card border p-4 text-center hover:shadow-lg transition"
+                    >
+                        {{-- Optional: show logo: --}}
+                        <img src="{{ asset('storage/'.config('brands')[$brand]['logo']) }}"
+                             alt="{{ $brand }} logo"
+                             class="mx-auto mb-2 w-16 h-auto"
+                        >
                         {{ $brand }}
                     </a>
                 @endforeach
