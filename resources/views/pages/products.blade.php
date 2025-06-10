@@ -48,7 +48,7 @@
             </button>
         </x-form>
 
-        {{-- **NEW**: if user clicked “Skincare” as category, show lines --}}
+        {{-- Skincare Lines (only when category=Skincare) --}}
         @if(request('category') === 'Skincare')
             <section class="skincare-lines mb-12">
                 <h3 class="section-subtitle text-xl font-semibold mb-4">
@@ -62,9 +62,43 @@
                       'Makeup Line'      => 'Makeup Line',
                     ] as $label => $line)
                         <a
-                            href="{{ route('products.index', ['category' => 'Skincare', 'line' => $line]) }}"
+                            href="{{ route('products.index', array_merge(request()->only(['search','brand','category']), ['line' => $line])) }}"
                             class="line-card border p-3 text-center hover:shadow-md transition"
-                            style="--card-bg: white; --card-text: black;"
+                        >
+                            {{ $label }}
+                        </a>
+                    @endforeach
+                </div>
+            </section>
+        @endif
+
+        {{-- Brand Lines (when brand=Repechage or Melaleuca) --}}
+        @php
+            $brandLines = [];
+            if(request('brand') === 'Repechage') {
+                $brandLines = [
+                  'Hydra Medic' => 'Hydra Medic',
+                  'Biolight'    => 'Biolight',
+                  'Vita Cura'   => 'Vita Cura',
+                  'Hydra 4'     => 'Hydra 4',
+                ];
+            } elseif(request('brand') === 'Melaleuca') {
+                $brandLines = [
+                  'Renew' => 'Renew',
+                ];
+            }
+        @endphp
+
+        @if(count($brandLines))
+            <section class="brand-lines mb-12">
+                <h3 class="section-subtitle text-xl font-semibold mb-4">
+                    Shop {{ request('brand') }} Lines
+                </h3>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    @foreach($brandLines as $label => $line)
+                        <a
+                            href="{{ route('products.index', array_merge(request()->only(['search','brand','category']), ['line' => $line])) }}"
+                            class="line-card border p-3 text-center hover:shadow-md transition"
                         >
                             {{ $label }}
                         </a>

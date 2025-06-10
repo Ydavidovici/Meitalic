@@ -197,7 +197,10 @@
                 <div class="flex flex-col items-center md:items-start space-y-4">
                     @foreach(array_keys(config('brands')) as $brand)
                         <a
-                            href="{{ route('products.index', ['brand' => $brand]) }}"
+                            href="{{ route('products.index', array_merge(
+                            request()->only(['search','brand','category']),
+                            ['brand' => $brand]
+                        )) }}"
                             class="brand-card border p-4 text-center hover:shadow-lg transition w-full max-w-xs"
                         >
                             <span class="block text-xl font-medium">{{ $brand }}</span>
@@ -231,7 +234,7 @@
             <h2 class="section-title text-2xl font-bold mb-6 text-center">Shop by Category</h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                {{-- ← Column 1: category preview video --}}
+                {{-- Column 1: preview video --}}
                 <div class="flex justify-center md:justify-start">
                     <div class="w-full max-w-xs aspect-square overflow-hidden rounded-lg shadow-md">
                         <video
@@ -248,7 +251,7 @@
                     </div>
                 </div>
 
-                {{-- Column 2: category buttons, same sizing as brands --}}
+                {{-- Column 2: category buttons --}}
                 <div class="flex flex-col items-center md:items-start space-y-4">
                     @foreach([
                       'Skincare'     => 'Skincare',
@@ -257,7 +260,10 @@
                       'Accessories'  => 'Accessories',
                     ] as $label => $cat)
                         <a
-                            href="{{ route('products.index', ['category' => $cat]) }}"
+                            href="{{ route('products.index', array_merge(
+                            request()->only(['search','brand','category']),
+                            ['category' => $cat]
+                        )) }}"
                             class="category-card border p-4 text-center hover:shadow-lg transition w-full max-w-xs"
                         >
                             {{ $label }}
