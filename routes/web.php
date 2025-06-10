@@ -20,26 +20,6 @@ use App\Http\Controllers\{
     ReviewController
 };
 
- Route::get('/debug-db-config', function () {
-     return response()->json([
-         'env_file_exists' => file_exists(base_path('.env')),
-         'db_host'         => config('database.connections.mysql.host'),
-         'db_port'         => config('database.connections.mysql.port'),
-         'db_database'     => config('database.connections.mysql.database'),
-         'db_username'     => config('database.connections.mysql.username'),
-         'db_password'     => config('database.connections.mysql.password'),
-         'db_socket'       => config('database.connections.mysql.unix_socket'),
-         'try_connection'  => (function () {
-             try {
-                 DB::select('SELECT 1');
-                 return 'OK';
-             } catch (\Throwable $e) {
-                 return $e->getMessage();
-             }
-         })(),
-     ]);
- });
-
 
 // ───────────── Public Pages ────────────────
 Route::get('/',             [HomeController::class, 'index'])->name('home');

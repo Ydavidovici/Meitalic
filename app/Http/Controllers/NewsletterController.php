@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Newsletter;
 use App\Models\PromoCode;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Jobs\SendNewsletter;
 
@@ -84,5 +86,40 @@ class NewsletterController extends Controller
         return redirect()
             ->route('admin.dashboard')
             ->with('success', 'Newsletter scheduled and promo code created successfully.');
+    }
+
+    public function subscribe(Request $request)
+    {
+        $data = $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        // If the user is logged in, update THEIR row:
+        if (Auth::check()) {
+            DB::table('users')
+                ->where('id', Auth::id())
+                ->update([
+                    'is_subscribed' => true,
+                    'subscribed_at' => now(),
+                ]);
+
+        } else {
+            // Otherwise try to update by email:
+            $affected = DB::table('users')
+                ->where('email', $data['email'])
+                ->update([
+                    'is_subscribed' => true,
+                    'subscribed_at' => now(),
+                ]);
+
+            if (! $affected) {
+                // No user row updated?  Fallback to newsletter table
+                Newsletter::firstOrCreate([
+                    'email' => $data['email'],
+                ]);
+            }
+        }
+
+        return back()->with('newsletter_success', 'Thanks for subscribing! 🎉');
     }
 }

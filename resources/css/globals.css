@@ -453,6 +453,8 @@
 }
 
 @layer components {
+    .brand-card,
+    .category-card,
     .reviews__card,
     .featured__card,
     .philosophy__card,
