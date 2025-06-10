@@ -21,11 +21,26 @@
     }
 
     .hero__banner {
-        @apply relative inset-x-0 top-0 left-1/2 w-screen -translate-x-1/2 h-96;
+        @apply relative w-screen h-48 left-1/2
+        transform -translate-x-1/2 overflow-hidden;
     }
+    @screen md {
+        .hero__banner {
+            @apply h-64;
+        }
+    }
+
+    @screen lg {
+        .hero__banner {
+            @apply h-[32rem];
+            /* 32rem tall on ≥1024px */
+        }
+    }
+
     .hero__banner-img {
         @apply block w-full h-full object-cover;
     }
+
     .hero__inner {
         @apply relative z-10;
     }
