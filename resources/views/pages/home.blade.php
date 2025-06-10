@@ -193,14 +193,14 @@
             <h2 class="section-title text-2xl font-bold mb-6 text-center">Shop by Brand</h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                {{-- ← Column 1: brand buttons, centered --}}
+                {{-- Column 1: brand buttons --}}
                 <div class="flex flex-col items-center md:items-start space-y-4">
                     @foreach(array_keys(config('brands')) as $brand)
                         <a
                             href="{{ route('products.index', array_merge(
-                            request()->only(['search','brand','category']),
-                            ['brand' => $brand]
-                        )) }}"
+                request()->only(['search','brand','category']),
+                ['brand' => $brand]
+            )) }}"
                             class="brand-card border p-4 text-center hover:shadow-lg transition w-full max-w-xs"
                         >
                             <span class="block text-xl font-medium">{{ $brand }}</span>
@@ -208,7 +208,7 @@
                     @endforeach
                 </div>
 
-                {{-- Column 2: preview video, fixed square with rounded corners --}}
+                {{-- Column 2: preview video --}}
                 <div class="flex justify-center">
                     <div class="w-full max-w-xs aspect-square overflow-hidden rounded-lg shadow-md">
                         <video
@@ -261,9 +261,9 @@
                     ] as $label => $cat)
                         <a
                             href="{{ route('products.index', array_merge(
-                            request()->only(['search','brand','category']),
-                            ['category' => $cat]
-                        )) }}"
+                request()->only(['search','brand','category']),
+                ['category' => $cat]
+            )) }}"
                             class="category-card border p-4 text-center hover:shadow-lg transition w-full max-w-xs"
                         >
                             {{ $label }}
