@@ -60,40 +60,82 @@
     </section>
 
 
+    <!-- Why Shop at Meitalic -->
+    <section class="why-shop bg-white mt-12 mb-12 py-16">
+        <div class="container mx-auto px-6 text-center">
+            <h2 class="text-3xl font-bold mb-8">Why Shop at Meitalic</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Satisfaction Guarantee -->
+                <div class="flex flex-col items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         class="h-8 w-8 text-pink-500 mb-3"
+                         fill="none" viewBox="0 0 24 24"
+                         stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p class="font-semibold text-gray-800">
+                        Satisfaction Guarantee
+                    </p>
+                </div>
+
+                <!-- Free Shipping -->
+                <div class="flex flex-col items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         class="h-8 w-8 text-pink-500 mb-3"
+                         fill="none" viewBox="0 0 24 24"
+                         stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M3 7h13v10H3V7zm13-4H3a2 2 0 00-2 2v12a2 2 0 002 2h1m16-6h2M16 3l5 5m0 0v8m0-8H16" />
+                    </svg>
+                    <p class="font-semibold text-gray-800">
+                        Free Shipping on Orders Over $50
+                    </p>
+                </div>
+
+                <!-- Made in USA -->
+                <div class="flex flex-col items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         class="h-8 w-8 text-pink-500 mb-3"
+                         fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M5 3v18l7-3 7 3V3H5z" />
+                    </svg>
+                    <p class="font-semibold text-gray-800">
+                        Made in USA
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Promo Video -->
+    <section class="promo-video py-16">
+        <div class="container mx-auto px-6">
+            <div class="w-full max-w-4xl mx-auto aspect-square">
+                <video
+                    src="{{ asset('images/meitalic-promo.mp4') }}"
+                    autoplay
+                    loop
+                    muted
+                    playsinline
+                    class="w-full h-full object-cover rounded-lg shadow-md"
+                ></video>
+            </div>
+        </div>
+    </section>
+
+
+
     <!-- Featured Products -->
     <section class="featured py-16">
         <div class="container mx-auto px-6">
-            <h2 class="text-3xl  mb-12 text-center">Bestsellers</h2>
+            <h2 class="text-3xl mb-12 text-center">Bestsellers</h2>
 
-            {{-- Product 1 (image left) --}}
+            {{-- Product 1: Glycolic Moisturizer (image right) --}}
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center mb-16">
-                <!-- image in col 1 -->
-                <div class="md:col-start-1">
-                    <a href="{{ route('products.index', ['search' => 'Exfoliating Scrub']) }}">
-                        <img
-                            src="{{ asset('images/exfoliating-scrub.jpeg') }}"
-                            alt="Exfoliating Scrub"
-                            class="w-full rounded-lg shadow-md"
-                        />
-                    </a>
-                </div>
-                <!-- text in col 2 -->
-                <div class="md:col-start-2">
-                    <h3 class="text-2xl font-semibold mb-2">Exfoliating Scrub</h3>
-                    <h4 class="text-xl text-gray-600 mb-4">Our patented honey-almond polish</h4>
-                    <p class="text-base leading-relaxed">
-                        Reveal your softest skin yet with our gentle, ultra-fine scrub. A blend of pure
-                        honey, crushed almond meal, and nourishing botanicals buffs away dull surface cells
-                        and unclogs pores without irritation. As you massage, the natural humectant
-                        properties of honey lock in moisture, leaving your complexion silky-smooth, radiant,
-                        and perfectly prepped for serums or makeup. Use once or twice weekly for a polished
-                        glow and renewed clarity.                    </p>
-                </div>
-            </div>
-
-            {{-- Product 2 (image right) --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center mb-16">
-                <!-- text goes in col 1 -->
+                <!-- text in col 1 -->
                 <div class="md:col-start-1">
                     <h3 class="text-2xl font-semibold mb-2">Glycolic Moisturizer</h3>
                     <h4 class="text-xl text-gray-600 mb-4">Exfoliating Hydration Booster</h4>
@@ -105,7 +147,7 @@
                         for makeup or bare-faced confidence.
                     </p>
                 </div>
-                <!-- image forced into col 2 -->
+                <!-- image in col 2 -->
                 <div class="md:col-start-2">
                     <a href="{{ route('products.index', ['search' => 'Glycolic Moisturizer']) }}">
                         <img
@@ -117,7 +159,7 @@
                 </div>
             </div>
 
-            {{-- Product 3 (image left) --}}
+            {{-- Product 2: Dr Pimple Serum (image left) --}}
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center mb-16">
                 <!-- image in col 1 -->
                 <div class="md:col-start-1">
@@ -143,9 +185,9 @@
                 </div>
             </div>
 
-            {{-- Product 4 (image right) --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                <!-- text in first column -->
+            {{-- Product 3: Makeup Peel (text left) --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center mb-16">
+                <!-- text in col 1 -->
                 <div class="md:col-start-1">
                     <h3 class="text-2xl font-semibold mb-2">Makeup Peel</h3>
                     <h4 class="text-xl text-gray-600 mb-4">Sweet Exfoliation for Instant Radiance</h4>
@@ -157,7 +199,7 @@
                         just gentle polish.
                     </p>
                 </div>
-                <!-- image in second column -->
+                <!-- image in col 2 -->
                 <div class="md:col-start-2">
                     <a href="{{ route('products.index', ['search' => 'Makeup Peel']) }}">
                         <img
@@ -168,103 +210,105 @@
                     </a>
                 </div>
             </div>
-    </section>
 
-    <!-- Promo Video -->
-    <section class="promo-video py-16">
-        <div class="container mx-auto px-6">
-            <div class="w-full max-w-4xl mx-auto aspect-square">
-                <video
-                    src="{{ asset('images/meitalic-promo.mp4') }}"
-                    autoplay
-                    loop
-                    muted
-                    playsinline
-                    class="w-full h-full object-cover rounded-lg shadow-md"
-                ></video>
+            {{-- Product 4: Exfoliating Scrub (image left) --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <!-- image in col 1 -->
+                <div class="md:col-start-1">
+                    <a href="{{ route('products.index', ['search' => 'Exfoliating Scrub']) }}">
+                        <img
+                            src="{{ asset('images/exfoliating-scrub.jpeg') }}"
+                            alt="Exfoliating Scrub"
+                            class="w-full rounded-lg shadow-md"
+                        />
+                    </a>
+                </div>
+                <!-- text in col 2 -->
+                <div class="md:col-start-2">
+                    <h3 class="text-2xl font-semibold mb-2">Exfoliating Scrub</h3>
+                    <h4 class="text-xl text-gray-600 mb-4">Our patented honey-almond polish</h4>
+                    <p class="text-base leading-relaxed">
+                        Reveal your softest skin yet with our gentle, ultra-fine scrub. A blend of pure
+                        honey, crushed almond meal, and nourishing botanicals buffs away dull surface cells
+                        and unclogs pores without irritation. As you massage, the natural humectant
+                        properties of honey lock in moisture, leaving your complexion silky-smooth, radiant,
+                        and perfectly prepped for serums or makeup. Use once or twice weekly for a polished
+                        glow and renewed clarity.
+                    </p>
+                </div>
             </div>
         </div>
     </section>
 
 
     <!-- Shop by Brand -->
-    <section class="shop-by-brand py-16">
-        <div class="container mx-auto px-6">
-            <h2 class="section-title text-2xl font-bold mb-6 text-center">Shop by Brand</h2>
+    <section class="shop-by-brand py-16 text-center">
+        <!-- full‐width, viewport‐centered title -->
+        <h2 class="section-title text-2xl font-bold mb-6">
+            Shop by Brand
+        </h2>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                {{-- Column 1: brand buttons --}}
-                <div class="flex flex-col items-center md:items-start space-y-4">
+        <!-- now the constrained grid -->
+        <div class="container mx-auto px-6 max-w-screen-lg">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center justify-items-center">
+                <!-- Column 1: brand buttons -->
+                <div class="flex flex-col items-center md:items-start space-y-4 w-full max-w-xs">
                     @foreach(array_keys(config('brands')) as $brand)
-                        <a
-                            href="{{ route('products.index', array_merge(
-                request()->only(['search','brand','category']),
-                ['brand' => $brand]
-            )) }}"
-                            class="brand-card border p-4 text-center hover:shadow-lg transition w-full max-w-xs"
+                        <a href="{{ route('products.index',
+               array_merge(request()->only(['search','brand','category']), ['brand'=>$brand])
+             ) }}"
+                           class="brand-card border p-4 text-center hover:shadow-lg transition w-full"
                         >
                             <span class="block text-xl font-medium">{{ $brand }}</span>
                         </a>
                     @endforeach
                 </div>
 
-                {{-- Column 2: preview video --}}
-                <div class="flex justify-center">
-                    <div class="w-full max-w-xs aspect-square overflow-hidden rounded-lg shadow-md">
-                        <video
-                            src="{{ asset('images/glycolic-moisturizer.mp4') }}"
-                            poster="{{ asset('images/glycolic-moisturizer-poster.jpg') }}"
-                            class="w-full h-full object-cover"
-                            autoplay
-                            muted
-                            loop
-                            playsinline
-                            preload="metadata"
-                            aria-label="Glycolic Moisturizer preview"
-                        ></video>
-                    </div>
+                <!-- Column 2: preview video -->
+                <div class="w-full max-w-xs aspect-square overflow-hidden rounded-lg shadow-md">
+                    <video
+                        src="{{ asset('images/glycolic-moisturizer.mp4') }}"
+                        poster="{{ asset('images/glycolic-moisturizer-poster.jpg') }}"
+                        class="w-full h-full object-cover"
+                        autoplay muted loop playsinline preload="metadata"
+                        aria-label="Glycolic Moisturizer preview"
+                    ></video>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Shop by Category -->
-    <section class="shop-by-category py-16">
-        <div class="container mx-auto px-6">
-            <h2 class="section-title text-2xl font-bold mb-6 text-center">Shop by Category</h2>
+    <section class="shop-by-category py-16 text-center">
+        <h2 class="section-title text-2xl font-bold mb-6">
+            Shop by Category
+        </h2>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                {{-- Column 1: preview video --}}
-                <div class="flex justify-center md:justify-start">
-                    <div class="w-full max-w-xs aspect-square overflow-hidden rounded-lg shadow-md">
-                        <video
-                            src="{{ asset('images/silk-skincare.mp4') }}"
-                            poster="{{ asset('images/silk-skincare-poster.jpg') }}"
-                            class="w-full h-full object-cover"
-                            autoplay
-                            muted
-                            loop
-                            playsinline
-                            preload="metadata"
-                            aria-label="Silk Skincare preview"
-                        ></video>
-                    </div>
+        <div class="container mx-auto px-6 max-w-screen-lg">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center justify-items-center">
+                <!-- Column 1: preview video -->
+                <div class="order-2 md:order-1 w-full max-w-xs aspect-square overflow-hidden rounded-lg shadow-md">
+                    <video
+                        src="{{ asset('images/silk-skincare.mp4') }}"
+                        poster="{{ asset('images/silk-skincare-poster.jpg') }}"
+                        class="w-full h-full object-cover"
+                        autoplay muted loop playsinline preload="metadata"
+                        aria-label="Silk Skincare preview"
+                    ></video>
                 </div>
 
-                {{-- Column 2: category buttons --}}
-                <div class="flex flex-col items-center md:items-start space-y-4">
+                <!-- Column 2: category buttons -->
+                <div class="order-1 md:order-2 flex flex-col items-center md:items-start space-y-4 w-full max-w-xs">
                     @foreach([
                       'Skincare'     => 'Skincare',
                       'Makeup'       => 'Makeup',
                       'Starter Kits' => 'Starter Kits',
                       'Accessories'  => 'Accessories',
-                    ] as $label => $cat)
-                        <a
-                            href="{{ route('products.index', array_merge(
-                request()->only(['search','brand','category']),
-                ['category' => $cat]
-            )) }}"
-                            class="category-card border p-4 text-center hover:shadow-lg transition w-full max-w-xs"
+                    ] as $label=>$cat)
+                        <a href="{{ route('products.index',
+               array_merge(request()->only(['search','brand','category']), ['category'=>$cat])
+             ) }}"
+                           class="category-card border p-4 text-center hover:shadow-lg transition w-full"
                         >
                             {{ $label }}
                         </a>
@@ -273,6 +317,7 @@
             </div>
         </div>
     </section>
+
 
     <!-- Instagram Plug -->
     <section class="instagram py-16 bg-secondary">
@@ -334,32 +379,45 @@
 
 
     <!-- Reviews -->
-    <section class="reviews">
-        <div class="reviews__inner">
-            <h2 class="section-title">Customer Reviews</h2>
+    <section class="reviews py-16">
+        <div class="container mx-auto px-6 reviews__inner">
+            <h2 class="section-title text-3xl font-bold text-center mb-12">
+                Customer Reviews
+            </h2>
 
-            <div class="reviews__grid">
-                {{-- Ideally loop through your actual reviews; here are two examples: --}}
-                <div class="reviews__card">
-                    <p class="reviews__text">
+            <div class="reviews__grid grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Review 1 -->
+                <div class="reviews__card bg-white p-6 rounded-lg shadow-md flex flex-col justify-between h-full">
+                    <p class="reviews__text text-gray-700 mb-4 break-words">
                         “Highly Recommend! So natural and full!”
                     </p>
-                    <div class="reviews__stars">★★★★★</div>
+                    <p class="reviews__author text-gray-900 font-semibold mb-2">
+                        — Emma R.
+                    </p>
+                    <div class="reviews__stars text-yellow-400 text-xl">
+                        ★★★★★
+                    </div>
                 </div>
-                <div class="reviews__card">
-                    <p class="reviews__text">
+
+                <!-- Review 2 -->
+                <div class="reviews__card bg-white p-6 rounded-lg shadow-md flex flex-col justify-between h-full">
+                    <p class="reviews__text text-gray-700 mb-4 break-words">
                         “I just wanted to say a huge thank you for the perfect purchase.
                         Such a light, airy makeup—in 10 seconds I feel like a million dollars
                         😍🥰😍🥰. The facial cleanser is absolutely perfect, wow, and the face
                         cream I put on in the morning—what a combo! I seriously feel like I
                         have brand-new skin!!!!!”
                     </p>
-                    <div class="reviews__stars">★★★★★</div>
+                    <p class="reviews__author text-gray-900 font-semibold mb-2">
+                        — Mia K.
+                    </p>
+                    <div class="reviews__stars text-yellow-400 text-xl">
+                        ★★★★★
+                    </div>
                 </div>
             </div>
         </div>
     </section>
-
 
     <section
         class="newsletter"
