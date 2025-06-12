@@ -115,7 +115,7 @@
         <div class="container mx-auto px-6">
             <div class="w-full max-w-4xl mx-auto aspect-square">
                 <video
-                    src="{{ asset('images/meitalic-promo.mp4') }}"
+                    src="{{ asset('images/meitalic-promo-shortened(35).mp4') }}"
                     autoplay
                     loop
                     muted
