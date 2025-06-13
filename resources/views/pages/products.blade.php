@@ -27,17 +27,16 @@
             <select name="brand" class="form-select">
                 <option value="">All Brands</option>
                 @foreach($allBrands as $b)
-                    <option value="{{ $b }}" @selected(request('brand')=== $b)>
+                    <option value="{{ $b }}" @selected(request('brand') === $b)>
                         {{ $b }}
                     </option>
                 @endforeach
             </select>
 
-
             <select name="category" class="form-select">
                 <option value="">All Categories</option>
                 @foreach($allCategories as $c)
-                    <option value="{{ $c }}" @selected(request('category')=== $c)>
+                    <option value="{{ $c }}" @selected(request('category') === $c)>
                         {{ $c }}
                     </option>
                 @endforeach
@@ -72,10 +71,17 @@
             </section>
         @endif
 
-        {{-- Brand Lines (when brand=Repechage or Melaleuca) --}}
+        {{-- Brand Lines (when brand=Meitalic, Repechage or Melaleuca) --}}
         @php
             $brandLines = [];
-            if(request('brand') === 'Repechage') {
+            if(request('brand') === 'Meitalic') {
+                $brandLines = [
+                  'Brightening Line' => 'Brightening Line',
+                  'Acne Line'        => 'Acne Line',
+                  'Rosacea Line'     => 'Rosacea Line',
+                  'Makeup Line'      => 'Makeup Line',
+                ];
+            } elseif(request('brand') === 'Repechage') {
                 $brandLines = [
                   'Hydra Medic' => 'Hydra Medic',
                   'Biolight'    => 'Biolight',
@@ -107,8 +113,6 @@
             </section>
         @endif
 
-
-
         {{-- 2) Product Grid --}}
         <div class="product-grid">
             @foreach($products as $product)
@@ -128,10 +132,10 @@
                             {{ $product->name }}
                         </h3>
                         <p class="product-card__price">
-                            ${{ number_format($product->price,2) }}
+                            ${{ number_format($product->price, 2) }}
                         </p>
 
-                        {{-- Add‑to‑cart form --}}
+                        {{-- Add-to-cart form --}}
                         <x-form
                             action="{{ route('cart.add') }}"
                             method="POST"
@@ -151,8 +155,7 @@
                                 class="product-card__qty-input"
                             />
 
-                            <button type="submit" class="product-card__atc-btn btn-primary"
-                            >
+                            <button type="submit" class="product-card__atc-btn btn-primary">
                                 Add to Cart
                             </button>
                         </x-form>
@@ -166,4 +169,4 @@
             </div>
         </div>
     </div>
-@endsection
+    @endsection

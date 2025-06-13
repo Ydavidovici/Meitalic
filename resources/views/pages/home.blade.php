@@ -90,19 +90,19 @@
                               d="M3 7h13v10H3V7zm13-4H3a2 2 0 00-2 2v12a2 2 0 002 2h1m16-6h2M16 3l5 5m0 0v8m0-8H16" />
                     </svg>
                     <p class="font-semibold text-gray-800">
-                        Free Shipping on Orders Over $50
+                        Free Shipping on Orders Over $55
                     </p>
                 </div>
 
                 <!-- Made in USA -->
                 <div class="flex flex-col items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg"
-                         class="h-8 w-8 text-pink-500 mb-3"
-                         fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M5 3v18l7-3 7 3V3H5z" />
-                    </svg>
+                    <img
+                        src="{{ asset('images/128px-Flag_of_the_United_States.svg.png') }}"
+                        alt="U.S. flag"
+                        class="h-8 w-auto mb-3"
+                    />
                     <p class="font-semibold text-gray-800">
-                        Made in USA
+                       Proudly Made in the USA
                     </p>
                 </div>
             </div>
@@ -243,21 +243,22 @@
 
     <!-- Shop by Brand -->
     <section class="shop-by-brand py-16 text-center">
-        <!-- full‐width, viewport‐centered title -->
         <h2 class="section-title text-2xl font-bold mb-6">
             Shop by Brand
         </h2>
 
-        <!-- now the constrained grid -->
         <div class="container mx-auto px-6 max-w-screen-lg">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center justify-items-center">
+            <div
+                class="flex flex-col md:flex-row
+             justify-center items-start md:items-center
+             gap-8 md:gap-12"
+            >
                 <!-- Column 1: brand buttons -->
                 <div class="flex flex-col items-center md:items-start space-y-4 w-full max-w-xs">
                     @foreach(array_keys(config('brands')) as $brand)
-                        <a href="{{ route('products.index',
-               array_merge(request()->only(['search','brand','category']), ['brand'=>$brand])
-             ) }}"
-                           class="brand-card border p-4 text-center hover:shadow-lg transition w-full"
+                        <a
+                            href="{{ route('products.index', array_merge(request()->only(['search','brand','category']), ['brand' => $brand])) }}"
+                            class="brand-card border p-4 text-center hover:shadow-lg transition w-full"
                         >
                             <span class="block text-xl font-medium">{{ $brand }}</span>
                         </a>
@@ -278,6 +279,7 @@
         </div>
     </section>
 
+
     <!-- Shop by Category -->
     <section class="shop-by-category py-16 text-center">
         <h2 class="section-title text-2xl font-bold mb-6">
@@ -285,9 +287,12 @@
         </h2>
 
         <div class="container mx-auto px-6 max-w-screen-lg">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center justify-items-center">
+            <div     class="flex flex-col md:flex-row
+           justify-center items-start md:items-center
+           gap-8 md:gap-12"
+            >
                 <!-- Column 1: preview video -->
-                <div class="order-2 md:order-1 w-full max-w-xs aspect-square overflow-hidden rounded-lg shadow-md">
+                <div class="w-full max-w-xs aspect-square overflow-hidden rounded-lg shadow-md order-2 md:order-1">
                     <video
                         src="{{ asset('images/silk-skincare.mp4') }}"
                         poster="{{ asset('images/silk-skincare-poster.jpg') }}"
@@ -298,17 +303,16 @@
                 </div>
 
                 <!-- Column 2: category buttons -->
-                <div class="order-1 md:order-2 flex flex-col items-center md:items-start space-y-4 w-full max-w-xs">
+                <div class="flex flex-col items-center md:items-start space-y-4 w-full max-w-xs order-1 md:order-2">
                     @foreach([
                       'Skincare'     => 'Skincare',
                       'Makeup'       => 'Makeup',
                       'Starter Kits' => 'Starter Kits',
                       'Accessories'  => 'Accessories',
-                    ] as $label=>$cat)
-                        <a href="{{ route('products.index',
-               array_merge(request()->only(['search','brand','category']), ['category'=>$cat])
-             ) }}"
-                           class="category-card border p-4 text-center hover:shadow-lg transition w-full"
+                    ] as $label => $cat)
+                        <a
+                            href="{{ route('products.index', array_merge(request()->only(['search','brand','category']), ['category' => $cat])) }}"
+                            class="category-card border p-4 text-center hover:shadow-lg transition w-full"
                         >
                             {{ $label }}
                         </a>
@@ -319,21 +323,20 @@
     </section>
 
 
-    <!-- Instagram Plug -->
+
     <section class="instagram py-16 bg-secondary">
-        <div class="container mx-auto px-6 text-center">
+        <div class="container mx-auto px-6 text-center flex flex-col items-center">
             <h2 class="text-3xl font-bold mb-4">Follow Us on Instagram</h2>
             <a
                 href="https://www.instagram.com/Meitaliccosmeceuticalsnewyork"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="inline-flex items-center space-x-2 text-accent hover:underline"
+                class="inline-flex items-center space-x-2 justify-center text-accent hover:underline mt-2"
             >
-                {{-- Instagram logo SVG --}}
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M7.75 2h8.5A5.75 5.75 0 0 1 22 7.75v8.5A5.75 5.75 0 0 1 16.25 22h-8.5A5.75 5.75 0 0 1 2 16.25v-8.5A5.75 5.75 0 0 1 7.75 2zm0 1.5A4.25 4.25 0 0 0 3.5 7.75v8.5A4.25 4.25 0 0 0 7.75 20.5h8.5a4.25 4.25 0 0 0 4.25-4.25v-8.5A4.25 4.25 0 0 0 16.25 3.5h-8.5zM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 1.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zm4.75-.75a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5z"/>
                 </svg>
-                <span class="text-xl">@Meitaliccosmeceuticalsnewyork</span>
+                <span class="text-xl break-all">@Meitaliccosmeceuticalsnewyork</span>
             </a>
         </div>
     </section>
