@@ -324,7 +324,7 @@
 
 
 
-    <section class="instagram py-16 bg-secondary">
+    <section class="instagram py-16">
         <div class="container mx-auto px-6 text-center flex flex-col items-center">
             <h2 class="text-3xl font-bold mb-4">Follow Us on Instagram</h2>
             <a
