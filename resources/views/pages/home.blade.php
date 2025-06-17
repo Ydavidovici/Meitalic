@@ -406,9 +406,9 @@
             <h2 class="text-3xl mb-12 text-center">Bestsellers</h2>
 
             {{-- Product 1: Glycolic Moisturizer (image right) --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center mb-16">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start md:items-center mb-16">
                 <!-- text in col 1 -->
-                <div class="md:col-start-1">
+                <div class="order-2 md:order-none md:col-start-1">
                     <h3 class="text-2xl font-semibold mb-2">Glycolic Moisturizer</h3>
                     <h4 class="text-xl text-gray-600 mb-4">Exfoliating Hydration Booster</h4>
                     <p class="text-base leading-relaxed">
@@ -420,7 +420,7 @@
                     </p>
                 </div>
                 <!-- image in col 2 -->
-                <div class="md:col-start-2">
+                <div class="order-1 md:order-none md:col-start-2">
                     <a href="{{ route('products.index', ['search' => 'Glycolic Moisturizer']) }}">
                         <img
                             src="{{ asset('images/Glycolic-Moisturizer.jpeg') }}"
@@ -432,9 +432,8 @@
             </div>
 
             {{-- Product 2: Dr Pimple Serum (image left) --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center mb-16">
-                <!-- image in col 1 -->
-                <div class="md:col-start-1">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start md:items-center mb-16">                <!-- image in col 1 -->
+                <div class="order-1 md:order-none md:col-start-1">
                     <a href="{{ route('products.index', ['search' => 'Dr Pimple Serum']) }}">
                         <img
                             src="{{ asset('images/dr-pimple.jpeg') }}"
@@ -444,7 +443,7 @@
                     </a>
                 </div>
                 <!-- text in col 2 -->
-                <div class="md:col-start-2">
+                <div class="order-2 md:order-none md:col-start-2">
                     <h3 class="text-2xl font-semibold mb-2">Dr Pimple Serum</h3>
                     <h4 class="text-xl text-gray-600 mb-4">Gentle Clarifying & Soothing Treatment</h4>
                     <p class="text-base leading-relaxed">
@@ -458,9 +457,8 @@
             </div>
 
             {{-- Product 3: Makeup Peel (text left) --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center mb-16">
-                <!-- text in col 1 -->
-                <div class="md:col-start-1">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start md:items-center mb-16">                <!-- text in col 1 -->
+                <div class="order-2 md:order-none md:col-start-1">
                     <h3 class="text-2xl font-semibold mb-2">Makeup Peel</h3>
                     <h4 class="text-xl text-gray-600 mb-4">Sweet Exfoliation for Instant Radiance</h4>
                     <p class="text-base leading-relaxed">
@@ -472,7 +470,7 @@
                     </p>
                 </div>
                 <!-- image in col 2 -->
-                <div class="md:col-start-2">
+                <div class="order-1 md:order-none md:col-start-2">
                     <a href="{{ route('products.index', ['search' => 'Makeup Peel']) }}">
                         <img
                             src="{{ asset('images/makeup-peel.jpeg') }}"
@@ -484,9 +482,8 @@
             </div>
 
             {{-- Product 4: Exfoliating Scrub (image left) --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                <!-- image in col 1 -->
-                <div class="md:col-start-1">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start md:items-center mb-16">                <!-- image in col 1 -->
+                <div class="order-1 md:order-none md:col-start-1">
                     <a href="{{ route('products.index', ['search' => 'Exfoliating Scrub']) }}">
                         <img
                             src="{{ asset('images/exfoliating-scrub.jpeg') }}"
@@ -496,7 +493,7 @@
                     </a>
                 </div>
                 <!-- text in col 2 -->
-                <div class="md:col-start-2">
+                <div class="order-2 md:order-none md:col-start-2">
                     <h3 class="text-2xl font-semibold mb-2">Exfoliating Scrub</h3>
                     <h4 class="text-xl text-gray-600 mb-4">Our patented honey-almond polish</h4>
                     <p class="text-base leading-relaxed">
