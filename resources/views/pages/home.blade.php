@@ -566,16 +566,6 @@
         <h2 class="section-title text-2xl font-bold mb-6">Shop by Category</h2>
 
         <div class="container mx-auto px-6 max-w-screen-lg space-y-12">
-            <!-- 1) Image on top, centered -->
-            <div class="flex justify-center">
-                <div class="w-full sm:w-2/3 md:w-1/2 lg:w-1/3 aspect-square overflow-hidden rounded-lg shadow-md">
-                    <img
-                        src="{{ asset('images/beautiful-woman.webp') }}"
-                        alt="Silk Skincare preview"
-                        class="w-full h-full object-cover"
-                    />
-                </div>
-            </div>
 
             <!-- 2) Category buttons, horizontal grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
