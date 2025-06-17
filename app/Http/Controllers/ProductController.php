@@ -179,6 +179,7 @@ class ProductController extends Controller
     public function destroy(Product $product)
     {
         $this->authorizeAdmin();
+        $product->cartItems()->delete();
         $product->delete();
 
         return redirect()
