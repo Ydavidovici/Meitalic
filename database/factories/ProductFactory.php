@@ -15,7 +15,7 @@ class ProductFactory extends Factory
         // 1) The only brands we want in production:
         $brands = [
             'Meitalic',
-            'Repecharge',
+            'Repechage',
             'Melaleuca',
         ];
 
