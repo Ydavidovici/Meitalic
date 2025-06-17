@@ -400,41 +400,12 @@
 
 
 
-    <!-- Featured Products -->
-    {{-- DEBUG: I am in Featured Products --}}
     <section class="featured py-16">
         <div class="container mx-auto px-6">
             <h2 class="text-3xl mb-12 text-center">Bestsellers</h2>
 
-            {{-- Product 1: Glycolic Moisturizer (image right on desktop) --}}
-            <div class="flex flex-col md:flex-row-reverse items-start md:items-center gap-8 mb-16">
-                <!-- image always first on mobile; on md+ it sits on the right via flex-row-reverse -->
-                <div class="w-full md:w-1/2">
-                    <a href="{{ route('products.index', ['search' => 'Glycolic Moisturizer']) }}">
-                        <img
-                            src="{{ asset('images/Glycolic-Moisturizer.jpeg') }}"
-                            alt="Glycolic Moisturizer"
-                            class="w-full rounded-lg shadow-md"
-                        />
-                    </a>
-                </div>
-                <!-- text always second on mobile; on md+ it sits on the left -->
-                <div class="w-full md:w-1/2">
-                    <h3 class="text-2xl font-semibold mb-2">Glycolic Moisturizer</h3>
-                    <h4 class="text-xl text-gray-600 mb-4">Exfoliating Hydration Booster</h4>
-                    <p class="text-base leading-relaxed">
-                        Give skin a second lease on life with our silky lotion that marries 5%
-                        glycolic acid and hyaluronic acid for a double-duty glow. It smooths fine lines,
-                        refines texture, and locks in moisture without heaviness, leaving you with a plump,
-                        even-tone finish. Ideal as your overnight hero—wake up to fresh, dewy skin primed
-                        for makeup or bare-faced confidence.
-                    </p>
-                </div>
-            </div>
-
-            {{-- Product 2: Dr Pimple Serum (image left on desktop) --}}
+            {{-- 1st: Dr Pimple Serum (was #2) --}}
             <div class="flex flex-col md:flex-row items-start md:items-center gap-8 mb-16">
-                <!-- image first on mobile; on md+ it sits on the left via flex-row -->
                 <div class="w-full md:w-1/2">
                     <a href="{{ route('products.index', ['search' => 'Dr Pimple Serum']) }}">
                         <img
@@ -444,21 +415,19 @@
                         />
                     </a>
                 </div>
-                <!-- text second on mobile; on md+ it sits on the right -->
                 <div class="w-full md:w-1/2">
                     <h3 class="text-2xl font-semibold mb-2">Dr Pimple Serum</h3>
                     <h4 class="text-xl text-gray-600 mb-4">Gentle Clarifying &amp; Soothing Treatment</h4>
                     <p class="text-base leading-relaxed">
-                        This ultra-light serum blends calming calamine clay with pore-refining salicylic
-                        acid to absorb excess oil, gently exfoliate, and reduce redness. Your complexion
-                        will feel balanced and matte—no tightness, just a clear, comfortable glow. Use
-                        morning and night to maintain skin that’s smooth, calm, and ready for whatever the
-                        day brings.
+                        This ultra-light serum blends calming calamine clay with pore-refining salicylic acid
+                        to absorb excess oil, gently exfoliate, and reduce redness. Your complexion will feel
+                        balanced and matte—no tightness, just a clear, comfortable glow. Use morning and night
+                        to maintain skin that’s smooth, calm, and ready for whatever the day brings.
                     </p>
                 </div>
             </div>
 
-            {{-- Product 3: Makeup Peel (image right on desktop) --}}
+            {{-- 2nd: Makeup Peel (was #3) --}}
             <div class="flex flex-col md:flex-row-reverse items-start md:items-center gap-8 mb-16">
                 <div class="w-full md:w-1/2">
                     <a href="{{ route('products.index', ['search' => 'Makeup Peel']) }}">
@@ -482,8 +451,8 @@
                 </div>
             </div>
 
-            {{-- Product 4: Exfoliating Scrub (image left on desktop) --}}
-            <div class="flex flex-col md:flex-row items-start md:items-center gap-8">
+            {{-- 3rd: Exfoliating Scrub (was #4) --}}
+            <div class="flex flex-col md:flex-row items-start md:items-center gap-8 mb-16">
                 <div class="w-full md:w-1/2">
                     <a href="{{ route('products.index', ['search' => 'Exfoliating Scrub']) }}">
                         <img
@@ -497,12 +466,34 @@
                     <h3 class="text-2xl font-semibold mb-2">Exfoliating Scrub</h3>
                     <h4 class="text-xl text-gray-600 mb-4">Our Patented Honey-Almond Polish</h4>
                     <p class="text-base leading-relaxed">
-                        Reveal your softest skin yet with our gentle, ultra-fine scrub. A blend of pure
-                        honey, crushed almond meal, and nourishing botanicals buffs away dull surface cells
-                        and unclogs pores without irritation. As you massage, the natural humectant
-                        properties of honey lock in moisture, leaving your complexion silky-smooth,
-                        radiant, and perfectly prepped for serums or makeup. Use once or twice weekly for a
-                        polished glow and renewed clarity.
+                        Reveal your softest skin yet with our gentle, ultra-fine scrub. A blend of pure honey,
+                        crushed almond meal, and nourishing botanicals buffs away dull surface cells and unclogs
+                        pores without irritation. Honey locks in moisture as you massage, leaving your complexion
+                        silky-smooth, radiant, and prepped for serums or makeup. Use 1–2× weekly for a polished
+                        glow and renewed clarity.
+                    </p>
+                </div>
+            </div>
+
+            {{-- 4th: Glycolic Moisturizer (was #1) --}}
+            <div class="flex flex-col md:flex-row-reverse items-start md:items-center gap-8">
+                <div class="w-full md:w-1/2">
+                    <a href="{{ route('products.index', ['search' => 'Glycolic Moisturizer']) }}">
+                        <img
+                            src="{{ asset('images/Glycolic-Moisturizer.jpeg') }}"
+                            alt="Glycolic Moisturizer"
+                            class="w-full rounded-lg shadow-md"
+                        />
+                    </a>
+                </div>
+                <div class="w-full md:w-1/2">
+                    <h3 class="text-2xl font-semibold mb-2">Glycolic Moisturizer</h3>
+                    <h4 class="text-xl text-gray-600 mb-4">Exfoliating Hydration Booster</h4>
+                    <p class="text-base leading-relaxed">
+                        Give skin a second lease on life with our silky lotion that marries 5% glycolic acid and
+                        hyaluronic acid for a double-duty glow. It smooths fine lines, refines texture, and locks
+                        in moisture without heaviness. Wake up to fresh, dewy skin primed for makeup or bare-faced
+                        confidence.
                     </p>
                 </div>
             </div>
@@ -510,40 +501,61 @@
     </section>
 
 
-    <!-- Shop by Brand -->
+    {{-- 2) Center-aligned video, sitting above Shop by Brand --}}
+    <section class="py-16">
+        <div class="container mx-auto px-6 flex justify-center">
+            <div class="w-full max-w-xs md:max-w-md overflow-hidden rounded-lg shadow-md">
+                <video
+                    src="{{ asset('images/silk-skincare.mp4') }}"
+                    class="w-full h-full object-cover"
+                    autoplay
+                    muted
+                    loop
+                    playsinline
+                    preload="auto"
+                ></video>
+            </div>
+        </div>
+    </section>
+
+
     <section class="shop-by-brand py-16 text-center">
-        <h2 class="section-title text-2xl font-bold mb-6">
-            Shop by Brand
-        </h2>
-
+        <h2 class="section-title text-2xl font-bold mb-6">Shop by Brand</h2>
         <div class="container mx-auto px-6 max-w-screen-lg">
-            <div
-                class="flex flex-col md:flex-row
-             justify-center items-start md:items-center
-             gap-8 md:gap-12"
-            >
-                <!-- Column 1: brand buttons -->
-                <div class="flex flex-col items-center md:items-start space-y-4 w-full max-w-xs">
-                    @foreach(array_keys(config('brands')) as $brand)
-                        <a
-                            href="{{ route('products.index', array_merge(request()->only(['search','brand','category']), ['brand' => $brand])) }}"
-                            class="brand-card border p-4 text-center hover:shadow-lg transition w-full"
-                        >
-                            <span class="block text-xl font-medium">{{ $brand }}</span>
-                        </a>
-                    @endforeach
-                </div>
-
-                <!-- Column 2: preview video -->
-                <div class="w-full max-w-xs aspect-square overflow-hidden rounded-lg shadow-md">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 lg:gap-12">
+                <!-- Meitalic -->
+                <a
+                    href="…"
+                    class="brand-card p-6 flex items-center justify-center space-x-4"
+                >
                     <img
-                        src="{{ asset('images/woman-applying-blusher.jpg') }}"
-                        poster="{{ asset('images/glycolic-moisturizer-poster.jpg') }}"
-                        class="w-full h-full object-cover"
-                        autoplay muted loop playsinline preload="metadata"
-                        aria-label="Glycolic Moisturizer preview"
-                    ></img>
-                </div>
+                        src="{{ asset('images/logo-meitalic(black-and-white).png') }}"
+                        alt="Meitalic logo"
+                        class="h-8 flex-shrink-0"
+                    />
+                    <span class="text-xl font-medium">Meitalic</span>
+                </a>
+
+                <!-- Repechage -->
+                <a
+                    href="…"
+                    class="brand-card p-6 flex items-center justify-center space-x-4"
+                >
+                    <img
+                        src="{{ asset('images/repechageblack-small.png') }}"
+                        alt="Repechage logo"
+                        class="h-8 flex-shrink-0"
+                    />
+                    <span class="text-xl font-medium">Repechage</span>
+                </a>
+
+                <!-- Melaleuca -->
+                <a
+                    href="…"
+                    class="brand-card p-6 flex items-center justify-center"
+                >
+                    <span class="text-xl font-medium">Melaleuca</span>
+                </a>
             </div>
         </div>
     </section>
@@ -551,42 +563,35 @@
 
     <!-- Shop by Category -->
     <section class="shop-by-category py-16 text-center">
-        <h2 class="section-title text-2xl font-bold mb-6">
-            Shop by Category
-        </h2>
+        <h2 class="section-title text-2xl font-bold mb-6">Shop by Category</h2>
 
-        <div class="container mx-auto px-6 max-w-screen-lg">
-            <div     class="flex flex-col md:flex-row
-           justify-center items-start md:items-center
-           gap-8 md:gap-12"
-            >
-                <!-- Column 1: preview video -->
-                <div class="w-full max-w-xs aspect-square overflow-hidden rounded-lg shadow-md order-2 md:order-1">
+        <div class="container mx-auto px-6 max-w-screen-lg space-y-12">
+            <!-- 1) Image on top, centered -->
+            <div class="flex justify-center">
+                <div class="w-full sm:w-2/3 md:w-1/2 lg:w-1/3 aspect-square overflow-hidden rounded-lg shadow-md">
                     <img
                         src="{{ asset('images/beautiful-woman.webp') }}"
-                        poster="{{ asset('images/silk-skincare-poster.jpg') }}"
+                        alt="Silk Skincare preview"
                         class="w-full h-full object-cover"
-                        autoplay muted loop playsinline preload="metadata"
-                        aria-label="Silk Skincare preview"
-                    ></img>
+                    />
                 </div>
+            </div>
 
-                <!-- Column 2: category buttons -->
-                <div class="flex flex-col items-center md:items-start space-y-4 w-full max-w-xs order-1 md:order-2">
-                    @foreach([
-                      'Skincare'     => 'Skincare',
-                      'Makeup'       => 'Makeup',
-                      'Starter Kits' => 'Starter Kits',
-                      'Accessories'  => 'Accessories',
-                    ] as $label => $cat)
-                        <a
-                            href="{{ route('products.index', array_merge(request()->only(['search','brand','category']), ['category' => $cat])) }}"
-                            class="category-card border p-4 text-center hover:shadow-lg transition w-full"
-                        >
-                            {{ $label }}
-                        </a>
-                    @endforeach
-                </div>
+            <!-- 2) Category buttons, horizontal grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+                @foreach([
+                  'Skincare'     => 'Skincare',
+                  'Makeup'       => 'Makeup',
+                  'Starter Kits' => 'Starter Kits',
+                  'Accessories'  => 'Accessories',
+                ] as $label => $cat)
+                    <a
+                        href="{{ route('products.index', array_merge(request()->only(['search','brand','category']), ['category' => $cat])) }}"
+                        class="category-card p-6 flex items-center justify-center hover:shadow-lg transition text-lg font-medium"
+                    >
+                        {{ $label }}
+                    </a>
+                @endforeach
             </div>
         </div>
     </section>
