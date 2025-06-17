@@ -401,14 +401,25 @@
 
 
     <!-- Featured Products -->
+    {{-- DEBUG: I am in Featured Products --}}
     <section class="featured py-16">
         <div class="container mx-auto px-6">
             <h2 class="text-3xl mb-12 text-center">Bestsellers</h2>
 
-            {{-- Product 1: Glycolic Moisturizer (image right) --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start md:items-center mb-16">
-                <!-- text in col 1 -->
-                <div class="order-2 md:order-none md:col-start-1">
+            {{-- Product 1: Glycolic Moisturizer (image right on desktop) --}}
+            <div class="flex flex-col md:flex-row-reverse items-start md:items-center gap-8 mb-16">
+                <!-- image always first on mobile; on md+ it sits on the right via flex-row-reverse -->
+                <div class="w-full md:w-1/2">
+                    <a href="{{ route('products.index', ['search' => 'Glycolic Moisturizer']) }}">
+                        <img
+                            src="{{ asset('images/Glycolic-Moisturizer.jpeg') }}"
+                            alt="Glycolic Moisturizer"
+                            class="w-full rounded-lg shadow-md"
+                        />
+                    </a>
+                </div>
+                <!-- text always second on mobile; on md+ it sits on the left -->
+                <div class="w-full md:w-1/2">
                     <h3 class="text-2xl font-semibold mb-2">Glycolic Moisturizer</h3>
                     <h4 class="text-xl text-gray-600 mb-4">Exfoliating Hydration Booster</h4>
                     <p class="text-base leading-relaxed">
@@ -419,21 +430,12 @@
                         for makeup or bare-faced confidence.
                     </p>
                 </div>
-                <!-- image in col 2 -->
-                <div class="order-1 md:order-none md:col-start-2">
-                    <a href="{{ route('products.index', ['search' => 'Glycolic Moisturizer']) }}">
-                        <img
-                            src="{{ asset('images/Glycolic-Moisturizer.jpeg') }}"
-                            alt="Glycolic Moisturizer"
-                            class="w-full rounded-lg shadow-md"
-                        />
-                    </a>
-                </div>
             </div>
 
-            {{-- Product 2: Dr Pimple Serum (image left) --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start md:items-center mb-16">                <!-- image in col 1 -->
-                <div class="order-1 md:order-none md:col-start-1">
+            {{-- Product 2: Dr Pimple Serum (image left on desktop) --}}
+            <div class="flex flex-col md:flex-row items-start md:items-center gap-8 mb-16">
+                <!-- image first on mobile; on md+ it sits on the left via flex-row -->
+                <div class="w-full md:w-1/2">
                     <a href="{{ route('products.index', ['search' => 'Dr Pimple Serum']) }}">
                         <img
                             src="{{ asset('images/dr-pimple.jpeg') }}"
@@ -442,10 +444,10 @@
                         />
                     </a>
                 </div>
-                <!-- text in col 2 -->
-                <div class="order-2 md:order-none md:col-start-2">
+                <!-- text second on mobile; on md+ it sits on the right -->
+                <div class="w-full md:w-1/2">
                     <h3 class="text-2xl font-semibold mb-2">Dr Pimple Serum</h3>
-                    <h4 class="text-xl text-gray-600 mb-4">Gentle Clarifying & Soothing Treatment</h4>
+                    <h4 class="text-xl text-gray-600 mb-4">Gentle Clarifying &amp; Soothing Treatment</h4>
                     <p class="text-base leading-relaxed">
                         This ultra-light serum blends calming calamine clay with pore-refining salicylic
                         acid to absorb excess oil, gently exfoliate, and reduce redness. Your complexion
@@ -456,9 +458,18 @@
                 </div>
             </div>
 
-            {{-- Product 3: Makeup Peel (text left) --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start md:items-center mb-16">                <!-- text in col 1 -->
-                <div class="order-2 md:order-none md:col-start-1">
+            {{-- Product 3: Makeup Peel (image right on desktop) --}}
+            <div class="flex flex-col md:flex-row-reverse items-start md:items-center gap-8 mb-16">
+                <div class="w-full md:w-1/2">
+                    <a href="{{ route('products.index', ['search' => 'Makeup Peel']) }}">
+                        <img
+                            src="{{ asset('images/makeup-peel.jpeg') }}"
+                            alt="Makeup Peel"
+                            class="w-full rounded-lg shadow-md"
+                        />
+                    </a>
+                </div>
+                <div class="w-full md:w-1/2">
                     <h3 class="text-2xl font-semibold mb-2">Makeup Peel</h3>
                     <h4 class="text-xl text-gray-600 mb-4">Sweet Exfoliation for Instant Radiance</h4>
                     <p class="text-base leading-relaxed">
@@ -469,21 +480,11 @@
                         just gentle polish.
                     </p>
                 </div>
-                <!-- image in col 2 -->
-                <div class="order-1 md:order-none md:col-start-2">
-                    <a href="{{ route('products.index', ['search' => 'Makeup Peel']) }}">
-                        <img
-                            src="{{ asset('images/makeup-peel.jpeg') }}"
-                            alt="Makeup Peel"
-                            class="w-full rounded-lg shadow-md"
-                        />
-                    </a>
-                </div>
             </div>
 
-            {{-- Product 4: Exfoliating Scrub (image left) --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start md:items-center mb-16">                <!-- image in col 1 -->
-                <div class="order-1 md:order-none md:col-start-1">
+            {{-- Product 4: Exfoliating Scrub (image left on desktop) --}}
+            <div class="flex flex-col md:flex-row items-start md:items-center gap-8">
+                <div class="w-full md:w-1/2">
                     <a href="{{ route('products.index', ['search' => 'Exfoliating Scrub']) }}">
                         <img
                             src="{{ asset('images/exfoliating-scrub.jpeg') }}"
@@ -492,17 +493,16 @@
                         />
                     </a>
                 </div>
-                <!-- text in col 2 -->
-                <div class="order-2 md:order-none md:col-start-2">
+                <div class="w-full md:w-1/2">
                     <h3 class="text-2xl font-semibold mb-2">Exfoliating Scrub</h3>
-                    <h4 class="text-xl text-gray-600 mb-4">Our patented honey-almond polish</h4>
+                    <h4 class="text-xl text-gray-600 mb-4">Our Patented Honey-Almond Polish</h4>
                     <p class="text-base leading-relaxed">
                         Reveal your softest skin yet with our gentle, ultra-fine scrub. A blend of pure
                         honey, crushed almond meal, and nourishing botanicals buffs away dull surface cells
                         and unclogs pores without irritation. As you massage, the natural humectant
-                        properties of honey lock in moisture, leaving your complexion silky-smooth, radiant,
-                        and perfectly prepped for serums or makeup. Use once or twice weekly for a polished
-                        glow and renewed clarity.
+                        properties of honey lock in moisture, leaving your complexion silky-smooth,
+                        radiant, and perfectly prepped for serums or makeup. Use once or twice weekly for a
+                        polished glow and renewed clarity.
                     </p>
                 </div>
             </div>
@@ -536,13 +536,13 @@
 
                 <!-- Column 2: preview video -->
                 <div class="w-full max-w-xs aspect-square overflow-hidden rounded-lg shadow-md">
-                    <video
-                        src="{{ asset('images/glycolic-moisturizer.mp4') }}"
+                    <img
+                        src="{{ asset('images/woman-applying-blusher.jpg') }}"
                         poster="{{ asset('images/glycolic-moisturizer-poster.jpg') }}"
                         class="w-full h-full object-cover"
                         autoplay muted loop playsinline preload="metadata"
                         aria-label="Glycolic Moisturizer preview"
-                    ></video>
+                    ></img>
                 </div>
             </div>
         </div>
@@ -562,13 +562,13 @@
             >
                 <!-- Column 1: preview video -->
                 <div class="w-full max-w-xs aspect-square overflow-hidden rounded-lg shadow-md order-2 md:order-1">
-                    <video
-                        src="{{ asset('images/silk-skincare.mp4') }}"
+                    <img
+                        src="{{ asset('images/beautiful-woman.webp') }}"
                         poster="{{ asset('images/silk-skincare-poster.jpg') }}"
                         class="w-full h-full object-cover"
                         autoplay muted loop playsinline preload="metadata"
                         aria-label="Silk Skincare preview"
-                    ></video>
+                    ></img>
                 </div>
 
                 <!-- Column 2: category buttons -->
