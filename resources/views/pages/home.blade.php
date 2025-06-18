@@ -52,10 +52,18 @@
     <section class="hero">
         <div class="hero__banner">
             <img
+                class="hero__banner-img"
+                srcset="
+        {{ asset('images/banner1.png') }}      1x,
+        {{ asset('images/banner1@2x.png') }}   2x
+      "
                 src="{{ asset('images/banner1.png') }}"
                 alt="Beauty is being comfortable and confident in your own skin"
-                class="hero__banner-img"
             />
+        </div>
+
+        <div class="hero__inner">
+            {{-- …your title, subtitle, CTA, etc. here… --}}
         </div>
     </section>
 
@@ -84,10 +92,13 @@
                 <div class="flex flex-col items-center">
                     <svg xmlns="http://www.w3.org/2000/svg"
                          class="h-8 w-8 text-pink-500 mb-3"
-                         fill="none" viewBox="0 0 24 24"
+                         fill="none"
+                         viewBox="0 0 24 24"
                          stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M3 7h13v10H3V7zm13-4H3a2 2 0 00-2 2v12a2 2 0 002 2h1m16-6h2M16 3l5 5m0 0v8m0-8H16" />
+                              d="M7 17a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M1 17h4V7a2 2 0 012-2h9l4 5v7h-4M16 17H6"/>
                     </svg>
                     <p class="font-semibold text-gray-800">
                         Free Shipping on Orders Over $55
@@ -381,23 +392,43 @@
         </div>
     </section>
 
-
-    {{-- 1) Center-aligned silk-skincare video (was the promo section) --}}
+    {{-- 1) Center-aligned silk-skincare video with mute/unmute toggle --}}
     <section class="py-16">
         <div class="container mx-auto px-6 flex justify-center">
-            <div class="w-full max-w-xs md:max-w-md overflow-hidden rounded-lg shadow-md">
+            <div class="w-full max-w-xs md:max-w-md rounded-lg shadow-md overflow-hidden relative">
+
+                <!-- Video (start muted) -->
                 <video
+                    id="silkVideo"
                     src="{{ asset('images/silk-skincare.mp4') }}"
                     class="w-full h-full object-cover"
-                    autoplay
-                    muted
-                    loop
-                    playsinline
-                    preload="auto"
+                    autoplay muted loop playsinline preload="auto"
                 ></video>
+
+                <!-- Mute/Unmute toggle button -->
+                <button
+                    id="muteBtn"
+                    class="absolute bottom-2 right-2 bg-white bg-opacity-75 hover:bg-opacity-100 p-2 rounded-full focus:outline-none"
+                    aria-label="Toggle mute"
+                >
+                    🔇
+                </button>
+
             </div>
         </div>
     </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const video = document.getElementById('silkVideo');
+            const btn = document.getElementById('muteBtn');
+
+            btn.addEventListener('click', () => {
+                video.muted = !video.muted;
+                btn.textContent = video.muted ? '🔇' : '🔊';
+            });
+        });
+    </script>
 
     {{-- 2) Featured “Bestsellers” with Glycolic Moisturizer first --}}
     <section class="featured py-16">
@@ -521,30 +552,28 @@
         <div class="container mx-auto px-6 max-w-screen-lg">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 lg:gap-12">
 
-                <!-- Meitalic: logo on the left -->
+                <!-- Meitalic only-logo card -->
                 <a
                     href="{{ route('products.index', ['brand' => 'Meitalic']) }}"
-                    class="brand-card p-6 flex items-center justify-center space-x-4"
+                    class="brand-card p-0 flex items-center justify-center overflow-hidden"
                 >
                     <img
                         src="{{ asset('images/logo-meitalic(black-and-white).png') }}"
                         alt="Meitalic logo"
-                        class="h-8 flex-shrink-0"
+                        class="w-full h-full object-contain"
                     />
-                    <span class="text-xl font-medium">Meitalic</span>
                 </a>
 
-                <!-- Repechage: logo on the right -->
+                <!-- Repechage only-logo card -->
                 <a
                     href="{{ route('products.index', ['brand' => 'Repechage']) }}"
-                    class="brand-card p-6 flex items-center justify-center flex-row-reverse space-x-4 space-x-reverse"
+                    class="brand-card p-0 flex items-center justify-center overflow-hidden"
                 >
                     <img
                         src="{{ asset('images/repechageblack-small.png') }}"
                         alt="Repechage logo"
-                        class="h-8 flex-shrink-0"
+                        class="w-full h-full object-contain"
                     />
-                    <span class="text-xl font-medium">Repechage</span>
                 </a>
 
             </div>
@@ -558,7 +587,7 @@
 
         <div class="container mx-auto px-6 max-w-screen-lg space-y-12">
 
-            <!-- 2) Category buttons, horizontal grid -->
+            <!-- Category buttons -->
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
                 @foreach([
                   'Skincare'     => 'Skincare',
@@ -567,7 +596,10 @@
                   'Accessories'  => 'Accessories',
                 ] as $label => $cat)
                     <a
-                        href="{{ route('products.index', array_merge(request()->only(['search','brand','category']), ['category' => $cat])) }}"
+                        href="{{ route('products.index', array_merge(
+                        request()->only(['search','brand','line']),
+                        ['category' => $cat]
+                    )) }}"
                         class="category-card p-6 flex items-center justify-center hover:shadow-lg transition text-lg font-medium"
                     >
                         {{ $label }}
