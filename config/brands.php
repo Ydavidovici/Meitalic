@@ -22,4 +22,11 @@ return [
             'Hydra 4',
         ],
     ],
+
+    'categories' => [
+        'Skincare',
+        'Makeup',
+        'Starter Kits',
+        'Accessories',
+    ],
 ];

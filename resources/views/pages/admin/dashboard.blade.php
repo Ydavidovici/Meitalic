@@ -365,7 +365,7 @@
                                     class="form-select"
                                 >
                                     <option value="">Choose a category…</option>
-                                    @foreach($allCategories as $c)
+                                    @foreach(config('brands.categories') as $c)
                                         <option
                                             value="{{ $c }}"
                                             {{ old('category') === $c ? 'selected' : '' }}
@@ -574,19 +574,19 @@
 
                             <!-- Category -->
                             <div class="form-group">
-                                <x-input-label for="new-category" value="Category" />
+                                <x-input-label for="category-{{ $prod->id }}" value="Category" />
 
                                 <select
-                                    id="new-category"
+                                    id="category-{{ $prod->id }}"
                                     name="category"
                                     required
                                     class="form-select"
                                 >
                                     <option value="">Choose a category…</option>
-                                    @foreach($allCategories as $c)
+                                    @foreach(config('brands.categories') as $c)
                                         <option
                                             value="{{ $c }}"
-                                            {{ old('category') === $c ? 'selected' : '' }}
+                                            {{ old('category', $prod->category) === $c ? 'selected' : '' }}
                                         >
                                             {{ $c }}
                                         </option>
