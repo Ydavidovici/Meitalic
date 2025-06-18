@@ -22,11 +22,4 @@ return [
             'Hydra 4',
         ],
     ],
-    'Melaleuca' => [
-        'slug'  => 'melaleuca',
-        'logo'  => 'images/brands/melaleuca.png',
-        'lines' => [
-            'Renew',
-        ],
-    ],
 ];

@@ -382,29 +382,52 @@
     </section>
 
 
-    <!-- Promo Video -->
-    <section class="promo-video py-16">
-        <div class="container mx-auto px-6">
-            <div class="w-full max-w-4xl mx-auto aspect-square">
+    {{-- 1) Center-aligned silk-skincare video (was the promo section) --}}
+    <section class="py-16">
+        <div class="container mx-auto px-6 flex justify-center">
+            <div class="w-full max-w-xs md:max-w-md overflow-hidden rounded-lg shadow-md">
                 <video
-                    src="{{ asset('images/meitalic-promo-shortened(3).mp4') }}"
+                    src="{{ asset('images/silk-skincare.mp4') }}"
+                    class="w-full h-full object-cover"
                     autoplay
-                    loop
                     muted
+                    loop
                     playsinline
-                    class="w-full h-full object-cover rounded-lg shadow-md"
+                    preload="auto"
                 ></video>
             </div>
         </div>
     </section>
 
-
-
+    {{-- 2) Featured “Bestsellers” with Glycolic Moisturizer first --}}
     <section class="featured py-16">
         <div class="container mx-auto px-6">
             <h2 class="text-3xl mb-12 text-center">Bestsellers</h2>
 
-            {{-- 1st: Dr Pimple Serum (was #2) --}}
+            {{-- 1st: Glycolic Moisturizer (moved from 4th) --}}
+            <div class="flex flex-col md:flex-row-reverse items-start md:items-center gap-8 mb-16">
+                <div class="w-full md:w-1/2">
+                    <a href="{{ route('products.index', ['search' => 'Glycolic Moisturizer']) }}">
+                        <img
+                            src="{{ asset('images/Glycolic-Moisturizer.jpeg') }}"
+                            alt="Glycolic Moisturizer"
+                            class="w-full rounded-lg shadow-md"
+                        />
+                    </a>
+                </div>
+                <div class="w-full md:w-1/2">
+                    <h3 class="text-2xl font-semibold mb-2">Glycolic Moisturizer</h3>
+                    <h4 class="text-xl text-gray-600 mb-4">Exfoliating Hydration Booster</h4>
+                    <p class="text-base leading-relaxed">
+                        Give skin a second lease on life with our silky lotion that marries 5% glycolic acid and
+                        hyaluronic acid for a double-duty glow. It smooths fine lines, refines texture, and locks
+                        in moisture without heaviness. Wake up to fresh, dewy skin primed for makeup or bare-faced
+                        confidence.
+                    </p>
+                </div>
+            </div>
+
+            {{-- 2nd: Dr Pimple Serum --}}
             <div class="flex flex-col md:flex-row items-start md:items-center gap-8 mb-16">
                 <div class="w-full md:w-1/2">
                     <a href="{{ route('products.index', ['search' => 'Dr Pimple Serum']) }}">
@@ -427,7 +450,7 @@
                 </div>
             </div>
 
-            {{-- 2nd: Makeup Peel (was #3) --}}
+            {{-- 3rd: Makeup Peel --}}
             <div class="flex flex-col md:flex-row-reverse items-start md:items-center gap-8 mb-16">
                 <div class="w-full md:w-1/2">
                     <a href="{{ route('products.index', ['search' => 'Makeup Peel']) }}">
@@ -451,8 +474,8 @@
                 </div>
             </div>
 
-            {{-- 3rd: Exfoliating Scrub (was #4) --}}
-            <div class="flex flex-col md:flex-row items-start md:items-center gap-8 mb-16">
+            {{-- 4th: Exfoliating Scrub --}}
+            <div class="flex flex-col md:flex-row items-start md:items-center gap-8">
                 <div class="w-full md:w-1/2">
                     <a href="{{ route('products.index', ['search' => 'Exfoliating Scrub']) }}">
                         <img
@@ -474,58 +497,33 @@
                     </p>
                 </div>
             </div>
-
-            {{-- 4th: Glycolic Moisturizer (was #1) --}}
-            <div class="flex flex-col md:flex-row-reverse items-start md:items-center gap-8">
-                <div class="w-full md:w-1/2">
-                    <a href="{{ route('products.index', ['search' => 'Glycolic Moisturizer']) }}">
-                        <img
-                            src="{{ asset('images/Glycolic-Moisturizer.jpeg') }}"
-                            alt="Glycolic Moisturizer"
-                            class="w-full rounded-lg shadow-md"
-                        />
-                    </a>
-                </div>
-                <div class="w-full md:w-1/2">
-                    <h3 class="text-2xl font-semibold mb-2">Glycolic Moisturizer</h3>
-                    <h4 class="text-xl text-gray-600 mb-4">Exfoliating Hydration Booster</h4>
-                    <p class="text-base leading-relaxed">
-                        Give skin a second lease on life with our silky lotion that marries 5% glycolic acid and
-                        hyaluronic acid for a double-duty glow. It smooths fine lines, refines texture, and locks
-                        in moisture without heaviness. Wake up to fresh, dewy skin primed for makeup or bare-faced
-                        confidence.
-                    </p>
-                </div>
-            </div>
         </div>
     </section>
 
-
-    {{-- 2) Center-aligned video, sitting above Shop by Brand --}}
-    <section class="py-16">
-        <div class="container mx-auto px-6 flex justify-center">
-            <div class="w-full max-w-xs md:max-w-md overflow-hidden rounded-lg shadow-md">
+    {{-- 3) Promo Video moved to the bottom --}}
+    <section class="promo-video py-16">
+        <div class="container mx-auto px-6">
+            <div class="w-full max-w-4xl mx-auto aspect-square">
                 <video
-                    src="{{ asset('images/silk-skincare.mp4') }}"
-                    class="w-full h-full object-cover"
+                    src="{{ asset('images/meitalic-promo-shortened(3).mp4') }}"
                     autoplay
-                    muted
                     loop
+                    muted
                     playsinline
-                    preload="auto"
+                    class="w-full h-full object-cover rounded-lg shadow-md"
                 ></video>
             </div>
         </div>
     </section>
 
-
     <section class="shop-by-brand py-16 text-center">
         <h2 class="section-title text-2xl font-bold mb-6">Shop by Brand</h2>
         <div class="container mx-auto px-6 max-w-screen-lg">
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 lg:gap-12">
-                <!-- Meitalic -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 lg:gap-12">
+
+                <!-- Meitalic: logo on the left -->
                 <a
-                    href="…"
+                    href="{{ route('products.index', ['brand' => 'Meitalic']) }}"
                     class="brand-card p-6 flex items-center justify-center space-x-4"
                 >
                     <img
@@ -536,10 +534,10 @@
                     <span class="text-xl font-medium">Meitalic</span>
                 </a>
 
-                <!-- Repechage -->
+                <!-- Repechage: logo on the right -->
                 <a
-                    href="…"
-                    class="brand-card p-6 flex items-center justify-center space-x-4"
+                    href="{{ route('products.index', ['brand' => 'Repechage']) }}"
+                    class="brand-card p-6 flex items-center justify-center flex-row-reverse space-x-4 space-x-reverse"
                 >
                     <img
                         src="{{ asset('images/repechageblack-small.png') }}"
@@ -549,13 +547,6 @@
                     <span class="text-xl font-medium">Repechage</span>
                 </a>
 
-                <!-- Melaleuca -->
-                <a
-                    href="…"
-                    class="brand-card p-6 flex items-center justify-center"
-                >
-                    <span class="text-xl font-medium">Melaleuca</span>
-                </a>
             </div>
         </div>
     </section>

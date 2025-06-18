@@ -16,7 +16,6 @@ class ProductFactory extends Factory
         $brands = [
             'Meitalic',
             'Repechage',
-            'Melaleuca',
         ];
 
         // 2) The exact categories the client uses:
