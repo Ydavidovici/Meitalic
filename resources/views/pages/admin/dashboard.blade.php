@@ -574,15 +574,24 @@
 
                             <!-- Category -->
                             <div class="form-group">
-                                <x-input-label for="category-{{ $prod->id }}" value="Category" />
-                                <input
-                                    id="category-{{ $prod->id }}"
+                                <x-input-label for="new-category" value="Category" />
+
+                                <select
+                                    id="new-category"
                                     name="category"
-                                    type="text"
-                                    value="{{ old('category',$prod->category) }}"
                                     required
-                                    class="form-input"
-                                />
+                                    class="form-select"
+                                >
+                                    <option value="">Choose a category…</option>
+                                    @foreach($allCategories as $c)
+                                        <option
+                                            value="{{ $c }}"
+                                            {{ old('category') === $c ? 'selected' : '' }}
+                                        >
+                                            {{ $c }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
 
                             <!-- Line -->
