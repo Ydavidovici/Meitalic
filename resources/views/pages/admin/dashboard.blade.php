@@ -357,7 +357,23 @@
                             <!-- Category -->
                             <div class="form-group">
                                 <x-input-label for="new-category" value="Category" />
-                                <input id="new-category" name="category" type="text" required class="form-input" />
+
+                                <select
+                                    id="new-category"
+                                    name="category"
+                                    required
+                                    class="form-select"
+                                >
+                                    <option value="">Choose a category…</option>
+                                    @foreach($allCategories as $c)
+                                        <option
+                                            value="{{ $c }}"
+                                            {{ old('category') === $c ? 'selected' : '' }}
+                                        >
+                                            {{ $c }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
 
                             <!-- Line -->

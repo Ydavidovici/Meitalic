@@ -67,12 +67,9 @@
         </div>
     </section>
 
-
     <!-- Why Shop at Meitalic -->
-    <section class="why-shop bg-white mt-12 mb-12 py-16">
+    <section class="why-shop bg-white mt-8 mb-8 py-16">
         <div class="container mx-auto px-6 text-center">
-            <h2 class="text-3xl font-bold mb-8">Why Shop at Meitalic</h2>
-
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <!-- Satisfaction Guarantee -->
                 <div class="flex flex-col items-center">
@@ -92,13 +89,19 @@
                 <div class="flex flex-col items-center">
                     <svg xmlns="http://www.w3.org/2000/svg"
                          class="h-8 w-8 text-pink-500 mb-3"
-                         fill="none"
                          viewBox="0 0 24 24"
-                         stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M7 17a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M1 17h4V7a2 2 0 012-2h9l4 5v7h-4M16 17H6"/>
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <!-- cargo box -->
+                        <rect x="1" y="5" width="15" height="11" rx="2"/>
+                        <!-- cab -->
+                        <path d="M16 16v-6h4l2 4v2z"/>
+                        <!-- wheels -->
+                        <circle cx="6" cy="18" r="2"/>
+                        <circle cx="18" cy="18" r="2"/>
                     </svg>
                     <p class="font-semibold text-gray-800">
                         Free Shipping on Orders Over $55
@@ -392,6 +395,7 @@
         </div>
     </section>
 
+
     {{-- 1) Center-aligned silk-skincare video with mute/unmute toggle --}}
     <section class="py-16">
         <div class="container mx-auto px-6 flex justify-center">
@@ -400,7 +404,7 @@
                 <!-- Video (start muted) -->
                 <video
                     id="silkVideo"
-                    src="{{ asset('images/silk-skincare.mp4') }}"
+                    src="{{ asset('images/glycolic-moisturizer.mp4') }}"
                     class="w-full h-full object-cover"
                     autoplay muted loop playsinline preload="auto"
                 ></video>
@@ -552,22 +556,22 @@
         <div class="container mx-auto px-6 max-w-screen-lg">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 lg:gap-12">
 
-                <!-- Meitalic only-logo card -->
+                <!-- Meitalic white-on-black -->
                 <a
                     href="{{ route('products.index', ['brand' => 'Meitalic']) }}"
-                    class="brand-card p-0 flex items-center justify-center overflow-hidden"
+                    class="brand-card p-6 !bg-black flex items-center justify-center"
                 >
                     <img
-                        src="{{ asset('images/logo-meitalic(black-and-white).png') }}"
+                        src="{{ asset('images/logo-meitalic.png') }}"
                         alt="Meitalic logo"
-                        class="w-full h-full object-contain"
+                        class="h-16 sm:h-20 md:h-24 object-contain"
                     />
                 </a>
 
-                <!-- Repechage only-logo card -->
+                <!-- Repechage only-logo card (unchanged) -->
                 <a
                     href="{{ route('products.index', ['brand' => 'Repechage']) }}"
-                    class="brand-card p-0 flex items-center justify-center overflow-hidden"
+                    class="brand-card !bg-black p-0 flex items-center justify-center overflow-hidden"
                 >
                     <img
                         src="{{ asset('images/repechageblack-small.png') }}"
@@ -608,6 +612,9 @@
             </div>
         </div>
     </section>
+
+
+
 
 
 
