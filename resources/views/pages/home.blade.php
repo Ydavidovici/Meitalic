@@ -563,7 +563,7 @@
                 <!-- Meitalic white-on-black -->
                 <a
                     href="{{ route('products.index', ['brand' => 'Meitalic']) }}"
-                    class="brand-card p-6 !bg-black flex items-center justify-center"
+                    class="brand-card p-6 !bg-[#7d7d7d] flex items-center justify-center"
                 >
                     <img
                         src="{{ asset('images/logo-meitalic.png') }}"
@@ -575,10 +575,10 @@
                 <!-- Repechage only-logo card (unchanged) -->
                 <a
                     href="{{ route('products.index', ['brand' => 'Repechage']) }}"
-                    class="brand-card !bg-black p-0 flex items-center justify-center overflow-hidden"
+                    class="brand-card !bg-[#7d7d7d] p-0 flex items-center justify-center overflow-hidden"
                 >
                     <img
-                        src="{{ asset('images/repechageblack-small.png') }}"
+                        src="{{ asset('images/Repechage-Logo.png') }}"
                         alt="Repechage logo"
                         class="w-full h-full object-contain"
                     />
