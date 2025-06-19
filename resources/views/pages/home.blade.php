@@ -51,15 +51,19 @@
 
     <section class="hero">
         <div class="hero__banner">
-            <img
-                class="hero__banner-img"
-                srcset="
-        {{ asset('images/banner1.png') }}      1x,
-        {{ asset('images/banner1@2x.png') }}   2x
-      "
-                src="{{ asset('images/banner1.png') }}"
-                alt="Beauty is being comfortable and confident in your own skin"
-            />
+            <picture>
+                <!-- on viewports ≥1024px, load banner2.jpg -->
+                <source
+                    media="(min-width: 1024px)"
+                    srcset="{{ asset('images/banner2.jpg') }}"
+                />
+                <!-- fallback for smaller viewports -->
+                <img
+                    class="hero__banner-img"
+                    src="{{ asset('images/banner1.png') }}"
+                    alt="Beauty is being comfortable and confident in your own skin"
+                />
+            </picture>
         </div>
 
         <div class="hero__inner">
