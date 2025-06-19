@@ -254,17 +254,15 @@
                 <!-- brand -->
                 <select name="brand" class="form-select">
                     <option value="">All Brands</option>
-                    @foreach($allBrands as $b)
-                        <option value="{{ $b }}" @selected(request('brand') === $b)>
-                            {{ $b }}
-                        </option>
+                    @foreach(array_keys(config('brands.brands')) as $b)
+                        <option value="{{ $b }}">{{ $b }}</option>
                     @endforeach
                 </select>
 
                 <!-- category -->
                 <select name="category" class="form-select">
                     <option value="">All Categories</option>
-                    @foreach($allCategories as $c)
+                    @foreach(config('brands.categories') as $c)
                         <option value="{{ $c }}" @selected(request('category') === $c)>
                             {{ $c }}
                         </option>
@@ -314,9 +312,11 @@
             <x-modal name="inventory-create" maxWidth="lg">
                 <x-slot name="title">New Product</x-slot>
 
-                {{-- inject your JS config once --}}
                 <script>
-                    window.config = { brands: @json(config('brands')) };
+                    window.config = {
+                        brands: @json(config('brands.brands')),
+                        categories: @json(config('brands.categories')),
+                    };
                 </script>
 
                 <x-form
@@ -348,8 +348,8 @@
                                     @change="lines = window.config.brands[brand]?.lines || []"
                                 >
                                     <option value="">Choose a brand…</option>
-                                    @foreach(array_keys(config('brands')) as $b)
-                                        <option value="{{ $b }}">{{ $b }}</option>
+                                    @foreach(array_keys(config('brands.brands')) as $b)
+                                    <option value="{{ $b }}">{{ $b }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -522,9 +522,11 @@
             <x-modal name="product-edit-{{ $prod->id }}" maxWidth="lg">
                 <x-slot name="title">Edit {{ $prod->name }}</x-slot>
 
-                {{-- ensure the JS config is available --}}
                 <script>
-                    window.config = window.config || { brands: @json(config('brands')) };
+                    window.config = {
+                        brands: @json(config('brands.brands')),
+                        categories: @json(config('brands.categories')),
+                    };
                 </script>
 
                 <x-form
@@ -566,7 +568,7 @@
                                     @change="lines = window.config.brands[brand]?.lines || []"
                                 >
                                     <option value="">Choose a brand…</option>
-                                    @foreach(array_keys(config('brands')) as $b)
+                                    @foreach(array_keys(config('brands.brands')) as $b)
                                         <option value="{{ $b }}">{{ $b }}</option>
                                     @endforeach
                                 </select>
