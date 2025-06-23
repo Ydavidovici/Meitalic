@@ -118,7 +118,7 @@ class ProductController extends Controller
             'height'      => 'required|numeric|min:0',
             'price'       => 'required|numeric|min:0',
             'inventory'   => 'required|integer|min:0',
-            'image'       => 'nullable|image|max:2048',
+            'image'       => 'nullable|image|max:20480',
             'is_featured' => 'sometimes|boolean',
         ]);
 
