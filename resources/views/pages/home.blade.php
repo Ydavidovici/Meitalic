@@ -55,7 +55,7 @@
                 <!-- on viewports ≥1024px, load banner2.jpg -->
                 <source
                     media="(min-width: 1024px)"
-                    srcset="{{ asset('images/banner2.jpg') }}"
+                    srcset="{{ asset('images/banner1.png') }}"
                 />
                 <!-- fallback for smaller viewports -->
                 <img
@@ -72,7 +72,7 @@
     </section>
 
     <!-- Why Shop at Meitalic -->
-    <section class="why-shop bg-white mt-8 mb-8 py-16">
+    <section class="why-shop bg-white mb-8 pb-16">
         <div class="container mx-auto px-6 text-center">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <!-- Satisfaction Guarantee -->
@@ -81,8 +81,20 @@
                          class="h-8 w-8 text-pink-500 mb-3"
                          fill="none" viewBox="0 0 24 24"
                          stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <!-- check mark, from (9,12) to (11,14) to (15,10) -->
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2l4-4"
+                        />
+                        <!-- circle centered at (12,12) radius 9 -->
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 3a9 9 0 110 18a9 9 0 010-18"
+                        />
                     </svg>
                     <p class="font-semibold text-gray-800">
                         Satisfaction Guarantee
@@ -424,6 +436,15 @@
 
             </div>
         </div>
+        <!-- “Shop Glycolic Moisturizer” CTA -->
+        <div class="flex justify-center mt-6">
+            <a
+                href="{{ route('products.index', ['search' => 'glycolic moisturizer']) }}"
+                class="btn-primary inline-block px-6 py-3 rounded-lg shadow hover:shadow-md transition"
+            >
+                Shop Glycolic Moisturizer Now
+            </a>
+        </div>
     </section>
 
     <script>
@@ -568,19 +589,19 @@
                     <img
                         src="{{ asset('images/logo-meitalic.png') }}"
                         alt="Meitalic logo"
-                        class="h-16 sm:h-20 md:h-24 object-contain"
+                        class="w-full max-h-32 object-contain"
                     />
                 </a>
 
                 <!-- Repechage only-logo card (unchanged) -->
                 <a
                     href="{{ route('products.index', ['brand' => 'Repechage']) }}"
-                    class="brand-card !bg-[#7d7d7d] p-0 flex items-center justify-center overflow-hidden"
+                    class="brand-card p-6 !bg-[#7d7d7d] flex items-center justify-center"
                 >
                     <img
                         src="{{ asset('images/Repechage-Logo.png') }}"
                         alt="Repechage logo"
-                        class="w-full h-full object-contain"
+                        class="w-full max-h-32 object-contain"
                     />
                 </a>
 
@@ -616,10 +637,6 @@
             </div>
         </div>
     </section>
-
-
-
-
 
 
     <section class="instagram py-16 bg-secondary">
@@ -673,11 +690,7 @@
                     </p>
                 </div>
             </div>
-
     </section>
-
-
-
 
     <!-- Reviews -->
     <section class="reviews py-16">
@@ -710,7 +723,7 @@
                         have brand-new skin!!!!!”
                     </p>
                     <p class="reviews__author text-gray-900 font-semibold mb-2">
-                        — Mia K.
+                        — Adi M.
                     </p>
                     <div class="reviews__stars text-yellow-400 text-xl">
                         ★★★★★
