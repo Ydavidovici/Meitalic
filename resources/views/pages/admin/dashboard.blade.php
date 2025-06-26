@@ -6,6 +6,9 @@
 @section('title', 'Admin Dashboard')
 
 @section('content')
+    <script>
+        window.serverErrors = @json($errors->toArray(), JSON_PRETTY_PRINT);
+    </script>
 
     <div x-data="adminDashboard()" class="admin-dashboard">
 
@@ -324,6 +327,7 @@
                     action="{{ route('admin.products.store') }}"
                     enctype="multipart/form-data"
                     class="modal-body--product-edit"
+                    data-modal-name="inventory-create"
                     @submit.prevent="validateAndSubmit($el)"
                 >
                     <div class="modal-body"
@@ -490,6 +494,9 @@
                                 accept="image/*"
                                 class="form-input"
                             />
+                            @error('image')
+                            <p class="text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <!-- Featured toggle -->
@@ -534,6 +541,7 @@
                     action="{{ route('admin.products.update', $prod) }}"
                     enctype="multipart/form-data"
                     class="modal-body--product-edit"
+                    data-modal-name="product-edit-{{ $prod->id }}"
                     @submit.prevent="validateAndSubmit($el)"
                 >
                     <div class="modal-body"
@@ -725,6 +733,7 @@
                                 type="file"
                                 accept="image/*"
                                 class="form-input"
+                                data-max-size-mb="30"
                             />
                         </div>
 

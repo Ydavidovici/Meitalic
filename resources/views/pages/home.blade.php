@@ -52,7 +52,7 @@
     <section class="hero">
         <div class="hero__banner">
             <picture>
-                <!-- on viewports ≥1024px, load banner2.jpg -->
+                <!-- on viewports ≥1024px, load banner3.jpg -->
                 <source
                     media="(min-width: 1024px)"
                     srcset="{{ asset('images/banner3.jpg') }}"
@@ -60,7 +60,7 @@
                 <!-- fallback for smaller viewports -->
                 <img
                     class="hero__banner-img"
-                    src="{{ asset('images/banner3.jpg') }}"
+                    src="{{ asset('images/banner1.png') }}"
                     alt="Beauty is being comfortable and confident in your own skin"
                 />
             </picture>

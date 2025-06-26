@@ -6,6 +6,8 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class ProductController extends Controller
 {
@@ -101,11 +103,18 @@ class ProductController extends Controller
         return app(AdminController::class)->index($request);
     }
 
-    // Admin: store new product
     public function store(Request $request)
     {
         $this->authorizeAdmin();
 
+        Log::debug('▶︎ store() hit', [
+            'has_file'   => $request->hasFile('image'),
+            'file_valid' => $request->hasFile('image')
+                ? $request->file('image')->isValid()
+                : null,
+            'all_input'  => $request->except('image'), // avoid dumping the whole file object
+        ]);
+        try {
         $data = $request->validate([
             'name'        => 'required|string|max:255',
             'brand'       => 'required|string|max:255',
@@ -118,20 +127,61 @@ class ProductController extends Controller
             'height'      => 'required|numeric|min:0',
             'price'       => 'required|numeric|min:0',
             'inventory'   => 'required|integer|min:0',
-            'image'       => 'nullable|image|max:20480',
+            'image' => 'nullable|file|mimes:jpg,jpeg,png,gif,webp|max:30720',
             'is_featured' => 'sometimes|boolean',
         ]);
+        } catch (ValidationException $e) {
+            // If this was an AJAX/Fetch request, return JSON, else redirect back.
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'errors' => $e->validator->errors(),
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+            throw $e; // leaves your old redirect+error-bag behavior intact
+        }
 
-        // auto-slug & SKU
+        // auto‐slug & SKU
         $data['slug']        = Str::slug($data['name']);
         $data['sku']         = $data['slug'].'-'.Str::upper(Str::random(6));
         $data['is_featured'] = $request->has('is_featured');
 
         if ($file = $request->file('image')) {
-            $data['image'] = $file->store('products', 'public');
+            Log::debug('▶︎ attempting to store file', [
+                'originalName' => $file->getClientOriginalName(),
+                'size'         => $file->getSize(),
+                'tmpPath'      => $file->getPathname(),
+            ]);
+
+            try {
+                $path = $file->store('products', 'public');
+                Log::debug('▶︎ file stored OK', ['path' => $path]);
+                $data['image'] = $path;
+            } catch (\Throwable $e) {
+                Log::error('▶︎ file storage exception', [
+                    'message' => $e->getMessage(),
+                    'trace'   => $e->getTraceAsString(),
+                ]);
+                // You can also bail early if you want:
+                // return back()->withErrors(['image'=>'Failed to store image.']);
+            }
+        } else {
+            Log::debug('▶︎ no image file present in request');
         }
 
-        Product::create($data);
+        Log::debug('▶︎ about to create product', ['data_keys' => array_keys($data)]);
+
+        try {
+            $product = Product::create($data);
+            Log::debug('▶︎ created product', [
+                'id'         => $product->id,
+                'attributes' => $product->toArray(),
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('▶︎ product create exception', [
+                'message' => $e->getMessage(),
+                'data'    => $data,
+            ]);
+        }
 
         return redirect()
             ->route('admin.dashboard')
@@ -155,9 +205,12 @@ class ProductController extends Controller
             'height'      => 'required|numeric|min:0',
             'price'       => 'required|numeric|min:0',
             'inventory'   => 'required|integer|min:0',
-            'image'       => 'nullable|image|max:2048',
+            'image'       => 'nullable|image|max:30720',
             'is_featured' => 'sometimes|boolean',
-        ]);
+            ],
+            [
+                'image.max'   => 'Image too large. The maximum file size is 30 MB.',
+            ]);
 
         if ($data['name'] !== $product->name) {
             $data['slug'] = Str::slug($data['name']);

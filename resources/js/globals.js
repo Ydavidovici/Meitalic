@@ -149,32 +149,66 @@ window.ensureFieldsFilled = function(formObj, fields) {
  * @returns {boolean} - true if valid, false (and show bubbles) otherwise
  */
 window.ensureFormValid = function(formEl) {
-    console.log('[validateAndSubmit] called for form:', formEl.id);
-
+    console.log('[validateAndSubmit] checking HTML5 validity for form:', formEl.id);
     if (!formEl.checkValidity()) {
+        console.warn('[validateAndSubmit] HTML5 validation failed for', formEl.id);
         formEl.reportValidity()
         return false
     }
+    console.log('[validateAndSubmit] HTML5 validation passed for', formEl.id);
     return true
 }
 
-window.validateAndSubmit = function(formEl) {
-    // 1) Run HTML5 constraint validation on <form>
-    if (!window.ensureFormValid(formEl)) {
-        console.log('[validateAndSubmit] -- HTML5 validation failed for', formEl.id);
+window.validateAndSubmit = async function(formEl) {
+    // 1) Native HTML5 check
+    if (!formEl.checkValidity()) {
+        formEl.reportValidity();
         return;
     }
 
-    // 2) (Optional) If you have a JS object backing that form (e.g., x-data="…"),
-    //    you could also check required fields via ensureFieldsFilled:
-    //    const alpineData = Alp‎ine.$data(formEl)
-    //    if (!window.ensureFieldsFilled(alpineData, ['name','price',…])) return
+    // 2) Clear existing inline errors
+    formEl.querySelectorAll('.inline-error').forEach(el => el.remove());
 
-    // 3) All good → submit the form normally
-    console.log('[validateAndSubmit] -- form is valid, calling form.submit() for', formEl.id);
-    formEl.submit()
+    // 3) Fire the AJAX
+    const formData = new FormData(formEl);
+    try {
+        const res = await fetch(formEl.action, {
+            method: formEl.method,
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+            },
+            body: formData
+        });
+
+        // 4) Validation errors
+        if (res.status === 422) {
+            const { errors } = await res.json();
+            for (const [field, messages] of Object.entries(errors)) {
+                const input = formEl.querySelector(`[name="${field}"]`);
+                if (!input) continue;
+                const p = document.createElement('p');
+                p.classList.add('inline-error','text-red-600','mt-1');
+                p.textContent = messages[0];
+                input.insertAdjacentElement('afterend', p);
+            }
+            return;
+        }
+
+        if (!res.ok) throw new Error('Server error');
+
+        // 5) Success: close the correct modal and refresh
+        // If this is the “New Product” form, modal is "inventory-create"
+        // Otherwise, you could add data-modal-name="product-edit-{{ $prod->id }}" on the form
+        const modalName = formEl.getAttribute('data-modal-name') || 'inventory-create';
+        window.dispatchEvent(new CustomEvent('close-modal', { detail: modalName }));
+        location.reload();
+
+    } catch (err) {
+        console.error('Submission failed:', err);
+        alert('Submission failed; see console for details.');
+    }
 }
-
 
 // 7) Checkout page component
 import '../css/pages/checkout/index.css'

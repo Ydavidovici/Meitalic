@@ -33,6 +33,16 @@ Alpine.store('dashboard', {
 // ── Admin Dashboard Component ──
 export default function adminDashboard() {
     return {
+
+        serverErrors: window.serverErrors || {},
+
+        init() {
+            // if there's an image-size error, open the “create product” modal
+            if (this.serverErrors.image) {
+                this.openModal('inventory-create')
+            }
+        },
+
         devMetricsVisible: Alpine.store('dashboard').devMetricsVisible,
         selectedOrders: [],
         selectedReview: {},
