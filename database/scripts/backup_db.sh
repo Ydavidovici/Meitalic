@@ -26,6 +26,6 @@ MYSQL_PWD="$DB_PASSWORD" \
   | gzip > "$FILE"
 
 # prune anything older than 7 days
-find "$BACKUP_DIR" -type f -name '*.sql.gz' -mtime +7 -delete
+find "$BACKUP_DIR" -type f -name '*.sql.gz' -mtime +30 -delete
 
 echo "✔ Backup complete: $FILE"
