@@ -55,12 +55,12 @@
                 <!-- on viewports ≥1024px, load banner2.jpg -->
                 <source
                     media="(min-width: 1024px)"
-                    srcset="{{ asset('images/banner1.png') }}"
+                    srcset="{{ asset('images/banner3.jpg') }}"
                 />
                 <!-- fallback for smaller viewports -->
                 <img
                     class="hero__banner-img"
-                    src="{{ asset('images/banner1.png') }}"
+                    src="{{ asset('images/banner3.jpg') }}"
                     alt="Beauty is being comfortable and confident in your own skin"
                 />
             </picture>
@@ -412,46 +412,56 @@
     </section>
 
 
-    {{-- 1) Center-aligned silk-skincare video with mute/unmute toggle --}}
-    <section class="py-16">
-        <div class="container mx-auto px-6 flex justify-center">
-            <div class="w-full max-w-xs md:max-w-md rounded-lg shadow-md overflow-hidden relative">
 
-                <!-- Video (start muted) -->
+    <section class="py-24">
+        <div class="mx-auto max-w-screen-lg px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-start gap-12 lg:gap-16 xl:gap-24">
+            <!-- TEXT -->
+            <div class="w-full md:w-2/5 flex flex-col space-y-8 lg:space-y-10 pr-0 lg:pr-12">
+                <h2 class="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl font-semibold">
+                    Glycolic Moisturizer
+                </h2>
+                <h3 class="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl 2xl:text-4xl text-gray-600">
+                    Exfoliating Hydration Booster
+                </h3>
+                <p class="text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed">
+                    Give skin a second lease on life with our silky lotion that marries 5%
+                    glycolic acid and hyaluronic acid for a double-duty glow. It smooths
+                    fine lines, refines texture, and locks in moisture without heaviness.
+                    Wake up to fresh, dewy skin primed for makeup or bare-faced confidence.
+                </p>
+                <a
+                    href="{{ route('products.index', ['search' => 'Glycolic Moisturizer']) }}"
+                    class="inline-block mt-6 px-8 py-4 text-center text-base sm:text-lg lg:text-xl rounded-lg shadow hover:shadow-md transition btn-primary"
+                >
+                    Grab It Now
+                </a>
+            </div>
+
+            <!-- VIDEO -->
+            <div
+                class="w-full md:w-3/5 lg:w-1/2 relative rounded-lg shadow-md overflow-hidden
+             h-64 sm:h-80 md:h-96 lg:h-[500px] xl:h-[650px]"
+            >
                 <video
                     id="silkVideo"
                     src="{{ asset('images/glycolic-moisturizer.mp4') }}"
                     class="w-full h-full object-cover"
                     autoplay muted loop playsinline preload="auto"
                 ></video>
-
-                <!-- Mute/Unmute toggle button -->
                 <button
                     id="muteBtn"
                     class="absolute bottom-2 right-2 bg-white bg-opacity-75 hover:bg-opacity-100 p-2 rounded-full focus:outline-none"
                     aria-label="Toggle mute"
-                >
-                    🔇
-                </button>
-
+                >🔇</button>
             </div>
         </div>
-        <!-- “Shop Glycolic Moisturizer” CTA -->
-        <div class="flex justify-center mt-6">
-            <a
-                href="{{ route('products.index', ['search' => 'glycolic moisturizer']) }}"
-                class="btn-primary inline-block px-6 py-3 rounded-lg shadow hover:shadow-md transition"
-            >
-                Shop Glycolic Moisturizer Now
-            </a>
-        </div>
     </section>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const video = document.getElementById('silkVideo');
             const btn = document.getElementById('muteBtn');
-
             btn.addEventListener('click', () => {
                 video.muted = !video.muted;
                 btn.textContent = video.muted ? '🔇' : '🔊';
@@ -459,49 +469,25 @@
         });
     </script>
 
-    {{-- 2) Featured “Bestsellers” with Glycolic Moisturizer first --}}
     <section class="featured py-16">
         <div class="container mx-auto px-6">
             <h2 class="text-3xl mb-12 text-center">Bestsellers</h2>
 
-            {{-- 1st: Glycolic Moisturizer (moved from 4th) --}}
-            <div class="flex flex-col md:flex-row-reverse items-start md:items-center gap-8 mb-16">
-                <div class="w-full md:w-1/2">
-                    <a href="{{ route('products.index', ['search' => 'Glycolic Moisturizer']) }}">
-                        <img
-                            src="{{ asset('images/Glycolic-Moisturizer.jpeg') }}"
-                            alt="Glycolic Moisturizer"
-                            class="w-full rounded-lg shadow-md"
-                        />
-                    </a>
-                </div>
-                <div class="w-full md:w-1/2">
-                    <h3 class="text-2xl font-semibold mb-2">Glycolic Moisturizer</h3>
-                    <h4 class="text-xl text-gray-600 mb-4">Exfoliating Hydration Booster</h4>
-                    <p class="text-base leading-relaxed">
-                        Give skin a second lease on life with our silky lotion that marries 5% glycolic acid and
-                        hyaluronic acid for a double-duty glow. It smooths fine lines, refines texture, and locks
-                        in moisture without heaviness. Wake up to fresh, dewy skin primed for makeup or bare-faced
-                        confidence.
-                    </p>
-                </div>
-            </div>
-
-            {{-- 2nd: Dr Pimple Serum --}}
-            <div class="flex flex-col md:flex-row items-start md:items-center gap-8 mb-16">
+            {{-- 1st: Dr Pimple Serum --}}
+            <div class="flex flex-col md:flex-row items-stretch gap-12 mb-24 bg-secondary p-8 md:p-12">
                 <div class="w-full md:w-1/2">
                     <a href="{{ route('products.index', ['search' => 'Dr Pimple Serum']) }}">
                         <img
                             src="{{ asset('images/dr-pimple.jpeg') }}"
                             alt="Dr Pimple Serum"
-                            class="w-full rounded-lg shadow-md"
+                            class="w-full rounded-lg shadow-md object-cover h-64 md:h-80 lg:h-96 xl:h-[30rem] 2xl:h-[36rem]"
                         />
                     </a>
                 </div>
-                <div class="w-full md:w-1/2">
-                    <h3 class="text-2xl font-semibold mb-2">Dr Pimple Serum</h3>
-                    <h4 class="text-xl text-gray-600 mb-4">Gentle Clarifying &amp; Soothing Treatment</h4>
-                    <p class="text-base leading-relaxed">
+                <div class="w-full md:w-1/2 flex flex-col justify-center space-y-6">
+                    <h3 class="text-3xl font-semibold">Dr Pimple Serum</h3>
+                    <h4 class="text-2xl text-gray-600">Gentle Clarifying &amp; Soothing Treatment</h4>
+                    <p class="text-xl leading-relaxed">
                         This ultra-light serum blends calming calamine clay with pore-refining salicylic acid
                         to absorb excess oil, gently exfoliate, and reduce redness. Your complexion will feel
                         balanced and matte—no tightness, just a clear, comfortable glow. Use morning and night
@@ -510,21 +496,21 @@
                 </div>
             </div>
 
-            {{-- 3rd: Makeup Peel --}}
-            <div class="flex flex-col md:flex-row-reverse items-start md:items-center gap-8 mb-16">
+            {{-- 2nd: Makeup Peel --}}
+            <div class="flex flex-col md:flex-row-reverse items-stretch gap-12 mb-24 p-8 md:p-12">
                 <div class="w-full md:w-1/2">
                     <a href="{{ route('products.index', ['search' => 'Makeup Peel']) }}">
                         <img
                             src="{{ asset('images/makeup-peel.jpeg') }}"
                             alt="Makeup Peel"
-                            class="w-full rounded-lg shadow-md"
+                            class="w-full h-full rounded-lg shadow-md object-cover"
                         />
                     </a>
                 </div>
-                <div class="w-full md:w-1/2">
-                    <h3 class="text-2xl font-semibold mb-2">Makeup Peel</h3>
-                    <h4 class="text-xl text-gray-600 mb-4">Sweet Exfoliation for Instant Radiance</h4>
-                    <p class="text-base leading-relaxed">
+                <div class="w-full md:w-1/2 flex flex-col justify-center space-y-6">
+                    <h3 class="text-3xl font-semibold">Makeup Peel</h3>
+                    <h4 class="text-2xl text-gray-600">Sweet Exfoliation for Instant Radiance</h4>
+                    <p class="text-xl leading-relaxed">
                         Transform your routine with a dreamy at-home peel that sweeps away dead skin,
                         pollution, and stubborn makeup in one go. Infused with nourishing honey and almond
                         proteins, it buffs and conditions, revealing a silky-soft surface and a healthy,
@@ -534,21 +520,21 @@
                 </div>
             </div>
 
-            {{-- 4th: Exfoliating Scrub --}}
-            <div class="flex flex-col md:flex-row items-start md:items-center gap-8">
+            {{-- 3rd: Exfoliating Scrub --}}
+            <div class="flex flex-col md:flex-row items-stretch gap-12 mb-24 bg-secondary p-8 md:p-12">
                 <div class="w-full md:w-1/2">
                     <a href="{{ route('products.index', ['search' => 'Exfoliating Scrub']) }}">
                         <img
                             src="{{ asset('images/exfoliating-scrub.jpeg') }}"
                             alt="Exfoliating Scrub"
-                            class="w-full rounded-lg shadow-md"
+                            class="w-full h-full rounded-lg shadow-md object-cover"
                         />
                     </a>
                 </div>
-                <div class="w-full md:w-1/2">
-                    <h3 class="text-2xl font-semibold mb-2">Exfoliating Scrub</h3>
-                    <h4 class="text-xl text-gray-600 mb-4">Our Patented Honey-Almond Polish</h4>
-                    <p class="text-base leading-relaxed">
+                <div class="w-full md:w-1/2 flex flex-col justify-center space-y-6">
+                    <h3 class="text-3xl font-semibold">Exfoliating Scrub</h3>
+                    <h4 class="text-2xl text-gray-600">Our Patented Honey-Almond Polish</h4>
+                    <p class="text-xl leading-relaxed">
                         Reveal your softest skin yet with our gentle, ultra-fine scrub. A blend of pure honey,
                         crushed almond meal, and nourishing botanicals buffs away dull surface cells and unclogs
                         pores without irritation. Honey locks in moisture as you massage, leaving your complexion
