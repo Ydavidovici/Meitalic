@@ -1,6 +1,6 @@
  <?php
 
-use Illuminate\Support\Facades\Route;
+ use Illuminate\Support\Facades\Route;
  use Illuminate\Http\Request;
  use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\{
@@ -22,50 +22,6 @@ use App\Http\Controllers\{
     ReviewController
 };
 
- Route::get('/php-debug', function () {
-     // dump upload & post limits + loaded php.ini path
-     dd([
-         'upload_max_filesize' => ini_get('upload_max_filesize'),
-         'post_max_size'       => ini_get('post_max_size'),
-         'memory_limit'        => ini_get('memory_limit'),
-         'php_ini_loaded_file' => php_ini_loaded_file(),
-     ]);
- });
-
- // Show the debug form
- Route::get('/debug-upload', function () {
-     // grab a real CSRF token
-     $token = csrf_token();
-
-     // use a heredoc (not nowdoc) or string concatenation so $token is injected
-     return <<<HTML
-<!doctype html>
-<html><body>
-  <form method="POST" action="/debug-upload" enctype="multipart/form-data">
-    <input type="hidden" name="_token" value="{$token}">
-    <label>Select image (up to 30 MB):</label>
-    <input type="file" name="file" accept="image/*" required>
-    <button type="submit">Upload</button>
-  </form>
-</body></html>
-HTML;
- });
-
- // Handle the upload
- Route::post('/debug-upload', function (Request $request) {
-     $file = $request->file('file');
-
-     if (! $file || ! $file->isValid()) {
-         return dd('Upload failed or no file', $request->all());
-     }
-
-     try {
-         $path = $file->store('products', 'public');
-         return dd('Stored OK at', $path, Storage::disk('public')->exists($path));
-     } catch (\Throwable $e) {
-         return dd('Storage exception', $e->getMessage(), $e->getTraceAsString());
-     }
- });
 
 // ───────────── Public Pages ────────────────
 Route::get('/',             [HomeController::class, 'index'])->name('home');

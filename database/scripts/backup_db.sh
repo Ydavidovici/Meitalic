@@ -8,6 +8,18 @@ ENV_FILE="$PROJECT_ROOT/.env"
 # load DB_* vars
 export $(grep -v '^#' "$ENV_FILE" | grep '^DB_' | xargs)
 
+# log file
+LOG_FILE="$PROJECT_ROOT/storage/logs/db_backup.log"
+mkdir -p "$(dirname "$LOG_FILE")"
+
+# simple logger
+log() { echo "[$(date +'%Y-%m-%d %H:%M:%S')] [$$] [$(whoami)] $*" >> "$LOG_FILE"; }
+
+# on any error, log and exit
+trap 'log "ERROR during backup of $DB_DATABASE"; exit 1' ERR
+
+log "STARTING backup of $DB_DATABASE"
+
 # ensure target dir exists
 BACKUP_DIR="$PROJECT_ROOT/storage/app/database"
 mkdir -p "$BACKUP_DIR"
@@ -25,7 +37,8 @@ MYSQL_PWD="$DB_PASSWORD" \
     "$DB_DATABASE" \
   | gzip > "$FILE"
 
-# prune anything older than 7 days
+# prune anything older than 30 days
 find "$BACKUP_DIR" -type f -name '*.sql.gz' -mtime +30 -delete
 
+log "SUCCESS backup complete: $FILE"
 echo "✔ Backup complete: $FILE"
