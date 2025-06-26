@@ -13,7 +13,7 @@ class Kernel extends ConsoleKernel
      * If you generated a BackupDatabase command, add it here.
      */
     protected $commands = [
-        // \App\Console\Commands\BackupDatabase::class,
+        \App\Console\Commands\MigrateProductImages::class,
     ];
 
     /**
