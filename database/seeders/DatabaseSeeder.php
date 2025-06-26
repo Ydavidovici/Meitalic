@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UserSeeder::class,
             ProductSeeder::class,
+            ProductImageSeeder::class,
             OrderSeeder::class,
             OrderItemSeeder::class,
             PaymentSeeder::class,
@@ -22,8 +23,5 @@ class DatabaseSeeder extends Seeder
             ReviewSeeder::class,
             NewsletterSeeder::class,
         ]);
-
-        \App\Models\User::factory()->regular()->create();
-        \App\Models\User::factory()->admin()->create();
     }
 }

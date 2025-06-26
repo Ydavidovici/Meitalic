@@ -4,8 +4,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\ProductImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
@@ -88,11 +90,15 @@ class ProductController extends Controller
         ));
     }
 
-    // Public detail
     public function show(string $slug)
     {
-        $product = Product::where('slug', $slug)->firstOrFail();
-        return view('pages.product', compact('product'));
+        $product = Product::where('slug', $slug)
+            ->firstOrFail();
+
+        // fetch all image paths for this product
+        $images = $this->getProductImages($product->id);
+
+        return view('pages.product', compact('product','images'));
     }
 
     // Admin: show "create" form via dashboard
@@ -127,7 +133,8 @@ class ProductController extends Controller
             'height'      => 'required|numeric|min:0',
             'price'       => 'required|numeric|min:0',
             'inventory'   => 'required|integer|min:0',
-            'image' => 'nullable|file|mimes:jpg,jpeg,png,gif,webp|max:30720',
+            'images'     => 'nullable|array',
+            'images.*'   => 'file|mimes:jpg,jpeg,png,gif,webp|max:30720',
             'is_featured' => 'sometimes|boolean',
         ]);
         } catch (ValidationException $e) {
@@ -140,47 +147,20 @@ class ProductController extends Controller
             throw $e; // leaves your old redirect+error-bag behavior intact
         }
 
-        // auto‐slug & SKU
+        // slug & sku
         $data['slug']        = Str::slug($data['name']);
         $data['sku']         = $data['slug'].'-'.Str::upper(Str::random(6));
         $data['is_featured'] = $request->has('is_featured');
 
-        if ($file = $request->file('image')) {
-            Log::debug('▶︎ attempting to store file', [
-                'originalName' => $file->getClientOriginalName(),
-                'size'         => $file->getSize(),
-                'tmpPath'      => $file->getPathname(),
-            ]);
+        // 1) create the product (without images)
+        $product = Product::create(Arr::except($data, ['images']));
 
-            try {
+        // 2) store each uploaded image
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $file) {
                 $path = $file->store('products', 'public');
-                Log::debug('▶︎ file stored OK', ['path' => $path]);
-                $data['image'] = $path;
-            } catch (\Throwable $e) {
-                Log::error('▶︎ file storage exception', [
-                    'message' => $e->getMessage(),
-                    'trace'   => $e->getTraceAsString(),
-                ]);
-                // You can also bail early if you want:
-                // return back()->withErrors(['image'=>'Failed to store image.']);
+                $product->images()->create(['path' => $path]);
             }
-        } else {
-            Log::debug('▶︎ no image file present in request');
-        }
-
-        Log::debug('▶︎ about to create product', ['data_keys' => array_keys($data)]);
-
-        try {
-            $product = Product::create($data);
-            Log::debug('▶︎ created product', [
-                'id'         => $product->id,
-                'attributes' => $product->toArray(),
-            ]);
-        } catch (\Throwable $e) {
-            Log::error('▶︎ product create exception', [
-                'message' => $e->getMessage(),
-                'data'    => $data,
-            ]);
         }
 
         return redirect()
@@ -193,6 +173,7 @@ class ProductController extends Controller
     {
         $this->authorizeAdmin();
 
+        // same validation rules as store
         $data = $request->validate([
             'name'        => 'required|string|max:255',
             'brand'       => 'required|string|max:255',
@@ -205,23 +186,34 @@ class ProductController extends Controller
             'height'      => 'required|numeric|min:0',
             'price'       => 'required|numeric|min:0',
             'inventory'   => 'required|integer|min:0',
-            'image'       => 'nullable|image|max:30720',
             'is_featured' => 'sometimes|boolean',
-            ],
-            [
-                'image.max'   => 'Image too large. The maximum file size is 30 MB.',
-            ]);
+            'images'      => 'nullable|array',
+            'images.*'    => 'file|mimes:jpg,jpeg,png,gif,webp|max:30720',
+        ]);
 
+        // update slug if name changed
         if ($data['name'] !== $product->name) {
             $data['slug'] = Str::slug($data['name']);
         }
         $data['is_featured'] = $request->has('is_featured');
 
-        if ($file = $request->file('image')) {
-            $data['image'] = $file->store('products', 'public');
+        if ($toRemove = $request->input('remove_images')) {
+            foreach (json_decode($toRemove, true) as $imgId) {
+                ProductImage::where('id', $imgId)
+                    ->where('product_id', $product->id)
+                    ->delete();
+            }
         }
 
-        $product->update($data);
+        // update product record (without images)
+        $product->update(Arr::except($data, ['images']));
+
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $file) {
+                $path = $file->store('products', 'public');
+                $product->images()->create(['path' => $path]);
+            }
+        }
 
         return redirect()
             ->route('admin.dashboard')
@@ -238,6 +230,12 @@ class ProductController extends Controller
         return redirect()
             ->route('admin.dashboard')
             ->with('success', 'Product deleted successfully.');
+    }
+
+    protected function getProductImages(int $productId)
+    {
+        return ProductImage::where('product_id', $productId)
+            ->pluck('path');
     }
 
     // Ensure only admins can hit these endpoints

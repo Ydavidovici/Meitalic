@@ -10,6 +10,7 @@ Alpine.store('auth', {
 })
 
 Alpine.store('dashboard', {
+
     devMetricsVisible: false,
     activeModal: null,
 
@@ -33,6 +34,46 @@ Alpine.store('dashboard', {
 // ── Admin Dashboard Component ──
 export default function adminDashboard() {
     return {
+
+        imagesToRemove: [],
+        newImages: [],
+
+        previewNewImages(event) {
+                        const input = event.target
+                            const container = input
+                                .closest('.form-group')
+                            .querySelector('.image-previews')
+
+                        // 1) Add newly-picked files into our array
+                            this.newImages.push(...Array.from(input.files))
+
+                        // 2) Rebuild a DataTransfer so <input>.files contains ALL of them
+                            const dt = new DataTransfer()
+                        this.newImages.forEach(file => dt.items.add(file))
+                        input.files = dt.files
+
+                        // 3) Render previews for the full set
+                            container.innerHTML = ''
+                            Array.from(dt.files).forEach(file => {
+                                    const reader = new FileReader()
+                                    reader.onload = e => {
+                                            const img = document.createElement('img')
+                                            img.src = e.target.result
+                                                img.classList.add('h-20','w-20','object-cover','rounded')
+                                                container.appendChild(img)
+                                            }
+                                    reader.readAsDataURL(file)
+                                })
+                        },
+
+        markForDeletion(imageId, evt) {
+            // 1) remember which IDs to remove
+            this.imagesToRemove.push(imageId)
+            // 2) dump JSON into your hidden input
+            this.$refs.removeImages.value = JSON.stringify(this.imagesToRemove)
+            // 3) remove that thumbnail from the DOM
+            evt.target.closest('div.relative').remove()
+        },
 
         serverErrors: window.serverErrors || {},
 

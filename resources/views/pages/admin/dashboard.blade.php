@@ -484,17 +484,19 @@
                             ></textarea>
                         </div>
 
-                        <!-- Image -->
                         <div class="form-group">
-                            <x-input-label for="new-image" value="Product Image" />
+                            <x-input-label for="new-images" value="Product Images" />
                             <input
-                                id="new-image"
-                                name="image"
+                                id="new-images"
+                                name="images[]"            {{-- note the [] and multiple --}}
                                 type="file"
                                 accept="image/*"
+                                multiple
                                 class="form-input"
+                                @change="previewNewImages($event)"
                             />
-                            @error('image')
+                            <div class="image-previews flex flex-wrap gap-2 mt-2"></div>
+                            @error('images.*')
                             <p class="text-red-600 mt-1">{{ $message }}</p>
                             @enderror
                         </div>
@@ -715,27 +717,51 @@
                             >{{ old('description',$prod->description) }}</textarea>
                         </div>
 
-                        <!-- Image upload & preview -->
+
+
                         <div class="form-group">
-                            <x-input-label for="image-{{ $prod->id }}" value="Product Image" />
-                            @if($prod->image)
-                                <img
-                                    src="{{ Str::startsWith($prod->image,['http://','https://'])
-                    ? $prod->image
-                    : asset('storage/'.$prod->image) }}"
-                                    alt="{{ $prod->name }}"
-                                    class="image-preview mb-2"
-                                >
-                            @endif
+                            <x-input-label value="Existing Images" />
+                            <div class="existing-images flex flex-wrap gap-2 mb-2">
+                                @foreach($prod->images as $img)
+                                    <div class="relative">
+                                        <img
+                                            src="{{ asset('storage/'.$img->path) }}"
+                                            class="h-20 w-20 object-cover rounded"
+                                        />
+                                        <button
+                                            type="button"
+                                            class="delete-btn absolute -top-1 -right-1 bg-red-600 text-white rounded-full h-5 w-5"
+                                            @click="markForDeletion({{ $img->id }}, $event)"
+                                        >&times;</button>
+                                    </div>
+                                @endforeach
+                            </div>
+                            {{-- Hidden JSON array of IDs to send to the server --}}
                             <input
-                                id="image-{{ $prod->id }}"
-                                name="image"
-                                type="file"
-                                accept="image/*"
-                                class="form-input"
-                                data-max-size-mb="30"
+                                name="remove_images"
+                                type="hidden"
+                                x-ref="removeImages"
                             />
                         </div>
+
+                        {{-- ADD MORE IMAGES --}}
+                        <div class="form-group">
+                            <x-input-label for="edit-images-{{ $prod->id }}" value="Add More Images" />
+                            <input
+                                id="edit-images-{{ $prod->id }}"
+                                name="images[]"            {{-- note the [] and multiple --}}
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                class="form-input"
+                                @change="previewNewImages($event)"
+                            />
+                            <div class="image-previews flex flex-wrap gap-2 mt-2"></div>
+                            @error('images.*')
+                            <p class="text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
 
                         <!-- Featured toggle -->
                         <div class="form-group flex items-center">

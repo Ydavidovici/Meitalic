@@ -160,36 +160,42 @@ window.ensureFormValid = function(formEl) {
 }
 
 window.validateAndSubmit = async function(formEl) {
-    // 1) Native HTML5 check
+    // 1) HTML5 validation
     if (!formEl.checkValidity()) {
         formEl.reportValidity();
         return;
     }
 
-    // 2) Clear existing inline errors
+    // 2) Clear old inline errors
     formEl.querySelectorAll('.inline-error').forEach(el => el.remove());
 
-    // 3) Fire the AJAX
-    const formData = new FormData(formEl);
+    // 3) Build the FormData (includes your file inputs,
+    //    the CSRF token and the hidden _method field)
+    const fd = new FormData(formEl);
+
     try {
+        // 4) Force the request to POST so files get parsed
         const res = await fetch(formEl.action, {
-            method: formEl.method,
+            method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'Accept': 'application/json',
+                'Accept':      'application/json',
             },
-            body: formData
+            body: fd
         });
 
-        // 4) Validation errors
+        // 5) If Laravel returns validation errors, show them inline
         if (res.status === 422) {
             const { errors } = await res.json();
-            for (const [field, messages] of Object.entries(errors)) {
+            console.log('Validation errors:', errors);
+            for (let [field, msgs] of Object.entries(errors)) {
+                // for array fields like images[], you may need a more
+                // sophisticated selector (e.g. `[name="images[]"]`)
                 const input = formEl.querySelector(`[name="${field}"]`);
                 if (!input) continue;
                 const p = document.createElement('p');
                 p.classList.add('inline-error','text-red-600','mt-1');
-                p.textContent = messages[0];
+                p.textContent = msgs[0];
                 input.insertAdjacentElement('afterend', p);
             }
             return;
@@ -197,18 +203,17 @@ window.validateAndSubmit = async function(formEl) {
 
         if (!res.ok) throw new Error('Server error');
 
-        // 5) Success: close the correct modal and refresh
-        // If this is the “New Product” form, modal is "inventory-create"
-        // Otherwise, you could add data-modal-name="product-edit-{{ $prod->id }}" on the form
+        // 6) Close the modal and reload on success
         const modalName = formEl.getAttribute('data-modal-name') || 'inventory-create';
         window.dispatchEvent(new CustomEvent('close-modal', { detail: modalName }));
         location.reload();
-
-    } catch (err) {
+    }
+    catch (err) {
         console.error('Submission failed:', err);
         alert('Submission failed; see console for details.');
     }
 }
+
 
 // 7) Checkout page component
 import '../css/pages/checkout/index.css'
