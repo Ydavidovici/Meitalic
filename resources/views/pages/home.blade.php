@@ -475,15 +475,18 @@
 
             {{-- 1st: Dr Pimple Serum --}}
             <div class="flex flex-col md:flex-row items-stretch gap-12 mb-24 bg-secondary p-8 md:p-12">
-                <div class="w-full md:w-1/2">
-                    <a href="{{ route('products.index', ['search' => 'Dr Pimple Serum']) }}">
+                <!-- IMAGE: full height -->
+                <div class="w-full md:w-1/2 flex h-full">
+                    <a href="{{ route('products.index', ['search' => 'Dr Pimple Serum']) }}" class="w-full">
                         <img
                             src="{{ asset('images/dr-pimple.jpeg') }}"
                             alt="Dr Pimple Serum"
-                            class="w-full rounded-lg shadow-md object-cover h-64 md:h-80 lg:h-96 xl:h-[30rem] 2xl:h-[36rem]"
+                            class="w-full h-full rounded-lg shadow-md object-cover"
                         />
                     </a>
                 </div>
+
+                <!-- TEXT -->
                 <div class="w-full md:w-1/2 flex flex-col justify-center space-y-6">
                     <h3 class="text-3xl font-semibold">Dr Pimple Serum</h3>
                     <h4 class="text-2xl text-gray-600">Gentle Clarifying &amp; Soothing Treatment</h4>
@@ -493,6 +496,12 @@
                         balanced and matte—no tightness, just a clear, comfortable glow. Use morning and night
                         to maintain skin that’s smooth, calm, and ready for whatever the day brings.
                     </p>
+                    <a
+                        href="{{ route('products.index', ['search' => 'Dr Pimple Serum']) }}"
+                        class="inline-block mt-6 px-8 py-4 text-center text-base sm:text-lg lg:text-xl rounded-lg shadow hover:shadow-md transition btn-primary"
+                    >
+                        Grab It Now
+                    </a>
                 </div>
             </div>
 
@@ -517,6 +526,12 @@
                         lit-from-within luminosity. Perfect for weekly spa-level pampering—no harsh grains,
                         just gentle polish.
                     </p>
+                    <a
+                        href="{{ route('products.index', ['search' => 'Makeup Peel']) }}"
+                        class="inline-block mt-6 px-8 py-4 text-center text-base sm:text-lg lg:text-xl rounded-lg shadow hover:shadow-md transition btn-primary"
+                    >
+                        Grab It Now
+                    </a>
                 </div>
             </div>
 
@@ -541,6 +556,12 @@
                         silky-smooth, radiant, and prepped for serums or makeup. Use 1–2× weekly for a polished
                         glow and renewed clarity.
                     </p>
+                    <a
+                        href="{{ route('products.index', ['search' => 'Exfoliating Scrub']) }}"
+                        class="inline-block mt-6 px-8 py-4 text-center text-base sm:text-lg lg:text-xl rounded-lg shadow hover:shadow-md transition btn-primary"
+                    >
+                        Grab It Now
+                    </a>
                 </div>
             </div>
         </div>
