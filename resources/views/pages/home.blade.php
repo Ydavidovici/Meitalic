@@ -431,7 +431,7 @@
                 </p>
                 <a
                     href="{{ route('products.index', ['search' => 'Glycolic Moisturizer']) }}"
-                    class="inline-block mt-6 px-8 py-4 text-center text-base sm:text-lg lg:text-xl rounded-lg shadow hover:shadow-md transition btn-primary"
+                    class="inline-block mt-6 px-8 py-4 text-center text-base sm:text-lg lg:text-xl rounded-lg shadow hover:shadow-md transition btn-aqua"
                 >
                     Grab It Now
                 </a>
@@ -450,7 +450,7 @@
                 ></video>
                 <button
                     id="muteBtn"
-                    class="absolute bottom-2 right-2 bg-white bg-opacity-75 hover:bg-opacity-100 p-2 rounded-full focus:outline-none"
+                    class="absolute bottom-2 right-2 bg-opacity-75 hover:bg-opacity-100 p-2 rounded-full focus:outline-none"
                     aria-label="Toggle mute"
                 >🔇</button>
             </div>
@@ -498,7 +498,7 @@
                     </p>
                     <a
                         href="{{ route('products.index', ['search' => 'Dr Pimple Serum']) }}"
-                        class="inline-block mt-6 px-8 py-4 text-center text-base sm:text-lg lg:text-xl rounded-lg shadow hover:shadow-md transition btn-primary"
+                        class="inline-block mt-6 px-8 py-4 text-center text-base sm:text-lg lg:text-xl rounded-lg shadow hover:shadow-md transition btn-aqua"
                     >
                         Grab It Now
                     </a>
@@ -528,7 +528,7 @@
                     </p>
                     <a
                         href="{{ route('products.index', ['search' => 'Makeup Peel']) }}"
-                        class="inline-block mt-6 px-8 py-4 text-center text-base sm:text-lg lg:text-xl rounded-lg shadow hover:shadow-md transition btn-primary"
+                        class="inline-block mt-6 px-8 py-4 text-center text-base sm:text-lg lg:text-xl rounded-lg shadow hover:shadow-md transition btn-aqua"
                     >
                         Grab It Now
                     </a>
@@ -558,7 +558,7 @@
                     </p>
                     <a
                         href="{{ route('products.index', ['search' => 'Exfoliating Scrub']) }}"
-                        class="inline-block mt-6 px-8 py-4 text-center text-base sm:text-lg lg:text-xl rounded-lg shadow hover:shadow-md transition btn-primary"
+                        class="inline-block mt-6 px-8 py-4 text-center text-base sm:text-lg lg:text-xl rounded-lg shadow hover:shadow-md transition btn-aqua"
                     >
                         Grab It Now
                     </a>
@@ -591,24 +591,24 @@
                 <!-- Meitalic white-on-black -->
                 <a
                     href="{{ route('products.index', ['brand' => 'Meitalic']) }}"
-                    class="brand-card p-6 !bg-[#7d7d7d] flex items-center justify-center"
+                    class="brand-card p-6 !btn-aqua flex items-center justify-center"
                 >
                     <img
                         src="{{ asset('images/logo-meitalic.png') }}"
                         alt="Meitalic logo"
-                        class="w-full max-h-32 object-contain"
+                        class="w-auto max-h-28 xl: max-h-30 object-contain"
                     />
                 </a>
 
                 <!-- Repechage only-logo card (unchanged) -->
                 <a
                     href="{{ route('products.index', ['brand' => 'Repechage']) }}"
-                    class="brand-card p-6 !bg-[#7d7d7d] flex items-center justify-center"
+                    class="brand-card p-6 !btn-aqua flex items-center justify-center"
                 >
                     <img
                         src="{{ asset('images/Repechage-Logo.png') }}"
                         alt="Repechage logo"
-                        class="w-full max-h-32 object-contain"
+                        class="w-auto max-h-40 object-contain"
                     />
                 </a>
 
@@ -748,7 +748,7 @@
     >
         <div class="newsletter__inner text-center">
             <h2 class="section-title">Join Our Newsletter</h2>
-            <button @click="open = true" class="btn-primary newsletter__btn">
+            <button @click="open = true" class="btn-aqua newsletter__btn">
                 Sign Up
             </button>
         </div>
