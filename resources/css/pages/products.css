@@ -1,6 +1,5 @@
 @import "../globals.css";
 
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,7 +7,7 @@
 @layer components {
     /* ── Outer page padding so footer never overlaps ── */
     .products-container {
-        @apply pb-16; /* 4rem of bottom padding */
+        @apply pb-16; /* 4rem bottom padding */
     }
 
     /* ── Grid itself ── */
@@ -22,51 +21,57 @@
     }
     .product-card__image-wrapper::before {
         content: "";
-        @apply block pt-[75%]; /* 3 ÷ 4 = 75% */
+        @apply block pt-[75%]; /* 4:3 aspect */
     }
     .product-card__image {
         @apply absolute inset-0 w-full h-full object-cover;
     }
 
-    /* ── View details link ── */
+    /* ── “View details” link ── */
     .product-card__link {
         @apply mt-4 text-indigo-600 text-sm text-center hover:underline;
     }
 
-    /* ── Pagination span full width ── */
+    /* ── Pagination spans full width ── */
     .product-grid__pagination {
         @apply col-span-full mt-8;
     }
 
-    .filter-input,
-    .filter-select {
-        @apply h-11             /* 2.75rem height */
-        border border-gray-300
-        rounded-md        /* <-- unified rounding */
-        px-4             /* left/right padding */
-        text-base
+    /* ── FILTER BAR ── */
+    .filter-form {
+        @apply w-full
+        flex flex-col space-y-4 items-stretch;
+    }
+
+    .filter-input {
+        @apply w-full h-12 px-4 border border-gray-300
+        rounded-lg placeholder-gray-500 text-base
         focus:outline-none focus:ring-2 focus:ring-accent;
     }
-
-    .filter-select {
-        @apply pr-10;
-        background-position: right 0.75rem center;
-        background-size: 1.5em;
-    }
-
     .filter-input::-ms-clear,
     .filter-input::-ms-reveal {
         @apply hidden;
     }
-
-    .product-card {
-        @apply card flex flex-col transition-shadow hover:shadow-lg;
-        /* (no overflow-hidden here, so nothing ever gets clipped) */
+    .filter-controls {
+        @apply flex w-full items-center gap-4;
+    }
+    .filter-select {
+        @apply flex-1 h-12 px-4 border border-gray-300
+        rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-accent pr-10;
+        background-position: right 0.75rem center;
+        background-size: 1.5em;
+    }
+    .filter-controls > .btn-primary {
+        @apply h-12 rounded-lg;
     }
 
-
-
-    /* ── Title & price styles (unchanged) ── */
+    /* ── PRODUCT CARD ── */
+    .product-card {
+        @apply card flex flex-col transition-shadow hover:shadow-lg;
+    }
+    .product-card__body {
+        @apply p-4 flex-1 flex flex-col items-start min-w-0;
+    }
     .product-card__title {
         @apply font-semibold text-lg mb-1;
     }
@@ -74,47 +79,19 @@
         @apply text-gray-600 mb-4;
     }
 
-    .product-card__body {
-        @apply p-4 flex-1 flex flex-col items-start min-w-0;
-    }
-
-    /* ── Add-to-cart form: stack vertically and center ── */
+    /* ── CTA LINK: “Grab It Now” ── */
     .product-card__atc-form {
-        @apply
-        mt-auto             /* push to bottom of card body */
-        flex
-        flex-col            /* stack children (input + button) vertically */
-        items-center        /* center them horizontally */
-        space-y-2;          /* small vertical gap between input & button */
+        @apply mt-auto px-4 pb-4;    /* push to bottom + padding */
     }
 
-    /* ── Quantity input: same fixed width for both elements ── */
-    .product-card__qty-input {
-        @apply
-        flex-none           /* do not grow or shrink */
-        w-24                /* fixed 6rem width (you can tweak this) */
-        h-10                /* 2.5rem tall */
-        border border-gray-300
-        rounded-md
-        text-center         /* center the “1” */
-        focus:outline-none focus:ring-2 focus:ring-accent;
+    .product-card__atc-form a.grab-btn {
+        @apply bg-accent text-white font-medium
+        rounded-lg h-10 w-full
+        flex items-center justify-center
+        transition-colors duration-200;
     }
 
-    /* ── “Add to Cart” button: match the same w-24 width ── */
-    .product-card__atc-btn {
-        @apply
-        flex-none           /* do not grow or shrink */
-        w-24                /* same 6rem width as the input */
-        h-10                /* 2.5rem tall */
-        text-white font-medium
-        rounded-md
-        flex
-        items-center justify-center
-        whitespace-nowrap   /* never wrap “Add to Cart” */
-        transition;
+    .product-card__atc-form a.grab-btn:hover {
+        @apply bg-accent bg-opacity-90;
     }
-
-
-
-
 }
