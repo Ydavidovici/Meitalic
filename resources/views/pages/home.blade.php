@@ -414,7 +414,7 @@
 
 
     <section class="py-24">
-        <div class="mx-auto max-w-screen-lg px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-start gap-12 lg:gap-16 xl:gap-24">
+        <div class="mx-auto max-w-screen-lg px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-start md:items-center gap-12 lg:gap-16 xl:gap-24">
             <!-- TEXT -->
             <div class="w-full md:w-2/5 flex flex-col space-y-8 lg:space-y-10 pr-0 lg:pr-12">
                 <h2 class="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl font-semibold">
@@ -439,8 +439,13 @@
 
             <!-- VIDEO -->
             <div
-                class="w-full md:w-3/5 lg:w-1/2 relative rounded-lg shadow-md overflow-hidden
-             h-64 sm:h-80 md:h-96 lg:h-[500px] xl:h-[650px]"
+                class="w-full md:w-3/5 lg:w-1/2
+         relative rounded-lg shadow-md overflow-hidden
+         h-96
+         sm:h-[500px]
+         md:h-[650px]
+         lg:h-[800px]
+         xl:h-[1000px]"
             >
                 <video
                     id="silkVideo"
