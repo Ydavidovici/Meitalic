@@ -431,7 +431,7 @@
                 </p>
                 <a
                     href="{{ route('products.index', ['search' => 'Glycolic Moisturizer']) }}"
-                    class="inline-block mt-6 px-8 py-4 text-center text-base sm:text-lg lg:text-xl rounded-lg shadow hover:shadow-md transition btn-aqua"
+                    class="text-black inline-block mt-6 px-8 py-4 text-center text-base sm:text-lg lg:text-xl rounded-lg shadow hover:shadow-md transition btn-aqua"
                 >
                     Grab It Now
                 </a>
@@ -499,7 +499,7 @@
                     </p>
                     <a
                         href="{{ route('products.index', ['search' => 'Dr Pimple Serum']) }}"
-                        class="inline-block mt-6 px-8 py-4 text-center text-base sm:text-lg lg:text-xl rounded-lg shadow hover:shadow-md transition btn-aqua"
+                        class="text-black inline-block mt-6 px-8 py-4 text-center text-base sm:text-lg lg:text-xl rounded-lg shadow hover:shadow-md transition btn-aqua"
                     >
                         Grab It Now
                     </a>
@@ -529,7 +529,7 @@
                     </p>
                     <a
                         href="{{ route('products.index', ['search' => 'Makeup Peel']) }}"
-                        class="inline-block mt-6 px-8 py-4 text-center text-base sm:text-lg lg:text-xl rounded-lg shadow hover:shadow-md transition btn-aqua"
+                        class="text-black inline-block mt-6 px-8 py-4 text-center text-base sm:text-lg lg:text-xl rounded-lg shadow hover:shadow-md transition btn-aqua"
                     >
                         Grab It Now
                     </a>
@@ -559,7 +559,7 @@
                     </p>
                     <a
                         href="{{ route('products.index', ['search' => 'Exfoliating Scrub']) }}"
-                        class="inline-block mt-6 px-8 py-4 text-center text-base sm:text-lg lg:text-xl rounded-lg shadow hover:shadow-md transition btn-aqua"
+                        class="text-black inline-block mt-6 px-8 py-4 text-center text-base sm:text-lg lg:text-xl rounded-lg shadow hover:shadow-md transition btn-aqua"
                     >
                         Grab It Now
                     </a>

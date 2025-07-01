@@ -141,7 +141,7 @@
 
     /* Brand cards */
     .shop-by-brand .brand-card {
-        @apply card hover:shadow-lg transition flex items-center justify-center;
+        @apply card bg-aqua hover:shadow-lg transition flex items-center justify-center;
     }
 
     /* Category cards */
