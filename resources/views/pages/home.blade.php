@@ -587,29 +587,29 @@
     <section class="shop-by-brand py-16 text-center">
         <h2 class="section-title text-2xl font-bold mb-6">Shop by Brand</h2>
         <div class="container mx-auto px-6 max-w-screen-lg">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 lg:gap-12">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
 
                 <!-- Meitalic white-on-black -->
                 <a
                     href="{{ route('products.index', ['brand' => 'Meitalic']) }}"
-                    class="brand-card p-6 !btn-aqua flex items-center justify-center"
+                    class="brand-card p-6 !btn-aqua flex items-center justify-center h-28 sm:h-32 md:h-40"
                 >
                     <img
                         src="{{ asset('images/logo-meitalic.png') }}"
                         alt="Meitalic logo"
-                        class="w-auto max-h-28 xl: max-h-30 object-contain"
+                        class="h-full w-auto object-contain"
                     />
                 </a>
 
-                <!-- Repechage only-logo card (unchanged) -->
+                <!-- Repechage only-logo card -->
                 <a
                     href="{{ route('products.index', ['brand' => 'Repechage']) }}"
-                    class="brand-card p-6 !btn-aqua flex items-center justify-center"
+                    class="brand-card p-6 !btn-aqua flex items-center justify-center h-28 sm:h-32 md:h-40"
                 >
                     <img
                         src="{{ asset('images/Repechage-Logo.png') }}"
                         alt="Repechage logo"
-                        class="w-auto max-h-40 object-contain"
+                        class="h-full w-auto object-contain"
                     />
                 </a>
 
@@ -647,7 +647,7 @@
     </section>
 
 
-    <section class="instagram py-16 bg-secondary">
+    <section class="instagram py-16 bg-aqua">
         <div class="container mx-auto px-6 text-center flex flex-col items-center">
             <h2 class="text-3xl font-bold mb-4">Follow Us on Instagram</h2>
             <a
