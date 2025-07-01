@@ -441,11 +441,7 @@
             <div
                 class="w-full md:w-3/5 lg:w-1/2
          relative rounded-lg shadow-md overflow-hidden
-         h-96
-         sm:h-[500px]
-         md:h-[650px]
-         lg:h-[800px]
-         xl:h-[1000px]"
+         aspect-video"
             >
                 <video
                     id="silkVideo"
