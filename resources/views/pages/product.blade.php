@@ -58,7 +58,7 @@
                 <x-form method="POST" action="{{ route('cart.add') }}">
                     <input type="hidden" name="product_id" :value="{{ $product->id }}">
                     <input type="hidden" name="quantity"    :value="qty">
-                    <button type="submit" class="btn-primary">Add to Cart</button>
+                    <button type="submit" class="btn-primary bg-aqua">Add to Cart</button>
                 </x-form>
             </div>
         </div>
