@@ -63,8 +63,14 @@
     }
     .filter-controls > .btn-primary {
         @apply h-12 rounded-lg;
+        background-color: var(--color-aqua);
     }
 
+    .filter-controls > .btn-primary:hover {
+        @apply bg-opacity-90;
+        background-color: var(--color-aqua);
+    }
+    
     /* ── PRODUCT CARD ── */
     .product-card {
         @apply card flex flex-col transition-shadow hover:shadow-lg;
@@ -89,9 +95,11 @@
         rounded-lg h-10 w-full
         flex items-center justify-center
         transition-colors duration-200;
+        background-color: var(--color-aqua);
     }
 
     .product-card__atc-form a.grab-btn:hover {
-        @apply bg-accent bg-opacity-90;
+        @apply bg-opacity-90;
+        background-color: var(--color-aqua);
     }
 }

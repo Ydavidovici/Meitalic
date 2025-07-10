@@ -230,11 +230,13 @@
 
 /* —— Call-to-action buttons —— */
 .site-nav__cta {
-    @apply inline-block bg-gray-800 text-white font-semibold
+    @apply inline-block text-white font-semibold
     px-6 py-2 rounded-md transition;
+    background-color: var(--color-aqua) !important;
 }
 .site-nav__cta:hover {
-    @apply bg-gray-800;
+    background-color: var(--color-aqua) !important;
+    opacity: 0.9;
 }
 
 /* —— Mobile toggle button —— */
@@ -279,11 +281,13 @@
 
 /* 4. CTA buttons (Login/Register/Logout) */
 .mobile-nav__list .site-nav__cta {
-    @apply mt-4 inline-block bg-accent text-white font-semibold
+    @apply mt-4 inline-block text-white font-semibold
     px-8 py-3 rounded-md transition;
+    background-color: var(--color-aqua) !important;
 }
 .mobile-nav__list .site-nav__cta:hover {
-    @apply bg-pink-400;
+    background-color: var(--color-aqua) !important;
+    opacity: 0.9;
 }
 
     /* —— Auth & CTA buttons —— */
