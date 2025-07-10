@@ -107,7 +107,7 @@
                             />
                         </div>
                         <div class="px-4 py-3">
-                            <h3 class="product-card__title group-hover:text-accent">
+                            <h3 class="product-card__title group-hover:text-[var(--color-aqua)]">
                                 {{ $product->name }}
                             </h3>
                             <p class="product-card__price">
