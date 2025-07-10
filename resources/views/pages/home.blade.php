@@ -481,7 +481,7 @@
                     <a href="{{ route('products.index', ['search' => 'Dr Pimple Serum']) }}" class="w-full">
                         <img
                             src="{{ asset('images/dr-pimple.jpeg') }}"
-                            alt="Dr Pimple Serum"
+                            alt="Dr. Pimple"
                             class="w-full h-full rounded-lg shadow-md object-cover"
                         />
                     </a>
@@ -489,7 +489,7 @@
 
                 <!-- TEXT -->
                 <div class="w-full md:w-1/2 flex flex-col justify-center space-y-6">
-                    <h3 class="text-3xl font-semibold">Dr Pimple Serum</h3>
+                    <h3 class="text-3xl font-semibold">Dr. Pimple</h3>
                     <h4 class="text-2xl text-gray-600">Gentle Clarifying &amp; Soothing Treatment</h4>
                     <p class="text-xl leading-relaxed">
                         This ultra-light serum blends calming calamine clay with pore-refining salicylic acid
