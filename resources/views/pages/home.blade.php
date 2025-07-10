@@ -654,13 +654,11 @@
                 href="https://www.instagram.com/Meitaliccosmeceuticalsnewyork"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="inline-flex items-center space-x-2 justify-center
-             text-black      <!-- both icon & text are black -->
-             hover:underline mt-2"
+                class="inline-flex items-baseline space-x-2 justify-center text-black hover:underline mt-2"
             >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    class="w-8 h-8 text-black"   <!-- force icon black -->
+                    class="w-8 h-8 text-black"
                 fill="currentColor"
                 viewBox="0 0 24 24"
                 >
