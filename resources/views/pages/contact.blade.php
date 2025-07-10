@@ -71,7 +71,7 @@
                 <x-input-error :messages="$errors->get('message')" class="mt-1" />
             </div>
 
-            <button type="submit" class="btn-primary">
+            <button type="submit" class="btn-primary bg-aqua">
                 Send Message
             </button>
         </x-form>

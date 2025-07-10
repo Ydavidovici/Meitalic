@@ -67,7 +67,6 @@
         </div>
 
         <div class="hero__inner">
-            {{-- …your title, subtitle, CTA, etc. here… --}}
         </div>
     </section>
 
@@ -97,7 +96,7 @@
                         />
                     </svg>
                     <p class="font-semibold text-gray-800">
-                        Satisfaction Guarantee
+                        Satisfaction Guaranteed
                     </p>
                 </div>
 
@@ -806,7 +805,7 @@
                                 required
                                 class="w-full px-6 py-3 border rounded focus:outline-none focus:ring-2 focus:ring-accent"
                             />
-                            <button type="submit" class="btn-primary w-full">Subscribe</button>
+                            <button type="submit" class="btn-primary w-full btn-aqua">Subscribe</button>
                         </x-form>
                     @endunless
 
