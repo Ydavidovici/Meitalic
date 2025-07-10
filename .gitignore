@@ -25,5 +25,3 @@ yarn-error.log
 /.zed
 /node_modules
 .DS_Store
-public/index.php
-public/.htaccess
