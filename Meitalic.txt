@@ -32,5 +32,3 @@ Renew
     - Make shopping cart svg white
     - Integrate ShipStation (platform)
     - Switch Meitalic logo in shop by brand to black logo
-
-
