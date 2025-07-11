@@ -1,0 +1,42 @@
+Meitalic
+
+Admin → admin@meitalic.test / AdminPass123
+
+Regular → user@meitalic.test / UserPass123
+
+Meitalic
+Brightening line
+Acne line
+Make up line 
+Rosacea line
+
+Those are our 4 lines. Now we also carry starter kits and a full line of makeup.
+
+
+Repechage
+Hydra medic
+Biolight 
+vita cura 
+Hydra 4
+
+Melaleuca
+Renew
+
+# TODO
+	- Make error pages and set up error handling
+	- show less products (maybe 4?) on userdash@youmightlike?
+	- add animations
+	- no quantity on products page, only in cart
+	- Put 'shop' before bestsellers, brand, and category
+
+
+- General QA & Accessibility
+    - Test keyboard navigation on forms & modals
+    - Ensure all images have meaningful alt text
+    - Validate color contrast meets WCAG standards
+
+
+
+maybe
+
+
