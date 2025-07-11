@@ -29,6 +29,6 @@ Renew
 	- Instagram no @
 	- MEITALIC next to Repechage match the size and black
 	- Find more professional instagram svg
-    - Make shopping cart svg white
-    - Integrate ShipStation (platform)
-    - Switch Meitalic logo in shop by brand to black logo
+    	- Make shopping cart svg white
+    	- Integrate ShipStation (platform)
+    	- Switch Meitalic logo in shop by brand to black logo
