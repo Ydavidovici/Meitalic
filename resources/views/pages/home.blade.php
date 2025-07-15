@@ -665,7 +665,7 @@
                 </svg>
 
                 <span class="text-xl leading-8 break-all text-black">
-        @Meitaliccosmeceuticalsnewyork
+        Meitaliccosmeceuticalsnewyork
                 </span>
             </a>
         </div>

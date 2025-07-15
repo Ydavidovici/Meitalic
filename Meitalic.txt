@@ -24,11 +24,9 @@ Renew
 
 # TODO
  - restyle products page
- - Change dr pimple serum to treatment
  - Crop dr pimple
- - Instagram no @
  - MEITALIC next to Repechage match the size and black
+ - Switch Meitalic logo in shop by brand to black logo
  - Find more professional instagram svg
  - Make shopping cart svg white
  - Integrate ShipStation (platform)
- - Switch Meitalic logo in shop by brand to black logo
