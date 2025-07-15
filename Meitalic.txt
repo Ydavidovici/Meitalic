@@ -23,10 +23,10 @@ Melaleuca
 Renew
 
 # TODO
+ - Integrate ShipStation instead of UPS, use for rate shopping, label printing
  - restyle products page
  - Crop dr pimple
  - MEITALIC next to Repechage match the size and black
  - Switch Meitalic logo in shop by brand to black logo
  - Find more professional instagram svg
  - Make shopping cart svg white
- - Integrate ShipStation (platform)
