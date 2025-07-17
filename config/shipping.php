@@ -7,7 +7,13 @@ return [
     | Free‑Shipping Threshold
     |--------------------------------------------------------------------------
     */
-    'free_threshold' => env('FREE_SHIPPING_THRESHOLD', 50),
+    'free_threshold' => env('FREE_SHIPPING_THRESHOLD', 55),
+
+    'shipstation' => [
+        'key'    => env('SHIPPING_SHIPSTATION_KEY'),
+        'secret' => env('SHIPPING_SHIPSTATION_SECRET'),
+        'base'   => env('SHIPPING_SHIPSTATION_BASE'),
+    ],
 
     /*
     |--------------------------------------------------------------------------

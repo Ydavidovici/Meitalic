@@ -15,7 +15,7 @@ use App\Models\PromoCode;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Http\Controllers\PaymentController;
-use App\Services\UPSService;
+use App\Services\ShipStationService;
 use App\Services\PackagingService;
 use App\Mail\ReviewRequestMailable;
 use App\Mail\OrderConfirmationMailable;
@@ -23,11 +23,11 @@ use App\Mail\AdminOrderNotificationMail;
 
 class CheckoutController extends Controller
 {
-    protected UPSService $ups;
+    protected ShipStationService $shipStationService;
 
-    public function __construct(UPSService $ups)
+    public function __construct(ShipStationService $shipStationService)
     {
-        $this->ups = $ups;
+        $this->shipStationService = $shipStationService;
     }
 
     /**
@@ -50,14 +50,15 @@ class CheckoutController extends Controller
         }
 
         return view('pages.checkout.index', compact(
-            'items','subtotal','discount','tax','shipping','total'
+            'items', 'subtotal', 'discount', 'tax', 'shipping', 'total'
         ));
     }
 
-
+    /**
+     * Calculate shipping cost via ShipStation and cache in session.
+     */
     public function calculateShipping(Request $request)
     {
-
         $data = $request->validate([
             'shipping_address' => 'required|string',
             'city'             => 'nullable|string',
@@ -66,41 +67,52 @@ class CheckoutController extends Controller
             'country'          => 'nullable|string',
         ]);
 
-
         $cart     = $this->getCart($request);
         $items    = $cart->cartItems()->with('product')->get();
         $subtotal = $items->sum(fn($i) => $i->price * $i->quantity);
 
-
-        // pull in whatever the test (or your config) has set
+        // free shipping threshold
         $threshold = config('shipping.free_threshold', 0);
 
-
         if ($subtotal >= $threshold) {
-            // free shipping at or above the threshold
             $fee = 0;
         } else {
-            // below the threshold → go to UPS
             $weight  = $items->sum(fn($i) => $i->product->weight * $i->quantity);
             $package = PackagingService::selectPackage($items);
             $dims    = $package['dims'];
 
-            $shipTo   = ['AddressLine' => $data['shipping_address']];
-            $rateDims = [
+            $from = [
+                'postalCode' => config('shipping.shipper_address.postalCode'),
+                'country'    => config('shipping.shipper_address.countryCode'),
+                'state'      => config('shipping.shipper_address.stateProvinceCode') ?? null,
+                'city'       => config('shipping.shipper_address.city') ?? null,
+            ];
+
+            $to = [
+                'postalCode' => $data['postal_code'],
+                'country'    => $data['country'],
+                'state'      => $data['state'] ?? null,
+                'city'       => $data['city'] ?? null,
+            ];
+
+            $parcel = [
                 'length' => $dims['length'],
                 'width'  => $dims['width'],
                 'height' => $dims['height'],
+                'weight' => $weight,
             ];
 
-            $fee = $this->ups->getRate($shipTo, $weight, $rateDims);
-        }
+            $rates = $this->shipStationService->getRates($from, $to, $parcel);
 
+            // pick the cheapest rate
+            $fee = collect($rates)
+                ->min(fn($r) => $r['shipRate'] ?? PHP_INT_MAX)['shipRate'] ?? 0;
+        }
 
         session(['shipping_fee' => $fee]);
 
         return response()->json(['shipping' => $fee]);
     }
-
 
     /**
      * AJAX: create a Stripe PaymentIntent including shipping.
@@ -119,14 +131,13 @@ class CheckoutController extends Controller
         $tax         = round(($subtotal - $discount) * config('cart.tax_rate', 0), 2);
         $shippingFee = session('shipping_fee', 0);
 
-        // 1) Calculate the integer cents for Stripe
+        // amount in cents
         $amountCents = (int) round(
             ($subtotal - $discount + $tax + $shippingFee) * 100
         );
 
         Stripe::setApiKey(config('services.stripe.secret'));
 
-        // 1) Log the outgoing Stripe create call
         Log::channel('api')->info('Stripe ▶️ PaymentIntent.create', [
             'amount_cents' => $amountCents,
             'currency'     => 'usd',
@@ -148,13 +159,12 @@ class CheckoutController extends Controller
         ]);
 
         Log::channel('api')->info('Stripe ◀️ PaymentIntent.create', [
-            'id'        => $intent->id,
-            'status'    => $intent->status,
-            'client_secret' => $intent->client_secret,
-            'timestamp' => now()->toIso8601String(),
+            'id'           => $intent->id,
+            'status'       => $intent->status,
+            'client_secret'=> $intent->client_secret,
+            'timestamp'    => now()->toIso8601String(),
         ]);
 
-        // 2) Return clientSecret + amount *per the test’s expectation*
         $displayAmount = ($subtotal - $discount + $tax + $shippingFee) / 100;
 
         return response()->json([
@@ -163,13 +173,11 @@ class CheckoutController extends Controller
         ]);
     }
 
-
     /**
      * After payment succeeds: record the order (with shipping_fee) + payment.
      */
     public function placeOrder(Request $request)
     {
-
         $data = $request->validate([
             'shipping_address' => 'required|string',
             'email'            => 'required|email',
@@ -186,7 +194,6 @@ class CheckoutController extends Controller
 
         $pi = PaymentIntent::retrieve($data['payment_intent']);
 
-        // 2) Log the Stripe response
         Log::channel('api')->info('Stripe ◀️ PaymentIntent.retrieve', [
             'id'        => $pi->id ?? null,
             'status'    => $pi->status,
@@ -197,7 +204,6 @@ class CheckoutController extends Controller
             return response()->json(['error' => 'Payment not successful'], 422);
         }
 
-        // Under test, the mock only provides ->status, so fall back to the passed‐in ID
         $stripePaymentId = $pi->id ?? $data['payment_intent'];
 
         // re-gather
@@ -226,7 +232,6 @@ class CheckoutController extends Controller
                 'meta'             => json_encode(['payment_intent' => $stripePaymentId]),
             ]);
 
-            // cents!
             app(PaymentController::class)->recordPayment(
                 $order,
                 $stripePaymentId,
@@ -262,67 +267,8 @@ class CheckoutController extends Controller
             : redirect()->route('checkout.success');
     }
 
-
-    public function applyPromo(Request $request)
-    {
-        $data = $request->validate([
-            'code' => 'required|string',
-        ]);
-
-        $cart  = $this->getCart($request);
-        $items = $cart->cartItems()->get();
-
-        if ($items->isEmpty()) {
-            return response()->json(['error' => 'Your cart is empty.'], 422);
-        }
-
-        $promo = PromoCode::where('code', $data['code'])
-            ->where('active', true)
-            ->first();
-
-        if (! $promo
-            || ($promo->expires_at && $promo->expires_at->isPast())
-            || ($promo->max_uses && $promo->used_count >= $promo->max_uses)
-        ) {
-            return response()->json(['error' => 'That promo code is invalid.'], 422);
-        }
-
-        $subtotal = $items->sum(fn($i) => $i->price * $i->quantity);
-
-        if ($promo->type === 'fixed') {
-            $discount = min($promo->discount, $subtotal);
-        } else {
-            $discount = round($subtotal * $promo->discount / 100, 2);
-        }
-
-        $cart->update([
-            'promo_code' => $promo->code,
-            'discount'   => $discount,
-        ]);
-
-        // calculate tax & total
-        ['tax' => $tax, 'total' => $total] = $this->calculateTotals($subtotal, $discount);
-
-        return response()->json(compact('subtotal', 'discount', 'tax', 'total'));
-    }
-
     /**
-     * Compute tax and total based on config('cart.tax_rate').
-     *
-     * @param  float|int  $subtotal  amount before discount
-     * @param  float|int  $discount  discount amount
-     * @return array{tax: float, total: float}
-     */
-    private function calculateTotals($subtotal, $discount): array
-    {
-        $tax   = round(($subtotal - $discount) * config('cart.tax_rate', 0), 2);
-        $total = round($subtotal - $discount + $tax, 2);
-
-        return ['tax' => $tax, 'total' => $total];
-    }
-
-    /**
-     * Thank‑you page.
+     * Thank-you page.
      */
     public function success()
     {
