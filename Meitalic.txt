@@ -31,6 +31,9 @@ Hydra 4
  - Switch Meitalic logo in shop by brand to black logo and match repechage logo in size
  - Make shopping cart svg white
  - debug payment page (inputs not accepting input)
+ - remove UPSService references and retest (fix any errors
+ - inspect checkoutcontroller@calculateshipping vs. checkoutcontroller @shippingRates for redundnacy
+ (prefer shippingRates, merge if needed)
  - find out if mr avraham wants dif shipping options
  - Integrate ShipStation pickups (scheduling and rating)
  - adjust shipping calls to client specifications (pickups vs. ups ground, options, sizes)
