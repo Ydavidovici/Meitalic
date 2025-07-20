@@ -1,5 +1,9 @@
 Meitalic
 
+UPS Account #
+0kd305
+
+
 Admin → admin@meitalic.test / AdminPass123
 
 Regular → user@meitalic.test / UserPass123

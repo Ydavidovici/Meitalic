@@ -10,9 +10,9 @@ return [
     'free_threshold' => env('FREE_SHIPPING_THRESHOLD', 55),
 
     'shipstation' => [
-        'key'    => env('SHIPPING_SHIPSTATION_KEY'),
-        'secret' => env('SHIPPING_SHIPSTATION_SECRET'),
-        'base'   => env('SHIPPING_SHIPSTATION_BASE'),
+        'key'    => env('SHIPSTATION_API_KEY'),
+        'secret' => env('SHIPSTATION_API_SECRET'),
+        'base'   => env('SHIPSTATION_API_BASE', 'https://ssapi.shipstation.com'),
     ],
 
     /*

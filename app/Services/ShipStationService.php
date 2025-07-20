@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Http;
 
 class ShipStationService
 {
-    protected $cfg;
+    protected array $cfg;
 
     public function __construct()
     {
@@ -16,25 +16,34 @@ class ShipStationService
     /**
      * Query ShipStation for rate quotes.
      *
-     * @param  array  $from   ['postalCode'=>'10001','country'=>'US','state'=>'NY','city'=>'New York']
-     * @param  array  $to     ['postalCode'=>'90210','country'=>'US','state'=>'CA','city'=>'Beverly Hills']
-     * @param  array  $parcel ['length'=>10,'width'=>5,'height'=>4,'weight'=>2]
-     * @return array          list of rate objects: ['serviceCode', 'carrierCode', 'serviceName', 'shipRate', …]
+     * @param  array   $from      ['postalCode'=>'10901','country'=>'US','state'=>'NY','city'=>'Airmont']
+     * @param  array   $to        ['postalCode'=>'90210','country'=>'US','state'=>'CA','city'=>'Beverly Hills']
+     * @param  array   $parcel    ['length'=>10,'width'=>5,'height'=>4,'weight'=>2]
+     * @param  string  $carrier   e.g. 'ups', 'stamps_com'
+     * @param  string|null $service specific serviceCode (or null for all)
+     * @return array             list of rate objects
      */
-    public function getRates(array $from, array $to, array $parcel): array
-    {
+    public function getRates(
+        array $from,
+        array $to,
+        array $parcel,
+        string $carrier = 'ups',
+        ?string $service  = null
+    ): array {
         $payload = [
-            'carrierCode'    => null,         // null = return all available carriers
-            'serviceCode'    => null,         // null = return all services
+            'carrierCode'    => $carrier,
+            'serviceCode'    => $service,
             'packageCode'    => 'package',
             'fromPostalCode' => $from['postalCode'],
             'fromCountry'    => $from['country'],
-            'fromState'      => $from['state']   ?? null,
-            'fromCity'       => $from['city']    ?? null,
+            'fromState'      => $from['state'] ?? null,
+            'fromCity'       => $from['city']  ?? null,
             'toPostalCode'   => $to['postalCode'],
             'toCountry'      => $to['country'],
-            'toState'        => $to['state']     ?? null,
-            'toCity'         => $to['city']      ?? null,
+            'toState'        => $to['state']   ?? null,
+            'toCity'         => $to['city']    ?? null,
+            'residential'    => true,
+            'confirmation'   => 'none',
             'weight'         => [
                 'value' => $parcel['weight'],
                 'units' => 'pounds',
@@ -53,8 +62,8 @@ class ShipStationService
         )
             ->acceptJson()
             ->post("{$this->cfg['base']}/shipments/getrates", $payload)
-            ->throw();  // let it bubble if something’s wrong
+            ->throw();
 
-        return $response->json('rates', []);
+        return $response->json();
     }
 }
