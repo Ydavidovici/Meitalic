@@ -220,36 +220,41 @@ import '../css/pages/checkout/index.css'
 import '../css/pages/checkout/success.css'
 import { loadStripe } from '@stripe/stripe-js'
 
-Alpine.data('checkoutPage', () => ({
-    stripe:       null,
-    elements:     null,
-    cardNumber:   null,
-    cardExpiry:   null,
-    cardCvc:      null,
+const STRIPE_KEY = import.meta.env.VITE_STRIPE_KEY
 
-    step:            1,
-    items:           [],
-    subtotal:        0,
-    discount:        0,
-    tax:             0,
-    shippingFee:     0,
-    total:           0,
-    promoCode:       '',
-    promoError:      '',
-    orderError:      '',
-    loading:         false,
+Alpine.data('checkoutPage', () => ({
+    stripe: null,
+    elements: null,
+    cardNumber: null,
+    cardExpiry: null,
+    cardCvc: null,
+
+    step: 1,
+    items: [],
+    subtotal: 0,
+    discount: 0,
+    tax: 0,
+    shippingFee: 0,
+    total: 0,
+    promoCode: '',
+    promoError: '',
+    orderError: '',
+    loading: false,
     shippingLoading: false,
-    shippingError:   '',
+    shippingError: '',
+
+    rates: [],
+    selectedRate: null,
 
     form: {
-        name:             '',
-        email:            '',
-        phone:            '',
+        name: '',
+        email: '',
+        phone: '',
         shipping_address: '',
-        city:             '',
-        state:            '',
-        postal_code:      '',
-        country:          ''
+        city: '',
+        state: '',
+        postal_code: '',
+        country: ''
     },
 
     init() {
@@ -262,57 +267,119 @@ Alpine.data('checkoutPage', () => ({
     goToStep(n) {
         if (n === 2) {
             const required = [
-                'name','email','shipping_address','city',
-                'state','postal_code','country'
-            ]
-            if (!ensureFieldsFilled(this.form, required)) return
-            this.calculateShipping()
+                'name', 'email', 'shipping_address', 'city',
+                'state', 'postal_code', 'country'
+            ];
+            if (!ensureFieldsFilled(this.form, required)) return;
+
+            // Uppercase & validate codes
+            this.form.country = this.form.country.trim().toUpperCase();
+            if (!/^[A-Z]{2}$/.test(this.form.country)) {
+                alert('Country must be a 2-letter code, e.g. "US".');
+                return;
+            }
+            this.form.state = this.form.state.trim().toUpperCase();
+            if (!/^[A-Z]{2}$/.test(this.form.state)) {
+                alert('State must be a 2-letter code, e.g. "NY".');
+                return;
+            }
+
+            this.fetchRates();
         } else {
-            this.step = n
+            this.step = n;
         }
     },
 
     async loadCart() {
-        const res = await fetch('/cart', {
-            headers: { Accept: 'application/json' }
-        })
-        if (!res.ok) return
-        const j = await res.json()
-        this.items    = j.items.map(i => ({ ...i, price:+i.price, quantity:+i.quantity }))
-        this.subtotal = this.items.reduce((s,i) => s + i.price*i.quantity, 0)
-        this.discount = +j.discount || 0
-        this.shippingFee = 0
-        this.recalc()
+        this.loading = true
+        try {
+            const res = await fetch('/cart', { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
+            if (!res.ok) throw new Error(res.statusText)
+            const j = await res.json()
+
+            this.items    = j.items.map(i => ({ ...i, price: +i.price, quantity: +i.quantity }))
+            this.subtotal = this.items.reduce((s, i) => s + i.price * i.quantity, 0)
+            this.discount = +j.discount || 0
+            this.tax      = parseFloat(((this.subtotal - this.discount) * window.TAX_RATE).toFixed(2))
+            this.total    = parseFloat((this.subtotal - this.discount + this.tax).toFixed(2))
+
+            console.log('[loadCart] items:', this.items)
+            console.log('[loadCart] subtotal:', this.subtotal)
+            console.log('[loadCart] discount:', this.discount)
+            console.log('[loadCart] tax:', this.tax)
+            console.log('[loadCart] total:', this.total)
+
+        } catch (e) {
+            console.error('Cart load failed:', e)
+        } finally {
+            this.loading = false
+        }
     },
 
     recalc() {
         this.tax   = parseFloat(((this.subtotal - this.discount) * TAX_RATE).toFixed(2))
         this.total = parseFloat((this.subtotal - this.discount + this.tax + this.shippingFee).toFixed(2))
+
+        console.log('[recalc] subtotal, discount, tax, shippingFee, total →',
+            this.subtotal, this.discount, this.tax, this.shippingFee, this.total
+        )
     },
 
-    async calculateShipping() {
+    async fetchRates() {
+        console.log('[fetchRates] cart items before request →', this.items)
+        console.log('[fetchRates] payload(form) →', this.form)
+
         this.shippingError   = ''
         this.shippingLoading = true
+
         try {
-            const res = await fetch('/checkout/shipping-cost', {
-                method: 'POST',
-                headers: {
-                    'Content-Type':'application/json',
-                    'Accept':'application/json',
-                    'X-CSRF-TOKEN': document
-                        .querySelector('meta[name="csrf-token"]')
-                        .content
+            const res = await fetch('/checkout/shipping-rates', {
+                method:      'POST',
+                credentials: 'same-origin',
+                headers:     {
+                    'Content-Type': 'application/json',
+                    'Accept':       'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
-                body: JSON.stringify(this.form)
+                body: JSON.stringify(this.form),
             })
-            const j = await res.json()
-            if (!res.ok) throw new Error(j.error || 'Shipping calculation failed.')
-            this.shippingFee = +j.shipping
+
+            console.log('[fetchRates] HTTP status →', res.status)
+            const raw = await res.text()
+            console.log('[fetchRates] raw response →', raw)
+
+            const j = JSON.parse(raw)
+            if (!res.ok) throw new Error(j.error || 'Failed to fetch shipping options.')
+
+            console.log('[fetchRates] parsed rates array →', j.rates)
+
+            // --- NEW: handle free-shipping (empty array) ---
+            if (!j.rates.length) {
+                this.shippingFee = 0
+                this.recalc()
+                this.step = 2
+                return
+            }
+
+            // existing “pick cheapest” logic
+            const best = j.rates.reduce((cheap, r) => {
+                const cost      = r.shipmentCost + r.otherCost
+                const cheapCost = cheap.shipmentCost + cheap.otherCost
+                return cost < cheapCost ? r : cheap
+            })
+
+            console.log('[fetchRates] best rate →', best)
+            this.shippingFee = best.shipmentCost + best.otherCost
+            console.log('[fetchRates] shippingFee set →', this.shippingFee)
+
             this.recalc()
             this.step = 2
-        } catch(err) {
+
+        } catch (err) {
+            console.error('[fetchRates] caught error →', err)
             this.shippingError = err.message
         } finally {
+            console.log('[fetchRates] done')
             this.shippingLoading = false
         }
     },
@@ -328,9 +395,7 @@ Alpine.data('checkoutPage', () => ({
             headers:{
                 'Content-Type':'application/json',
                 'Accept':'application/json',
-                'X-CSRF-TOKEN': document
-                    .querySelector('meta[name="csrf-token"]')
-                    .content
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
             },
             body: JSON.stringify({ code:this.promoCode })
         })
@@ -346,7 +411,8 @@ Alpine.data('checkoutPage', () => ({
 
     async initStripe() {
         if (this.stripe) return
-        this.stripe   = await loadStripe('pk_test_…')
+        // use the env key instead of hard-coding
+        this.stripe   = await loadStripe(STRIPE_KEY)
         this.elements = this.stripe.elements()
         const style   = { base:{ fontSize:'16px', color:'#333' } }
         this.cardNumber = this.elements.create('cardNumber', { style })
@@ -360,21 +426,21 @@ Alpine.data('checkoutPage', () => ({
     async pay() {
         this.orderError = ''
         this.loading    = true
+
         try {
             const intentRes = await fetch('/checkout/payment-intent', {
                 method:'POST',
                 headers:{
                     'Content-Type':'application/json',
                     'Accept':'application/json',
-                    'X-CSRF-TOKEN': document
-                        .querySelector('meta[name="csrf-token"]')
-                        .content
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
                 body: JSON.stringify({
                     shipping_address: this.form.shipping_address,
                     email:            this.form.email,
                     phone:            this.form.phone,
-                    shipping_fee:     this.shippingFee
+                    shipping_fee:     this.shippingFee,
+                    service_code:     this.selectedRate?.serviceCode
                 })
             })
             const intentJson = await intentRes.json()
@@ -391,13 +457,12 @@ Alpine.data('checkoutPage', () => ({
                 headers:{
                     'Content-Type':'application/json',
                     'Accept':'application/json',
-                    'X-CSRF-TOKEN': document
-                        .querySelector('meta[name="csrf-token"]')
-                        .content
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
                 body: JSON.stringify({
                     ...this.form,
                     shipping_fee:   this.shippingFee,
+                    service_code:   this.selectedRate?.serviceCode,
                     payment_intent: paymentIntent.id
                 })
             })
@@ -411,6 +476,12 @@ Alpine.data('checkoutPage', () => ({
         finally {
             this.loading = false
         }
+    },
+
+    selectRate(rate) {
+        this.selectedRate = rate
+        this.shippingFee  = rate.shipmentCost + rate.otherCost
+        this.recalc()
     }
 }))
 

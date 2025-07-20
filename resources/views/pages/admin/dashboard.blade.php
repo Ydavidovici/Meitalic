@@ -698,6 +698,7 @@
                                     id="height-{{ $prod->id }}"
                                     name="height"
                                     type="number"
+                                    step="0.01"
                                     value="{{ old('height',$prod->height) }}"
                                     required
                                     class="form-input"

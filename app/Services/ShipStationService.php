@@ -24,16 +24,19 @@ class ShipStationService
      * @return array             list of rate objects
      */
     public function getRates(
+
         array $from,
         array $to,
         array $parcel,
         string $carrier = 'ups',
-        ?string $service  = null
+        ?string $service  = null,
+        ?string $packageCode = 'package',
+        ?bool   $residential = false
     ): array {
         $payload = [
             'carrierCode'    => $carrier,
             'serviceCode'    => $service,
-            'packageCode'    => 'package',
+            'packageCode'    => $packageCode ?? null,
             'fromPostalCode' => $from['postalCode'],
             'fromCountry'    => $from['country'],
             'fromState'      => $from['state'] ?? null,
@@ -42,7 +45,7 @@ class ShipStationService
             'toCountry'      => $to['country'],
             'toState'        => $to['state']   ?? null,
             'toCity'         => $to['city']    ?? null,
-            'residential'    => true,
+            'residential'    => $residential ?? false,
             'confirmation'   => 'none',
             'weight'         => [
                 'value' => $parcel['weight'],

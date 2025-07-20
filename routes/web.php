@@ -60,6 +60,9 @@ Route::post('/checkout/payment-intent', [CheckoutController::class,'paymentInten
     ->name('checkout.paymentIntent');
 Route::get('/checkout/success',   [CheckoutController::class,'success'])
     ->name('checkout.success');
+ // Fetch all available shipping rates
+ Route::post('/checkout/shipping-rates', [CheckoutController::class, 'shippingRates'])
+     ->name('checkout.shippingRates');
 
 // ───────────── Cart ────────────────────────
 Route::prefix('cart')->name('cart.')->group(function () {

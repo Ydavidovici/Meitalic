@@ -12,48 +12,43 @@ class ProductFactory extends Factory
 
     public function definition(): array
     {
-        // 1) The only brands we want in production:
-        $brands = [
-            'Meitalic',
-            'Repechage',
-        ];
+        // Pull your box dims straight out of config:
+        $boxes   = config('shipping.boxes');
+        // Find the “biggest” box by volume (or assume the last one):
+        $biggest = collect($boxes)
+            ->sortBy(fn($b) => $b['length'] * $b['width'] * $b['height'])
+            ->last();
 
-        // 2) The exact categories the client uses:
-        $categories = [
-            'Skincare',
-            'Make up',
-            'Starter Kits',
-            'Accessories',
-        ];
+        // Envelope is smaller—ignore, since we want box fits
+        $maxL = $biggest['length'];     // 9.0
+        $maxW = $biggest['width'];      // 6.5
+        $maxH = $biggest['height'];     // 3.5
+        $maxWt = $biggest['max_weight']; // 50
 
-        // 3) Under “Skincare” we have these “lines”:
-        $skincareLines = [
-            'Brightening line',
-            'Acne line',
-            'Rosacea line',
-            'Make up line',
-        ];
+        // 1) Brands and categories as before
+        $brands     = ['Meitalic','Repechage'];
+        $categories = ['Skincare','Make up','Starter Kits','Accessories'];
+        $skincare   = ['Brightening line','Acne line','Rosacea line','Make up line'];
 
-        // pick one of each
         $brand    = $this->faker->randomElement($brands);
         $category = $this->faker->randomElement($categories);
-
-        // only assign a line if the category is Skincare—
-        // otherwise leave it null
-        $line = $category === 'Skincare'
-            ? $this->faker->randomElement($skincareLines)
+        $line     = $category === 'Skincare'
+            ? $this->faker->randomElement($skincare)
             : null;
 
         return [
             'name'         => ucfirst($this->faker->words(3, true)),
             'brand'        => $brand,
             'category'     => $category,
-            'line'         => $line,               // ← our new field
+            'line'         => $line,
             'description'  => $this->faker->sentences(3, true),
-            'weight'       => $this->faker->randomFloat(2, 0.1, 20),
-            'length'       => $this->faker->randomFloat(2, 1, 24),
-            'width'        => $this->faker->randomFloat(2, 1, 24),
-            'height'       => $this->faker->randomFloat(2, 0.1, 24),
+
+            // **Constrain dims & weight to fit in your biggest box:**
+            'length'       => $this->faker->randomFloat(2, 0.1, $maxL),
+            'width'        => $this->faker->randomFloat(2, 0.1, $maxW),
+            'height'       => $this->faker->randomFloat(2, 0.1, $maxH),
+            'weight'       => $this->faker->randomFloat(2, 0.1, $maxWt),
+
             'price'        => $this->faker->randomFloat(2, 10, 150),
             'image'        => 'images/hero-photo.png',
             'sku'          => strtoupper(Str::random(8)),

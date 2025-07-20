@@ -1,6 +1,7 @@
 {{-- resources/views/pages/checkout/index.blade.php --}}
 @extends('layouts.app')
-@section('title','Checkout')
+
+@section('title', 'Checkout')
 
 @section('content')
     <x-form
@@ -64,45 +65,74 @@
                 <!-- City / State / ZIP / Country -->
                 <div class="form-group">
                     <label for="city" class="block font-medium mb-1">City</label>
-                    <input id="city" name="city" x-model="form.city" class="form-input" placeholder="City" required>
+                    <input
+                        id="city" name="city"
+                        x-model="form.city"
+                        class="form-input"
+                        placeholder="City"
+                        required
+                    >
                 </div>
+
                 <div class="form-group">
                     <label for="state" class="block font-medium mb-1">State</label>
-                    <input id="state" name="state" x-model="form.state" class="form-input" placeholder="State" required>
+                    <select
+                        id="state" name="state"
+                        x-model="form.state"
+                        class="form-input"
+                        required
+                    >
+                        <option value="" disabled>Select a state</option>
+                        @foreach(config('shipping.states') as $code => $label)
+                            <option value="{{ $code }}">{{ $label }} ({{ $code }})</option>
+                        @endforeach
+                    </select>
                 </div>
+
                 <div class="form-group">
                     <label for="postal_code" class="block font-medium mb-1">ZIP</label>
-                    <input id="postal_code" name="postal_code" x-model="form.postal_code" class="form-input" placeholder="ZIP" required>
+                    <input
+                        id="postal_code" name="postal_code"
+                        x-model="form.postal_code"
+                        class="form-input"
+                        placeholder="ZIP"
+                        required
+                    >
                 </div>
+
                 <div class="form-group">
                     <label for="country" class="block font-medium mb-1">Country</label>
-                    <input id="country" name="country" x-model="form.country" class="form-input" placeholder="Country" required>
+                    <select
+                        id="country" name="country"
+                        x-model="form.country"
+                        class="form-input"
+                        required
+                    >
+                        <option value="" disabled>Select a country</option>
+                        @foreach(config('shipping.countries') as $code => $name)
+                            <option value="{{ $code }}">{{ $name }} ({{ $code }})</option>
+                        @endforeach
+                    </select>
                 </div>
-            </div>
+            </div> {{-- end checkout-grid --}}
 
             <div class="flex justify-end mt-6">
                 <button
                     type="button"
                     @click="goToStep(2)"
                     class="btn-primary"
-                >Next</button>
+                >
+                    Next
+                </button>
             </div>
-        </div>
+        </div> {{-- end step 1 card --}}
 
+        {{-- STEP 2: Review, Promo & Shipping Options --}}
+        <div x-show="step===2" class="checkout-card space-y-6">
+            <h3 class="section-heading">2. Review Your Order & Shipping</h3>
 
-        {{-- STEP 2: Review & Promo --}}
-        <div x-show="step===2" class="checkout-card">
-            <h3 class="section-heading">2. Review Your Order</h3>
-
-            <div class="space-y-2 mb-4">
-                <div>Subtotal: $<span x-text="subtotal.toFixed(2)"></span></div>
-                <div>Discount: − $<span x-text="discount.toFixed(2)"></span></div>
-                <div>Tax: $<span x-text="tax.toFixed(2)"></span></div>
-                <div>Shipping: $<span x-text="shippingFee.toFixed(2)"></span></div>
-                <div class="text-lg font-semibold">Total: $<span x-text="total.toFixed(2)"></span></div>
-            </div>
-
-            <div class="form-group mb-6">
+            {{-- Promo Code --}}
+            <div class="form-group mb-4">
                 <input
                     type="text"
                     placeholder="Promo code"
@@ -113,24 +143,93 @@
                     type="button"
                     @click="applyPromo()"
                     class="btn-secondary ml-2"
-                >Apply</button>
+                >
+                    Apply
+                </button>
                 <p x-text="promoError" class="text-red-600 mt-1"></p>
             </div>
 
-            <div class="flex justify-between">
+            {{-- Shipping Options --}}
+            <div class="space-y-2">
+                <h4 class="font-medium mb-2">Shipping Options</h4>
+
+                <template x-if="shippingLoading">
+                    <p class="text-sm text-gray-500">Loading shipping options…</p>
+                </template>
+                <template x-if="shippingError">
+                    <p class="text-red-600" x-text="shippingError"></p>
+                </template>
+
+                <template x-if="!shippingLoading && rates.length">
+                    <div class="space-y-2">
+                        <template x-for="r in rates" :key="r.serviceCode">
+                            <label class="flex items-center">
+                                <input
+                                    type="radio"
+                                    name="serviceCode"
+                                    :value="r.serviceCode"
+                                    :checked="selectedRate?.serviceCode === r.serviceCode"
+                                    @change="selectRate(r)"
+                                    class="form-radio mr-2"
+                                >
+                                <span
+                                    x-text="`${r.serviceName} — $${(r.shipmentCost + r.otherCost).toFixed(2)}`"
+                                ></span>
+                            </label>
+                        </template>
+                    </div>
+                </template>
+                <template x-if="!shippingLoading && !rates.length">
+                    <p class="text-sm text-gray-500">No shipping options available.</p>
+                </template>
+            </div>
+
+            {{-- Totals --}}
+            <div class="border-t pt-4 space-y-1">
+                <div class="flex justify-between">
+                    <span>Subtotal</span>
+                    <span>$<span x-text="subtotal.toFixed(2)"></span></span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Discount</span>
+                    <span>− $<span x-text="discount.toFixed(2)"></span></span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Tax</span>
+                    <span>$<span x-text="tax.toFixed(2)"></span></span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Shipping</span>
+                    <span>$<span x-text="shippingFee.toFixed(2)"></span></span>
+                </div>
+                <div class="flex justify-between font-semibold">
+                    <span>Total</span>
+                    <span>$<span x-text="total.toFixed(2)"></span></span>
+                </div>
+            </div>
+
+            {{-- Hidden fields for final submit --}}
+            <input type="hidden" name="serviceCode" :value="selectedRate?.serviceCode">
+            <input type="hidden" name="shipping_fee"  :value="shippingFee">
+
+            {{-- Navigation Buttons --}}
+            <div class="flex justify-between mt-6">
                 <button
                     type="button"
                     @click="goToStep(1)"
                     class="btn-secondary"
-                >Back</button>
+                >
+                    ← Back
+                </button>
                 <button
                     type="button"
                     @click="goToStep(3)"
                     class="btn-primary"
-                >Continue to Payment</button>
+                >
+                    Continue to Payment →
+                </button>
             </div>
-        </div>
-
+        </div> {{-- end step 2 card --}}
 
         {{-- STEP 3: Payment --}}
         <div x-show="step===3" class="checkout-card">
@@ -158,9 +257,10 @@
                     :disabled="loading"
                     class="btn-primary btn-pay w-full"
                 >
-        <span x-text="loading
-          ? 'Processing…'
-          : `Pay $${total.toFixed(2)}`"></span>
+                    <span x-text="loading
+                        ? 'Processing…'
+                        : `Pay $${total.toFixed(2)}`">
+                    </span>
                 </button>
             </div>
 
@@ -169,9 +269,11 @@
                     type="button"
                     @click="goToStep(2)"
                     class="btn-secondary"
-                >Back</button>
+                >
+                    ← Back
+                </button>
             </div>
-        </div>
+        </div> {{-- end step 3 card --}}
     </x-form>
 
     <script src="https://js.stripe.com/v3/"></script>

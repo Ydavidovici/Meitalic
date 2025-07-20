@@ -9,6 +9,95 @@ return [
     */
     'free_threshold' => env('FREE_SHIPPING_THRESHOLD', 55),
 
+    'tax_rate' => env('CART_TAX_RATE', 0.06625),
+
+    'shipper_address' => [
+        'postalCode'           => env('SHIP_FROM_POSTAL_CODE'),
+        'country'              => env('SHIP_FROM_COUNTRY', 'US'),
+        'state'                => env('SHIP_FROM_STATE'),
+        'city'                 => env('SHIP_FROM_CITY'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | US States
+    |--------------------------------------------------------------------------
+    */
+    'states' => [
+        'AL' => 'Alabama',
+        'AK' => 'Alaska',
+        'AZ' => 'Arizona',
+        'AR' => 'Arkansas',
+        'CA' => 'California',
+        'CO' => 'Colorado',
+        'CT' => 'Connecticut',
+        'DE' => 'Delaware',
+        'FL' => 'Florida',
+        'GA' => 'Georgia',
+        'HI' => 'Hawaii',
+        'ID' => 'Idaho',
+        'IL' => 'Illinois',
+        'IN' => 'Indiana',
+        'IA' => 'Iowa',
+        'KS' => 'Kansas',
+        'KY' => 'Kentucky',
+        'LA' => 'Louisiana',
+        'ME' => 'Maine',
+        'MD' => 'Maryland',
+        'MA' => 'Massachusetts',
+        'MI' => 'Michigan',
+        'MN' => 'Minnesota',
+        'MS' => 'Mississippi',
+        'MO' => 'Missouri',
+        'MT' => 'Montana',
+        'NE' => 'Nebraska',
+        'NV' => 'Nevada',
+        'NH' => 'New Hampshire',
+        'NJ' => 'New Jersey',
+        'NM' => 'New Mexico',
+        'NY' => 'New York',
+        'NC' => 'North Carolina',
+        'ND' => 'North Dakota',
+        'OH' => 'Ohio',
+        'OK' => 'Oklahoma',
+        'OR' => 'Oregon',
+        'PA' => 'Pennsylvania',
+        'RI' => 'Rhode Island',
+        'SC' => 'South Carolina',
+        'SD' => 'South Dakota',
+        'TN' => 'Tennessee',
+        'TX' => 'Texas',
+        'UT' => 'Utah',
+        'VT' => 'Vermont',
+        'VA' => 'Virginia',
+        'WA' => 'Washington',
+        'WV' => 'West Virginia',
+        'WI' => 'Wisconsin',
+        'WY' => 'Wyoming',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Countries (ISO 3166-1 alpha-2 codes)
+    |--------------------------------------------------------------------------
+    */
+    'countries' => [
+        'US' => 'United States',
+        'CA' => 'Canada',
+        'MX' => 'Mexico',
+        'GB' => 'United Kingdom',
+        'DE' => 'Germany',
+        'FR' => 'France',
+        'JP' => 'Japan',
+        'CN' => 'China',
+        'IN' => 'India',
+        'AU' => 'Australia',
+        'BR' => 'Brazil',
+        'ZA' => 'South Africa',
+        'NG' => 'Nigeria',
+    ],
+
+
     'shipstation' => [
         'key'    => env('SHIPSTATION_API_KEY'),
         'secret' => env('SHIPSTATION_API_SECRET'),
@@ -32,19 +121,6 @@ return [
         'rate_endpoint'   => env('UPS_RATE_ENDPOINT'),
         // Dimensional weight divisor (imperial): cubic inches ÷ 139 → pounds
         'dim_divisor' => env('UPS_DIM_DIVISOR', 139),
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Shipper / Origin Address
-    |--------------------------------------------------------------------------
-    */
-    'shipper_address' => [
-        'line'    => env('SHIPPING_ORIGIN_LINE',   '131 Spook Rock Rd'),
-        'city'    => env('SHIPPING_ORIGIN_CITY',   'Suffern'),
-        'state'   => env('SHIPPING_ORIGIN_STATE',  'NY'),
-        'postal'  => env('SHIPPING_ORIGIN_POSTAL', '10901'),
-        'country' => env('SHIPPING_ORIGIN_COUNTRY','US'),
     ],
 
     /*

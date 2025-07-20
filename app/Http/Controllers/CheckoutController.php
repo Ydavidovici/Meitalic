@@ -72,7 +72,7 @@ class CheckoutController extends Controller
         $subtotal = $items->sum(fn($i) => $i->price * $i->quantity);
 
         // free shipping threshold
-        $threshold = config('shipping.free_threshold', 0);
+        $threshold = config('shipping.free_threshold', 55);
 
         if ($subtotal >= $threshold) {
             $fee = 0;
@@ -265,6 +265,110 @@ class CheckoutController extends Controller
         return $request->expectsJson()
             ? response()->json(['success' => true, 'order_id' => $order->id])
             : redirect()->route('checkout.success');
+    }
+
+    /**
+     * Return all available shipping rates for the given address + cart.
+     */
+    public function shippingRates(Request $request)
+    {
+        // 1) Validate & normalize input
+        $data = $request->validate([
+            'city'        => ['nullable','string'],
+            'state'       => ['nullable','string','size:2','regex:/^[A-Z]{2}$/'],
+            'postal_code' => ['required','string'],
+            'country'     => ['required','string','size:2','regex:/^[A-Z]{2}$/'],
+        ]);
+        $data['country'] = strtoupper($data['country']);
+        if (isset($data['state'])) {
+            $data['state'] = strtoupper($data['state']);
+        }
+
+        // 2) Ship-from & Ship-to
+        $shipper = config('shipping.shipper_address');
+        $from = [
+            'postalCode' => $shipper['postalCode'],
+            'country'    => $shipper['country'],
+            'state'      => $shipper['state'] ?? null,
+            'city'       => $shipper['city']  ?? null,
+        ];
+        $to = [
+            'postalCode' => $data['postal_code'],
+            'country'    => $data['country'],
+            'state'      => $data['state'] ?? null,
+            'city'       => $data['city']  ?? null,
+        ];
+
+        // 3) Load cart, compute subtotal & weight
+        $cart     = $this->getCart($request);
+        $items    = $cart->cartItems()->with('product')->get();
+        $subtotal = $items->sum(fn($i) => $i->price * $i->quantity);
+        $weight   = $items->sum(fn($i) => $i->product->weight * $i->quantity);
+
+        // 4) Free-shipping check
+        $threshold = config('shipping.free_threshold', 0);
+        \Log::info('shippingRates subtotal vs threshold', compact('subtotal','threshold'));
+        if ($subtotal >= $threshold) {
+            session(['shipping_fee' => 0]);
+            return response()->json(['rates' => []]);
+        }
+
+        // 5) Packaging decision
+        $pack = app(PackagingService::class)->selectPackage($items);
+        \Log::info('shippingRates packaging result', $pack);
+
+        $totalFee = 0;
+        $allRates = [];
+
+        if ($pack['type'] === 'multi') {
+            // split weight across $pack['count'] boxes
+            $remaining = $weight;
+            for ($i = 0; $i < $pack['count']; $i++) {
+                $thisWeight = min($pack['maxWeight'], $remaining);
+                $parcel = [
+                    'length' => $pack['dims']['length'],
+                    'width'  => $pack['dims']['width'],
+                    'height' => $pack['dims']['height'],
+                    'weight' => $thisWeight,
+                ];
+                \Log::info("shippingRates parcel #{$i}", $parcel);
+
+                $rates = $this->shipStationService->getRates($from, $to, $parcel, 'ups');
+                \Log::info("ShipStation rates box #{$i}", ['rates' => $rates]);
+
+                // cheapest cost for this box
+                $best = collect($rates)
+                    ->map(fn($r)=> $r['shipmentCost'] + $r['otherCost'])
+                    ->min();
+                $totalFee += $best;
+                $allRates = array_merge($allRates, $rates);
+
+                $remaining -= $thisWeight;
+            }
+        } else {
+            // single envelope or box
+            $dims   = $pack['dims'];
+            $parcel = [
+                'length' => $dims['length'],
+                'width'  => $dims['width'],
+                'height' => $dims['height'],
+                'weight' => $weight,
+            ];
+            \Log::info('shippingRates parcel dimensions', $parcel);
+
+            $rates = $this->shipStationService->getRates($from, $to, $parcel, 'ups');
+            \Log::info('ShipStation returned rates', ['rates' => $rates]);
+
+            // cheapest cost
+            $totalFee = collect($rates)
+                ->map(fn($r)=> $r['shipmentCost'] + $r['otherCost'])
+                ->min();
+            $allRates = $rates;
+        }
+
+        // 6) Cache & return
+        session(['shipping_fee' => $totalFee]);
+        return response()->json(['rates' => $allRates]);
     }
 
     /**

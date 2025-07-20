@@ -63,9 +63,9 @@
                     <ul class="cart-list">
                         <template x-for="item in items" :key="item.id">
                             <li class="cart-item">
-                                <img :src="item.product.image_url" class="cart-item-img">
+                                <img :src="item.image_url" class="cart-item-img">
                                 <div class="cart-item-info">
-                                    <p class="cart-item-name" x-text="item.product.name"></p>
+                                    <p class="cart-item-name" x-text="item.name"></p>
                                     <p class="cart-item-meta">
                                         $<span x-text="item.price.toFixed(2)"></span>
                                         ×

@@ -25,19 +25,31 @@ class CartController extends Controller
 
     public function index(Request $request)
     {
-        $cart     = $this->getCart($request);
-        $items    = $cart->cartItems()->with('product')->get();
-        $subtotal = $items->sum('total');
-        $discount = $cart->discount ?? 0;
+        $cart  = $this->getCart($request);
+        $items = $cart->cartItems()->with('product')->get();
 
-        // <<— add this
-        $tax   = round( ($subtotal - $discount) * config('cart.tax_rate', 0), 2 );
-        $total = round( $subtotal - $discount + $tax, 2 );
-        // —>>
+        // Build a clean payload for JSON:
+        $payload = $items->map(fn($i) => [
+            'id'         => $i->id,
+            'productId'  => $i->product_id,
+            'name'       => $i->product->name,
+            'price'      => $i->price,
+            'quantity'   => $i->quantity,
+            'total'      => $i->total,
+            'length'     => $i->product->length,
+            'width'      => $i->product->width,
+            'height'     => $i->product->height,
+            'weight'     => $i->product->weight,
+        ])->all();
+
+        $subtotal = array_sum(array_column($payload, 'total'));
+        $discount = $cart->discount ?? 0;
+        $tax      = round(($subtotal - $discount) * config('cart.tax_rate', 0), 2);
+        $total    = round($subtotal - $discount + $tax, 2);
 
         if ($request->wantsJson()) {
             return response()->json([
-                'items'    => $items,
+                'items'    => $payload,
                 'subtotal' => $subtotal,
                 'discount' => $discount,
                 'tax'      => $tax,
@@ -45,7 +57,9 @@ class CartController extends Controller
             ]);
         }
 
-        return view('cart.index', compact('items','subtotal','discount','tax','total'));
+        return view('cart.index', compact(
+            'items','subtotal','discount','tax','total'
+        ));
     }
 
 
