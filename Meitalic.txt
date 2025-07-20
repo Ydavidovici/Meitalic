@@ -23,14 +23,17 @@ Biolight
 vita cura
 Hydra 4
 
-Melaleuca
-Renew
+
+
 
 # TODO
- - Integrate ShipStation instead of UPS, use for rate shopping, label printing
+ - Integrate ShipStation pickups
  - restyle products page
- - Crop dr pimple
+ - Crop dr pimple image
  - MEITALIC next to Repechage match the size and black
  - Switch Meitalic logo in shop by brand to black logo
- - Find more professional instagram svg
  - Make shopping cart svg white
+ - find out if mr avraham wants dif shipping options
+ - adjust shipping calls to client specifications (pickups vs. ups ground, options, sizes)
+ - debug payment page (inputs not accepting input)
+ - do research on pickups and scheduling them and the price dif to ups ground
