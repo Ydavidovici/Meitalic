@@ -37,4 +37,5 @@ other carriers?
  (prefer shippingRates, merge if needed)
  - ensure we offer multiple ups shipping options (whatever ups gives us) and let the customer choose
  - Integrate ShipStation pickups (scheduling and rating)
+ - Explore Shipstation label printing
  - integrate other carriers or don't, based on mr avraham's preference
