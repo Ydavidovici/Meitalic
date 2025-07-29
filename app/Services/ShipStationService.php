@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Client\RequestException;
 
 class ShipStationService
@@ -11,39 +12,32 @@ class ShipStationService
 
     public function __construct()
     {
-        $this->cfg = config('shipping');
+        $this->cfg = config('shipping.shipstation');
     }
 
     /**
-     * Legacy: return *all* rates from ShipStation for one carrier.
+     * Generic legacy call: fetch all raw rates for a given carrier code.
      */
-    public function getRatesLegacy(
-        array  $from,
-        array  $to,
-        array  $parcel,
-        string $carrier,
-        ?string $service     = null,
-        ?string $packageCode = 'package',
-        bool   $residential  = false
+    protected function getRates(
+        array $from,
+        array $to,
+        array $parcel,
+        string $carrierCode
     ): array {
         $payload = [
-            'carrierCode'    => $carrier,
-            'serviceCode'    => $service,
-            'packageCode'    => $packageCode,
+            'carrierCode'    => $carrierCode,
+            'packageCode'    => 'package',
             'fromPostalCode' => $from['postalCode'],
             'fromCountry'    => $from['country'],
-            'fromState'      => $from['state'] ?? null,
-            'fromCity'       => $from['city']  ?? null,
+            'fromState'      => $from['state']   ?? null,
+            'fromCity'       => $from['city']    ?? null,
             'toPostalCode'   => $to['postalCode'],
             'toCountry'      => $to['country'],
-            'toState'        => $to['state']   ?? null,
-            'toCity'         => $to['city']    ?? null,
-            'residential'    => $residential,
-            'confirmation'   => 'none',
-            'weight'         => [
-                'value' => $parcel['weight'],
-                'units' => 'pounds',
-            ],
+            'toState'        => $to['state']     ?? null,
+            'toCity'         => $to['city']      ?? null,
+            'residential'    => true,
+            'confirmation'   => 'delivery',
+            'weight'         => ['value' => $parcel['weight'], 'units' => 'pounds'],
             'dimensions'     => [
                 'units'  => 'inches',
                 'length' => $parcel['length'],
@@ -52,94 +46,147 @@ class ShipStationService
             ],
         ];
 
-        $resp = Http::withBasicAuth(
-            $this->cfg['shipstation']['key'],
-            $this->cfg['shipstation']['secret']
-        )
+        $response = Http::withBasicAuth($this->cfg['key'], $this->cfg['secret'])
             ->acceptJson()
-            ->post("{$this->cfg['shipstation']['base']}/shipments/getrates", $payload)
-            ->throw();
+            ->post("{$this->cfg['base']}/shipments/getrates", $payload);
 
-        return $resp->json();
+        // If ShipStation returns any 4xx/5xx, capture everything and stop.
+            if ($response->failed()) {
+                dd([
+                    'carrier' => $carrierCode,
+                    'status' => $response->status(),
+                    'payload' => $payload,
+                    // ← raw body, not the json() helper
+                    'raw_body' => $response->body(),
+                ]);
+            }
+
+        // Otherwise, throw on any other issues and return the data
+        $response->throw();
+        return $response->json();
     }
 
     /**
-     * New: poll all configured carriers, skip invalid ones,
-     * merge & pick cheapest per delivery-day.
+     * Apply delivery-day estimation and pick cheapest per day.
      */
-    public function getRates(
-        array           $from,
-        array           $to,
-        array           $parcel,
-        string|array    $carrier      = [],
-        ?string         $service      = null,
-        ?string         $packageCode  = 'package',
-        bool            $residential  = false
-    ): array {
-        $carriers = is_array($carrier) && count($carrier)
-            ? $carrier
-            : $this->cfg['shipstation']['carriers'];
-
-        $allRates = [];
-
-        foreach ($carriers as $code) {
-            try {
-                $legs = $this->getRatesLegacy(
-                    $from, $to, $parcel,
-                    $code, $service, $packageCode, $residential
-                );
-                $allRates = array_merge($allRates, $legs);
-
-            } catch (RequestException $e) {
-                $body = $e->response?->json() ?? [];
-
-                // if it's an invalid-carrier error, skip silently
-                if (isset($body['ExceptionMessage'])
-                    && str_contains($body['ExceptionMessage'], 'Invalid carrierCode')
-                ) {
-                    continue;
-                }
-
-                // otherwise rethrow—something else went wrong.
-                throw $e;
-            }
-        }
-
-        return $this->filterCheapestByDay($allRates);
-    }
-
     protected function filterCheapestByDay(array $allRates): array
     {
         $best = [];
-        foreach ($allRates as $r) {
-            $days = $this->parseDeliveryDays($r);
-            if ($days === null) {
-                continue;
-            }
-            $cost = $r['shipmentCost'] + $r['otherCost'];
-            if (!isset($best[$days]) ||
-                $cost < ($best[$days]['shipmentCost'] + $best[$days]['otherCost'])
-            ) {
-                $r['deliveryDays'] = $days;
-                $best[$days] = $r;
+        foreach ($allRates as $rate) {
+            $days = $this->parseDeliveryDays($rate);
+            if ($days === null) continue;
+
+            $cost = $rate['shipmentCost'] + $rate['otherCost'];
+            if (!isset($best[$days]) || $cost < ($best[$days]['shipmentCost'] + $best[$days]['otherCost'])) {
+                $rate['deliveryDays'] = $days;
+                $best[$days] = $rate;
             }
         }
         ksort($best);
         return array_values($best);
     }
 
+    /**
+     * Estimate delivery days from serviceCode or serviceName.
+     */
     protected function parseDeliveryDays(array $rate): ?int
     {
-        if (isset($rate['deliveryDays'])) {
-            return (int)$rate['deliveryDays'];
-        }
-        $code = strtolower($rate['serviceCode'] ?? '');
-        $name = strtolower($rate['serviceName'] ?? '');
+        $code = strtolower($rate['serviceCode']  ?? '');
+        $name = strtolower($rate['serviceName']  ?? '');
+        $map  = [
+            // USPS
+            'priority_mail_express' => 1,
+            'priority_mail'         => 2,
+            'media_mail'            => 5,
+            'parcel_select'         => 3,
+            'ground_advantage'      => 3,
+            // UPS
+            'next_day'              => 1,
+            '2nd_day'               => 2,
+            '3_day'                 => 3,
+            // FedEx
+            'overnight'             => 1,
+            '2day'                  => 2,
+            'express_saver'         => 3,
+            'ground'                => 5,
+            'ground_economy'        => 5,
+        ];
 
-        if (str_contains($code, 'next_day')   || str_contains($name, 'next day'))   return 1;
-        if (str_contains($code, '2nd_day')    || str_contains($name, '2 day'))     return 2;
-        if (str_contains($code, '3_day')      || str_contains($name, '3 day'))     return 3;
-        // …add more as needed
+        foreach ($map as $pattern => $days) {
+            if (str_contains($code, $pattern) || str_contains($name, $pattern)) {
+                return $days;
+            }
+        }
+
         return null;
+    }
+
+    // ——— Carrier‐specific public methods ———
+
+    /**
+     * Get USPS (Stamps.com) rates.
+     */
+    public function getUspsRates(array $from, array $to, array $parcel): array
+    {
+        $raw = $this->getRates($from, $to, $parcel, 'stamps_com');
+        return $this->filterCheapestByDay($raw);
+    }
+
+    /**
+     * Get UPS rates. Not used, returns error.
+     */
+    public function getUpsRates(array $from, array $to, array $parcel): array
+    {
+        $raw = $this->getRates($from, $to, $parcel, 'ups');
+        return $this->filterCheapestByDay($raw);
+    }
+
+    /**
+     * Get DHL Express Worldwide rates. Not used, returns error.
+     */
+    public function getDhlRates(array $from, array $to, array $parcel): array
+    {
+        $raw = $this->getRates($from, $to, $parcel, 'dhl_express_worldwide');
+        return $this->filterCheapestByDay($raw);
+    }
+
+    /**
+     * Get FedEx rates.
+     */
+    public function getFedexRates(array $from, array $to, array $parcel): array
+    {
+        $raw = $this->getRates($from, $to, $parcel, 'fedex_walleted');
+        return $this->filterCheapestByDay($raw);
+    }
+
+    /**
+     * Get SEKO LTL rates. Not used, returns error.
+     */
+    public function getSekoRates(array $from, array $to, array $parcel): array
+    {
+        $raw = $this->getRates($from, $to, $parcel, 'seko_ltl_walleted');
+        return $this->filterCheapestByDay($raw);
+    }
+
+    /**
+     * Get GlobalPost rates. Not used, returns error.
+     */
+    public function getGlobalPostRates(array $from, array $to, array $parcel): array
+    {
+        $raw = $this->getRates($from, $to, $parcel, 'globalpost');
+        return $this->filterCheapestByDay($raw);
+    }
+
+    /**
+     * Aggregate all carrier rates and pick cheapest per day across carriers.
+     */
+    public function getAllRates(array $from, array $to, array $parcel): array
+    {
+        $all = [];
+        $all = array_merge($all, $this->getUspsRates($from, $to, $parcel));
+        $all = array_merge($all, $this->getUpsRates($from, $to, $parcel));
+        $all = array_merge($all, $this->getFedexRates($from, $to, $parcel));
+
+        return $this->filterCheapestByDay($all);
     }
 }

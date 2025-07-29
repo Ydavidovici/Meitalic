@@ -219,15 +219,12 @@ window.validateAndSubmit = async function(formEl) {
 import '../css/pages/checkout/index.css'
 import '../css/pages/checkout/success.css'
 import { loadStripe } from '@stripe/stripe-js'
-
 const STRIPE_KEY = import.meta.env.VITE_STRIPE_KEY
 
 Alpine.data('checkoutPage', () => ({
     stripe: null,
     elements: null,
-    cardNumber: null,
-    cardExpiry: null,
-    cardCvc: null,
+    cardElement: null,
 
     step: 1,
     items: [],
@@ -302,13 +299,6 @@ Alpine.data('checkoutPage', () => ({
             this.discount = +j.discount || 0
             this.tax      = parseFloat(((this.subtotal - this.discount) * window.TAX_RATE).toFixed(2))
             this.total    = parseFloat((this.subtotal - this.discount + this.tax).toFixed(2))
-
-            console.log('[loadCart] items:', this.items)
-            console.log('[loadCart] subtotal:', this.subtotal)
-            console.log('[loadCart] discount:', this.discount)
-            console.log('[loadCart] tax:', this.tax)
-            console.log('[loadCart] total:', this.total)
-
         } catch (e) {
             console.error('Cart load failed:', e)
         } finally {
@@ -319,67 +309,43 @@ Alpine.data('checkoutPage', () => ({
     recalc() {
         this.tax   = parseFloat(((this.subtotal - this.discount) * TAX_RATE).toFixed(2))
         this.total = parseFloat((this.subtotal - this.discount + this.tax + this.shippingFee).toFixed(2))
-
-        console.log('[recalc] subtotal, discount, tax, shippingFee, total →',
-            this.subtotal, this.discount, this.tax, this.shippingFee, this.total
-        )
     },
 
     async fetchRates() {
-        console.log('[fetchRates] cart items before request →', this.items)
-        console.log('[fetchRates] payload(form) →', this.form)
-
-        this.shippingError   = ''
+        this.shippingError = ''
         this.shippingLoading = true
-
         try {
             const res = await fetch('/checkout/shipping-rates', {
-                method:      'POST',
-                credentials: 'same-origin',
-                headers:     {
-                    'Content-Type': 'application/json',
-                    'Accept':       'application/json',
+                method:'POST', credentials:'same-origin',
+                headers:{
+                    'Content-Type':'application/json',
+                    'Accept':'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
-                body: JSON.stringify(this.form),
+                body: JSON.stringify(this.form)
             })
-
-            console.log('[fetchRates] HTTP status →', res.status)
-            const raw = await res.text()
-            console.log('[fetchRates] raw response →', raw)
-
-            const j = JSON.parse(raw)
-            if (!res.ok) throw new Error(j.error || 'Failed to fetch shipping options.')
-
-            console.log('[fetchRates] parsed rates array →', j.rates)
-
-            // --- NEW: handle free-shipping (empty array) ---
-            if (!j.rates.length) {
+            const j = await res.json()
+            if (!res.ok) throw new Error(j.error||'Failed to fetch shipping options.')
+            this.rates = j.rates
+            if (!this.rates.length) {
                 this.shippingFee = 0
                 this.recalc()
                 this.step = 2
                 return
             }
-
-            // existing “pick cheapest” logic
-            const best = j.rates.reduce((cheap, r) => {
-                const cost      = r.shipmentCost + r.otherCost
+            const best = this.rates.reduce((cheap,r) => {
+                const cost = r.shipmentCost + r.otherCost
                 const cheapCost = cheap.shipmentCost + cheap.otherCost
                 return cost < cheapCost ? r : cheap
             })
-
-            console.log('[fetchRates] best rate →', best)
-            this.shippingFee = best.shipmentCost + best.otherCost
-            console.log('[fetchRates] shippingFee set →', this.shippingFee)
-
+            this.selectedRate = best
+            this.shippingFee  = best.shipmentCost + best.otherCost
             this.recalc()
             this.step = 2
-
-        } catch (err) {
-            console.error('[fetchRates] caught error →', err)
+        } catch(err) {
+            console.error('[fetchRates]', err)
             this.shippingError = err.message
         } finally {
-            console.log('[fetchRates] done')
             this.shippingLoading = false
         }
     },
@@ -411,16 +377,13 @@ Alpine.data('checkoutPage', () => ({
 
     async initStripe() {
         if (this.stripe) return
-        // use the env key instead of hard-coding
         this.stripe   = await loadStripe(STRIPE_KEY)
         this.elements = this.stripe.elements()
         const style   = { base:{ fontSize:'16px', color:'#333' } }
-        this.cardNumber = this.elements.create('cardNumber', { style })
-        this.cardExpiry = this.elements.create('cardExpiry', { style })
-        this.cardCvc    = this.elements.create('cardCvc',    { style })
-        this.cardNumber.mount('#card-number')
-        this.cardExpiry.mount('#card-expiry')
-        this.cardCvc.mount('#card-cvc')
+
+        // Unified card element
+        this.cardElement = this.elements.create('card', { style })
+        this.cardElement.mount('#card-element')
     },
 
     async pay() {
@@ -446,9 +409,15 @@ Alpine.data('checkoutPage', () => ({
             const intentJson = await intentRes.json()
             if (!intentRes.ok) throw new Error(intentJson.error || 'Payment init failed.')
 
+            // Confirm payment using unified card element
             const { error, paymentIntent } = await this.stripe.confirmCardPayment(
                 intentJson.clientSecret,
-                { payment_method: { card: this.cardNumber } }
+                {
+                    payment_method: {
+                        card: this.cardElement,
+                        billing_details: { name: this.form.name }
+                    }
+                }
             )
             if (error) throw error
 

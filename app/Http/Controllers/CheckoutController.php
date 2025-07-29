@@ -102,7 +102,7 @@ class CheckoutController extends Controller
                 'weight' => $weight,
             ];
 
-            $rates = $this->shipStationService->getRates($from, $to, $parcel);
+            $rates = $this->shipStationService->getAllRates($from, $to, $parcel);
 
             // pick the cheapest rate
             $fee = collect($rates)
@@ -272,6 +272,7 @@ class CheckoutController extends Controller
      */
     public function shippingRates(Request $request)
     {
+
         // 1) Validate & normalize input
         $data = $request->validate([
             'city'        => ['nullable','string'],
@@ -333,7 +334,7 @@ class CheckoutController extends Controller
                 ];
                 \Log::info("shippingRates parcel #{$i}", $parcel);
 
-                $rates = $this->shipStationService->getRates($from, $to, $parcel, 'ups');
+                $rates = $this->shipStationService->getAllRates($from, $to, $parcel, 'ups');
                 \Log::info("ShipStation rates box #{$i}", ['rates' => $rates]);
 
                 // cheapest cost for this box
@@ -356,7 +357,7 @@ class CheckoutController extends Controller
             ];
             \Log::info('shippingRates parcel dimensions', $parcel);
 
-            $rates = $this->shipStationService->getRates($from, $to, $parcel, 'ups');
+            $rates = $this->shipStationService->getAllRates($from, $to, $parcel, 'ups');
             \Log::info('ShipStation returned rates', ['rates' => $rates]);
 
             // cheapest cost
@@ -368,7 +369,8 @@ class CheckoutController extends Controller
 
         // 6) Cache & return
         session(['shipping_fee' => $totalFee]);
-        return response()->json(['rates' => $allRates]);
+        $currency = $data['country'] === 'IL' ? 'ILS' : 'USD';
+        return response()->json(['rates' => $allRates,    'currency' => $currency,]);
     }
 
     /**

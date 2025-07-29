@@ -74,13 +74,18 @@
                     >
                 </div>
 
-                <div class="form-group">
+                <div
+                    x-show="form.country === 'US'"
+                    class="form-group"
+                    x-cloak
+                >
                     <label for="state" class="block font-medium mb-1">State</label>
                     <select
                         id="state" name="state"
                         x-model="form.state"
                         class="form-input"
-                        required
+                        :required="form.country === 'US'"
+                    >
                     >
                         <option value="" disabled>Select a state</option>
                         @foreach(config('shipping.states') as $code => $label)
@@ -235,20 +240,14 @@
         <div x-show="step===3" class="checkout-card">
             <h3 class="section-heading">3. Payment</h3>
 
+            <!-- Single container for Stripe's Card Element -->
             <div class="form-group">
-                <label class="block font-medium mb-1">Card Number</label>
-                <div id="card-number" class="form-input"></div>
+                <label for="card-element" class="block mb-1">Card Details</label>
+                <div id="card-element" class="form-input"><!-- Stripe injects number/expiry/CVC here --></div>
             </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div class="form-group">
-                    <label class="block font-medium mb-1">Expiry</label>
-                    <div id="card-expiry" class="form-input"></div>
-                </div>
-                <div class="form-group">
-                    <label class="block font-medium mb-1">CVC</label>
-                    <div id="card-cvc" class="form-input"></div>
-                </div>
-            </div>
+
+            <!-- Show any Stripe error -->
+            <p x-text="orderError" class="text-red-600 mt-2"></p>
 
             <div class="mt-6">
                 <button
@@ -257,10 +256,10 @@
                     :disabled="loading"
                     class="btn-primary btn-pay w-full"
                 >
-                    <span x-text="loading
-                        ? 'Processing…'
-                        : `Pay $${total.toFixed(2)}`">
-                    </span>
+      <span x-text="loading
+        ? 'Processing…'
+        : `Pay $${total.toFixed(2)}`">
+      </span>
                 </button>
             </div>
 
@@ -273,7 +272,7 @@
                     ← Back
                 </button>
             </div>
-        </div> {{-- end step 3 card --}}
+        </div>
     </x-form>
 
     <script src="https://js.stripe.com/v3/"></script>
