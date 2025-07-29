@@ -46,22 +46,37 @@ class ShipStationService
             ],
         ];
 
+        // **If it's international, tack on customs & duties info:**
+        if (strtoupper($from['country']) !== strtoupper($to['country'])) {
+            $payload['internationalOptions'] = [
+                'billDutiesTo' => 'sender',      // or 'receiver'
+                //'nonMachinable' => false,     // optional
+            ];
+
+            // You must provide at least one customs item:
+            $payload['customsItems'] = [[
+                'description'       => 'Merchandise',
+                'quantity'          => 1,
+                'value'             => $parcel['value']  ?? 0,
+                'weight'            => ['value' => $parcel['weight'], 'units' => 'pounds'],
+                'countryOfOrigin'   => $from['country'],  // e.g. 'US'
+            ]];
+        }
+
         $response = Http::withBasicAuth($this->cfg['key'], $this->cfg['secret'])
             ->acceptJson()
             ->post("{$this->cfg['base']}/shipments/getrates", $payload);
 
-        // If ShipStation returns any 4xx/5xx, capture everything and stop.
-            if ($response->failed()) {
-                dd([
-                    'carrier' => $carrierCode,
-                    'status' => $response->status(),
-                    'payload' => $payload,
-                    // ← raw body, not the json() helper
-                    'raw_body' => $response->body(),
-                ]);
-            }
+        if ($response->failed()) {
+            Log::error('ShipStation rate error', [
+                'carrier'  => $carrierCode,
+                'status'   => $response->status(),
+                'payload'  => $payload,
+                'raw_body' => $response->body(),
+            ]);
+            return [];
+        }
 
-        // Otherwise, throw on any other issues and return the data
         $response->throw();
         return $response->json();
     }

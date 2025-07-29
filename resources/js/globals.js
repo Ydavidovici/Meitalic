@@ -263,22 +263,41 @@ Alpine.data('checkoutPage', () => ({
 
     goToStep(n) {
         if (n === 2) {
+            // base required fields
             const required = [
-                'name', 'email', 'shipping_address', 'city',
-                'state', 'postal_code', 'country'
+                'name',
+                'email',
+                'shipping_address',
+                'city',
+                'postal_code',
+                'country',
             ];
-            if (!ensureFieldsFilled(this.form, required)) return;
 
-            // Uppercase & validate codes
+            // only require state when shipping within the US
+            if (this.form.country.trim().toUpperCase() === 'US') {
+                required.push('state');
+            } else {
+                // clear any leftover state value for non-US
+                this.form.state = '';
+            }
+
+            if (!ensureFieldsFilled(this.form, required)) {
+                return;
+            }
+
+            // upper‐case & validate codes
             this.form.country = this.form.country.trim().toUpperCase();
             if (!/^[A-Z]{2}$/.test(this.form.country)) {
                 alert('Country must be a 2-letter code, e.g. "US".');
                 return;
             }
-            this.form.state = this.form.state.trim().toUpperCase();
-            if (!/^[A-Z]{2}$/.test(this.form.state)) {
-                alert('State must be a 2-letter code, e.g. "NY".');
-                return;
+
+            if (this.form.country === 'US') {
+                this.form.state = this.form.state.trim().toUpperCase();
+                if (!/^[A-Z]{2}$/.test(this.form.state)) {
+                    alert('State must be a 2-letter code, e.g. "NY".');
+                    return;
+                }
             }
 
             this.fetchRates();
