@@ -143,4 +143,60 @@ class ShipStationServiceTest extends TestCase
             print_r($rates);
         }
     }
+
+    /**
+     * Inspect raw vs. filtered rates for each carrier.
+     */
+    public function testRawAndFilteredRatesPerCarrier()
+    {
+        if (
+            empty(config('shipping.shipstation.base')) ||
+            empty(config('shipping.shipstation.key')) ||
+            empty(config('shipping.shipstation.secret'))
+        ) {
+            $this->markTestSkipped('ShipStation API credentials not configured.');
+        }
+
+        $from = [
+            'postalCode' => '10901', 'country' => 'US',
+            'state'      => 'NY',    'city'    => 'Airmont',
+        ];
+        $to = [
+            'postalCode' => '65134', 'country' => 'IL',
+            'state'      => null,    'city'    => 'Tel Aviv-Yafo',
+        ];
+        $parcel = [
+            'weight' => 5.00,
+            'length' => 8.5,
+            'width'  => 3.5,
+            'height' => 3.5,
+            'value'  => 100,  // customs
+        ];
+
+        $carriers = [
+            'stamps_com'      => 'getUspsRates',
+            'ups'             => 'getUpsRates',
+            'fedex_walleted'  => 'getFedexRates',
+        ];
+
+        foreach ($carriers as $code => $method) {
+            // 1) Grab the raw rates array via the protected getRates()
+            $raw = $this->invokeMethod('getRates', [
+                $from, $to, $parcel, $code
+            ]);
+
+            // 2) Run them through filterCheapestByDay()
+            $filtered = $this->invokeMethod('filterCheapestByDay', [$raw]);
+
+            // Dump to console so you can inspect
+            fwrite(STDOUT, PHP_EOL . "=== RAW rates for {$code} ===\n");
+            print_r($raw);
+            fwrite(STDOUT, PHP_EOL . "=== FILTERED (cheapest/day) for {$code} ===\n");
+            print_r($filtered);
+
+            // Basic assertions so the test actually passes/fails
+            $this->assertIsArray($raw,  "Expected raw rates array for {$code}");
+            $this->assertIsArray($filtered, "Expected filtered rates array for {$code}");
+        }
+    }
 }

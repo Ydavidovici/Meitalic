@@ -81,15 +81,19 @@ class ShipStationService
         return $response->json();
     }
 
+
     /**
-     * Apply delivery-day estimation and pick cheapest per day.
+     * Pick exactly one (cheapest) rate per delivery-day.
      */
     protected function filterCheapestByDay(array $allRates): array
     {
         $best = [];
+
         foreach ($allRates as $rate) {
             $days = $this->parseDeliveryDays($rate);
-            if ($days === null) continue;
+            if ($days === null) {
+                continue;  // drop everything we can’t map to a day
+            }
 
             $cost = $rate['shipmentCost'] + $rate['otherCost'];
             if (!isset($best[$days]) || $cost < ($best[$days]['shipmentCost'] + $best[$days]['otherCost'])) {
@@ -97,34 +101,61 @@ class ShipStationService
                 $best[$days] = $rate;
             }
         }
+
         ksort($best);
         return array_values($best);
     }
 
     /**
-     * Estimate delivery days from serviceCode or serviceName.
+     * Keep cheapest-per-day AND also show anything we couldn’t parse.
      */
+    protected function filterAndIncludeUnknown(array $allRates): array
+    {
+        // 1) get your day-based rates
+        $filtered = $this->filterCheapestByDay($allRates);
+
+        // 2) grab the ones you dropped
+        $unknown = array_filter($allRates, function($rate) {
+            return $this->parseDeliveryDays($rate) === null;
+        });
+
+        // 3) merge them on the end
+        return array_merge($filtered, array_values($unknown));
+    }
+
     protected function parseDeliveryDays(array $rate): ?int
     {
         $code = strtolower($rate['serviceCode']  ?? '');
         $name = strtolower($rate['serviceName']  ?? '');
         $map  = [
-            // USPS
-            'priority_mail_express' => 1,
-            'priority_mail'         => 2,
-            'media_mail'            => 5,
-            'parcel_select'         => 3,
-            'ground_advantage'      => 3,
-            // UPS
-            'next_day'              => 1,
-            '2nd_day'               => 2,
-            '3_day'                 => 3,
-            // FedEx
-            'overnight'             => 1,
-            '2day'                  => 2,
-            'express_saver'         => 3,
-            'ground'                => 5,
-            'ground_economy'        => 5,
+            // ——— USPS ———
+            'priority_mail_express'               => 1,
+            'priority_mail'                       => 2,
+            'media_mail'                          => 5,
+            'parcel_select'                       => 3,
+            'ground_advantage'                    => 3,
+
+            // ——— UPS Domestic ———
+            'next_day'                            => 1,
+            '2nd_day'                             => 2,
+            '3_day'                               => 3,
+
+            // ——— UPS International ———
+            'ups_worldwide_express_plus'          => 1,
+            'ups_worldwide_express'               => 1,
+            'ups_worldwide_expedited'             => 3,
+            'ups_worldwide_saver'                 => 3,
+
+            // ——— FedEx International ———
+            'fedex_international_priority'        => 2,
+            'fedex_international_economy'         => 5,
+
+            // ——— FedEx Domestic ———
+            'overnight'                           => 1,
+            '2day'                                => 2,
+            'express_saver'                       => 3,
+            'ground'                              => 5,
+            'ground_economy'                      => 5,
         ];
 
         foreach ($map as $pattern => $days) {
@@ -202,6 +233,7 @@ class ShipStationService
         $all = array_merge($all, $this->getUpsRates($from, $to, $parcel));
         $all = array_merge($all, $this->getFedexRates($from, $to, $parcel));
 
-        return $this->filterCheapestByDay($all);
+        return $this->filterAndIncludeUnknown($all);
+
     }
 }

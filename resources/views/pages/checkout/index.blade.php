@@ -158,34 +158,41 @@
             <div class="space-y-2">
                 <h4 class="font-medium mb-2">Shipping Options</h4>
 
-                <template x-if="shippingLoading">
-                    <p class="text-sm text-gray-500">Loading shipping options…</p>
-                </template>
-                <template x-if="shippingError">
-                    <p class="text-red-600" x-text="shippingError"></p>
-                </template>
-
                 <template x-if="!shippingLoading && rates.length">
                     <div class="space-y-2">
                         <template x-for="r in rates" :key="r.serviceCode">
-                            <label class="flex items-center">
-                                <input
-                                    type="radio"
-                                    name="serviceCode"
-                                    :value="r.serviceCode"
-                                    :checked="selectedRate?.serviceCode === r.serviceCode"
-                                    @change="selectRate(r)"
-                                    class="form-radio mr-2"
-                                >
-                                <span
-                                    x-text="`${r.serviceName} — $${(r.shipmentCost + r.otherCost).toFixed(2)}`"
-                                ></span>
+                            <label class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <input
+                                        type="radio"
+                                        name="serviceCode"
+                                        :value="r.serviceCode"
+                                        :checked="selectedRate?.serviceCode === r.serviceCode"
+                                        @change="selectRate(r)"
+                                        class="form-radio mr-2"
+                                    >
+                                    <span x-text="r.serviceName"></span>
+                                </div>
+
+                                <div class="flex items-baseline">
+                                    <!-- price -->
+                                    <span class="font-medium mr-2">
+            $<span x-text="(r.shipmentCost + r.otherCost).toFixed(2)"></span>
+          </span>
+
+                                    <!-- days -->
+                                    <template x-if="r.deliveryDays != null">
+            <span class="text-sm text-gray-500">
+              (<span x-text="formatDays(r)"></span>)
+            </span>
+                                    </template>
+                                    <template x-if="r.deliveryDays == null">
+                                        <span class="text-sm text-gray-500">(est. shipping time varies)</span>
+                                    </template>
+                                </div>
                             </label>
                         </template>
                     </div>
-                </template>
-                <template x-if="!shippingLoading && !rates.length">
-                    <p class="text-sm text-gray-500">No shipping options available.</p>
                 </template>
             </div>
 

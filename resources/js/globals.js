@@ -243,6 +243,16 @@ Alpine.data('checkoutPage', () => ({
     rates: [],
     selectedRate: null,
 
+    /**
+     * Turn 1/2/3 into “1 day”, “2 days”, etc., or fallback text.
+     */
+    formatDays(rate) {
+        if (rate.deliveryDays != null) {
+            return `${rate.deliveryDays} day${rate.deliveryDays > 1 ? 's' : ''}`;
+        }
+        return 'Varies';
+    },
+
     form: {
         name: '',
         email: '',

@@ -31,7 +31,6 @@ Frontend (Important) -
  - ensure cart info is properly displayed in step 2 of checkout flow
 
 Backend (Important) -
- - ensure we can ship to israel properly
  - ensure all carriers are displayed properly with all options for customer displayed
  - Integrate ShipStation pickups (scheduling and rating)
  - Explore Shipstation label printing
