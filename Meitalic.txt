@@ -18,22 +18,31 @@ Biolight
 vita cura
 Hydra 4
 
-
-
-other carriers, as well as shipping options within a carrier (think ground, air, etc) should be provided.
-
 # TODO
+Styling -
  - Crop dr pimple image so you dont see the shelf
  - Switch Meitalic logo in shop by brand to black logo and match repechage logo in size
  - Make shopping cart svg white
- - debug payment page (inputs not accepting input)
- - remove UPSService references and retest (fix any errors)
- - inspect checkoutcontroller@calculateshipping vs. checkoutcontroller @shippingRates for redundnacy
- (prefer shippingRates, merge if needed)
- - Migrate API to V2
+ - redesign checkout flow buttons and style aqua (ensure consistency)
+ - add loading button for info input on checkout flow step 1
 
+Frontend (Important) -
+ - Ensure proper frontend input validation and error handling for checkout flow
+ - ensure cart info is properly displayed in step 2 of checkout flow
 
- - ensure we offer multiple ups shipping options (whatever ups gives us) and let the customer choose
+Backend (Important) -
+ - ensure we can ship to israel properly
+ - ensure all carriers are displayed properly with all options for customer displayed
  - Integrate ShipStation pickups (scheduling and rating)
  - Explore Shipstation label printing
- - integrate other carriers
+ - Rewrite test scripts, and whichever pass ensure that they correctly test the relevant controllers and services.
+
+Backend (Unimportant) -
+ - If no user is found with the credentials provided in the checkout flow, create one to store the info
+ - Migrate Shipstation API to V2
+ - remove UPSService references and retest (fix any errors)
+ - inspect checkoutcontroller@calculateshipping vs. checkoutcontroller @shippingRates for redundnacy -
+   (prefer shippingRates, merge if needed)
+
+
+
