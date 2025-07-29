@@ -3,18 +3,16 @@ Meitalic
 UPS Account #
 0kd305
 
-
 Admin → admin@meitalic.test / AdminPass123
-
 Regular → user@meitalic.test / UserPass123
 
-Meitalic - 
+Meitalic -
 Brightening line
 Acne line
 Make up line
 Rosacea line
 
-Repechage - 
+Repechage -
 Hydra medic
 Biolight
 vita cura
@@ -22,10 +20,7 @@ Hydra 4
 
 
 
-
-client packages orders and prints labels - only ups pickup is needed.
-other carriers?
-
+other carriers, as well as shipping options within a carrier (think ground, air, etc) should be provided.
 
 # TODO
  - Crop dr pimple image so you dont see the shelf
@@ -35,7 +30,10 @@ other carriers?
  - remove UPSService references and retest (fix any errors)
  - inspect checkoutcontroller@calculateshipping vs. checkoutcontroller @shippingRates for redundnacy
  (prefer shippingRates, merge if needed)
+ - Migrate API to V2
+
+
  - ensure we offer multiple ups shipping options (whatever ups gives us) and let the customer choose
  - Integrate ShipStation pickups (scheduling and rating)
  - Explore Shipstation label printing
- - integrate other carriers or don't, based on mr avraham's preference
+ - integrate other carriers

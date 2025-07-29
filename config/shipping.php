@@ -95,6 +95,7 @@ return [
         'BR' => 'Brazil',
         'ZA' => 'South Africa',
         'NG' => 'Nigeria',
+        'IS' => 'Israel'
     ],
 
 
@@ -102,6 +103,11 @@ return [
         'key'    => env('SHIPSTATION_API_KEY'),
         'secret' => env('SHIPSTATION_API_SECRET'),
         'base'   => env('SHIPSTATION_API_BASE', 'https://ssapi.shipstation.com'),
+
+        'carriers' => explode(',', env(
+            'SHIPSTATION_CARRIERS',
+            'ups,usps,fedex,dhl_express,globalpost,seko_ltl'
+        )),
     ],
 
     /*
