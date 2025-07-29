@@ -167,13 +167,13 @@ return [
             'length'     => 8.5,
             'width'      => 3.5,
             'height'     => 3.5,
-            'max_weight' => 50,     // e.g. UPS small‑box weight limit
+            'max_weight' => 50,
         ],
         [
             'length'     => 9.0,
             'width'      => 6.5,
             'height'     => 3.5,
-            'max_weight' => 50,     // e.g. UPS large‑box weight limit
+            'max_weight' => 50,
         ],
     ],
 

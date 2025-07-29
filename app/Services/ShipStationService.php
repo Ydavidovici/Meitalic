@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Client\RequestException;
@@ -237,23 +238,31 @@ class ShipStationService
 
     }
 
-
-    public function createLabel(
-        array $from,
-        array $to,
-        array $parcel,
-        string $carrierCode,
-        string $serviceCode
+    public function createShipment(
+         array  $from,
+         array  $to,
+         array  $parcel,
+         string $carrierCode,
+         string $serviceCode,
+         string $orderNumber,
+         array  $orderItems
     ): array {
         $payload = [
-            'carrierCode'    => $carrierCode,
-            'serviceCode'    => $serviceCode,
-            'packageCode'    => 'package',
-            'confirmation'   => 'delivery',
-            'shipFrom'       => $from,
-            'shipTo'         => $to,
-            'weight'         => ['value' => $parcel['weight'], 'units' => 'pounds'],
-            'dimensions'     => [
+            'orderNumber' => $orderNumber,
+            'orderKey'    => Str::uuid(),
+            'orderDate'   => now()->toIso8601String(),
+            'items'       => $orderItems,
+            'shipDate' => now()->toDateString(),
+            'shipFrom'    => $from,
+            'shipTo'      => $to,
+            'carrierCode' => $carrierCode,
+            'orderStatus' => 'awaiting_shipment',
+            'billTo'      => $to,
+            'serviceCode' => $serviceCode,
+            'packageCode' => 'package',
+            'confirmation'=> 'delivery',
+            'weight'      => ['value' => $parcel['weight'], 'units' => 'pounds'],
+            'dimensions'  => [
                 'units'  => 'inches',
                 'length' => $parcel['length'],
                 'width'  => $parcel['width'],
@@ -261,9 +270,74 @@ class ShipStationService
             ],
         ];
 
+        // --- debug dump: what we’re sending
+        fwrite(STDOUT, PHP_EOL . "=== createLabel payload ===" . PHP_EOL);
+        fwrite(STDOUT, json_encode($payload, JSON_PRETTY_PRINT) . PHP_EOL);
+
+        $resp = Http::withBasicAuth($this->cfg['key'], $this->cfg['secret'])
+            ->acceptJson()
+            ->post("{$this->cfg['base']}/orders/createorder", $payload);
+        // --- debug dump: raw response body
+        fwrite(STDOUT, PHP_EOL . "=== createLabel response body ===" . PHP_EOL);
+        fwrite(STDOUT, $resp->body() . PHP_EOL);
+
+        if ($resp->failed()) {
+            Log::error('ShipStation createShipment error', [
+                'payload'  => $payload,
+                'response' => $resp->body(),
+            ]);
+            throw new \Exception('Failed to create shipment in ShipStation');
+        }
+
+        return $resp->json(); // returns at least orderId (ShipStation’s internal), etc.
+    }
+
+
+
+    public function createLabel(
+        array  $from,
+        array  $to,
+        array  $parcel,
+        string $carrierCode,
+        string $serviceCode,
+        int    $shipStationOrderId,
+        array  $orderItems
+    ): array {
+        $payload = [
+                        'orderId'      => $shipStationOrderId,
+                        'carrierCode'  => $carrierCode,
+                        'serviceCode'  => $serviceCode,
+                        'packageCode'  => 'package',
+                        'confirmation' => 'delivery',
+                        'shipDate'     => now()->toDateString(),
+
+                        // required address blocks:
+                        'shipFrom'     => $from,
+                        'shipTo'       => $to,
+
+                        // required package details:
+                        'weight'       => [
+                                'value' => $parcel['weight'],
+                                'units' => 'pounds',
+                            ],
+
+                      // dimensions are optional but recommended:
+                        'dimensions'   => [
+                                'units'  => 'inches',
+                                'length' => $parcel['length'],
+                                'width'  => $parcel['width'],
+                                'height' => $parcel['height'],
+                            ],
+                    ];
+
+        // (you can remove these in production, but let’s log them while we debug)
+        fwrite(STDOUT, "=== createLabel payload ===\n" . json_encode($payload, JSON_PRETTY_PRINT) . "\n");
+
         $response = Http::withBasicAuth($this->cfg['key'], $this->cfg['secret'])
             ->acceptJson()
             ->post("{$this->cfg['base']}/shipments/createlabel", $payload);
+
+        fwrite(STDOUT, "=== createLabel response ===\n" . $response->body() . "\n");
 
         if ($response->failed()) {
             Log::error('ShipStation createLabel error', [
@@ -273,6 +347,10 @@ class ShipStationService
             throw new \Exception('Failed to create shipping label.');
         }
 
-        return $response->json();  // contains labelId, labelData, trackingNumber, etc.
-    }
+// ShipStation returns "shipmentId" rather than "labelId" — tests expect labelId
+        $body = $response->json();
+        if (!isset($body['labelId']) && isset($body['shipmentId'])) {
+            $body['labelId'] = $body['shipmentId'];
+        }
+        return $body;    }
 }

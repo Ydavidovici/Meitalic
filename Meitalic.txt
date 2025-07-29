@@ -41,6 +41,7 @@ Backend (Unimportant) -
  - remove UPSService references and retest (fix any errors)
  - inspect checkoutcontroller@calculateshipping vs. checkoutcontroller @shippingRates for redundnacy -
    (prefer shippingRates, merge if needed)
+ - Add shipment management ui
 
 
 

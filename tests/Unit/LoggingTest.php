@@ -60,60 +60,6 @@ class LoggingTest extends TestCase
     }
 
     /** @test */
-    public function ups_service_get_rate_logs_oauth_and_rate_calls()
-    {
-        // 0) Provide dummy config so UPSService has what it needs
-        config([
-            'shipping.ups.client_id'       => 'DUMMY_ID',
-            'shipping.ups.client_secret'   => 'DUMMY_SECRET',
-            'shipping.ups.oauth_token_url' => 'https://oauth.example/token',
-            'shipping.ups.rate_endpoint'   => 'https://rate.example/ship',
-            'shipping.shipper_address'     => [
-                'AddressLine'       => '123 Test St',
-                'City'              => 'Testville',
-                'StateProvinceCode' => 'TS',
-                'PostalCode'        => '12345',
-                'CountryCode'       => 'US',
-            ],
-        ]);
-
-        // 1) Prepare a MockHandler with two sequential responses
-        $mock = new MockHandler([
-            new GuzzleResponse(200, ['Content-Type'=>'application/json'], json_encode(['access_token'=>'TEST_TOKEN'])),
-            new GuzzleResponse(200, ['Content-Type'=>'application/json'], json_encode([
-                'RateResponse' => [
-                    'RatedShipment' => [
-                        ['TotalCharges'=>['MonetaryValue'=>'42.50']]
-                    ]
-                ]
-            ])),
-        ]);
-        $stack = HandlerStack::create($mock);
-        // push your logging middleware onto that same stack
-        $stack->push(new GuzzleLogMiddleware('api'));
-
-        // 2) Override the withLogging() macro to use our mocked stack
-        Http::macro('withLogging', function () use ($stack) {
-            return Http::withOptions(['handler' => $stack]);
-        });
-
-        // 3) Invoke the service
-        $svc  = new UPSService();
-        $rate = $svc->getRate(
-            ['AddressLine' => '123 Test St'],
-            10.5,
-            ['length'=>5,'width'=>4,'height'=>3]
-        );
-
-        $this->assertEquals(42.5, $rate);
-
-        // 4) Ensure two calls were logged: one for OAuth, one for Rate
-        $log = File::get($this->apiLog);
-        $this->assertSame(2, substr_count($log, 'HTTP ▶️ Request'));
-        $this->assertSame(2, substr_count($log, 'HTTP ◀️ Response'));
-    }
-
-    /** @test */
     public function audit_observer_logs_user_model_events()
     {
         $user = \App\Models\User::factory()->create(['email' => 'audit@test']);

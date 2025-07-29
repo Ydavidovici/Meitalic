@@ -298,8 +298,31 @@ class CheckoutController extends Controller
             $carrier = $meta['carrier'];
             $service = $meta['service_code'];
 
-            $labelResp = $this->shipStationService
-                ->createLabel($from, $to, $parcel, $carrier, $service);
+            $orderItems = $order->orderItems->map(fn($i) => [
+                'lineItemKey' => Str::uuid(),
+                'sku'         => $i->product->sku ?? null,
+                'name'        => $i->name,
+                'quantity'    => $i->quantity,
+                'unitPrice'   => $i->price,
+                'weight'      => ['value' => $i->product->weight, 'units' => 'pounds'],
+            ])->all();
+
+            // ⇨ CREATE THE SHIPMENT IN SHIPSTATION:
+            $shipmentResp = $this->shipStationService->createShipment(
+                $from, $to, $parcel,
+                $carrier, $service,
+                (string)$order->id,
+                $orderItems
+            );
+            $shipStationOrderId = $shipmentResp['orderId'];
+
+            $labelResp = $this->shipStationService->createLabel(
+                $from, $to, $parcel,
+                $carrier, $service,
+                (string)$order->id,
+                $orderItems
+            );
+
 
             Shipment::create([
                 'order_id'        => $order->id,

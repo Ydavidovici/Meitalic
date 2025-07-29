@@ -10,7 +10,10 @@ class CreateShipmentsTable extends Migration
     {
         Schema::create('shipments', function (Blueprint $t) {
             $t->id();
-            $t->foreignId('order_id')->constrained()->cascadeOnDelete();
+            $t->foreignId('order_id')
+                ->nullable()
+                ->constrained()
+                ->nullOnDelete();
             $t->string('label_id')->unique();
             $t->string('tracking_number')->nullable();  // if returned
             $t->string('carrier_code');

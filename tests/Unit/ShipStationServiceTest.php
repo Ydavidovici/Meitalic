@@ -5,6 +5,8 @@ namespace Tests\Unit;
 use Tests\TestCase;
 use App\Services\ShipStationService;
 use ReflectionClass;
+use Illuminate\Support\Str;
+
 
 class ShipStationServiceTest extends TestCase
 {
@@ -198,5 +200,96 @@ class ShipStationServiceTest extends TestCase
             $this->assertIsArray($raw,  "Expected raw rates array for {$code}");
             $this->assertIsArray($filtered, "Expected filtered rates array for {$code}");
         }
+    }
+
+
+    public function testCreateShipmentAndLabelIntegration()
+    {
+        // skip if no credentials
+        if (
+            empty(config('shipping.shipstation.base')) ||
+            empty(config('shipping.shipstation.key')) ||
+            empty(config('shipping.shipstation.secret'))
+        ) {
+            $this->markTestSkipped('ShipStation API credentials not configured.');
+        }
+
+        // 1) Build a minimal "from" & "to" address
+        $from = [
+            'name'       => 'Test Sender',
+            'street1'    => '123 Warehouse Way',
+            'city'       => 'Airmont',
+            'state'      => 'NY',
+            'postalCode' => '10901',
+            'country'    => 'US',
+            'phone'      => '973-555-1234',
+            'email'      => 'sender@example.com',
+            'residential'=> false,
+        ];
+
+        $to = [
+            'name'       => 'Test Recipient',
+            'street1'    => '456 Elm St',
+            'city'       => 'Bergenfield',
+            'state'      => 'NJ',
+            'postalCode' => '07621',
+            'country'    => 'US',
+            'phone'      => '973-555-5678',
+            'email'      => 'recipient@example.com',
+            'residential'=> true,
+        ];
+
+        // 2) Parcel dimensions & weight
+        $parcel = [
+            'length' => 5,
+            'width'  => 5,
+            'height' => 5,
+            'weight' => 1.0,
+        ];
+
+        // 3) Fake orderNumber & items
+        $orderNumber = 'TEST-' . now()->timestamp;
+        $orderItems  = [
+            [
+                'name'              => 'Test Widget',
+                'quantity'          => 1,
+                'unitPrice'         => 19.99,
+                'warehouseLocation' => 'A1',
+                'weight'            => ['value' => 1, 'units' => 'pounds'],
+            ],
+        ];
+
+        // 4) Create the shipment in ShipStation
+        $ship = $this->svc->createShipment(
+            $from,
+            $to,
+            $parcel,
+            'ups',         // carrierCode
+            'ups_ground',  // serviceCode
+            $orderNumber,  // your test orderNumber
+            $orderItems    // items
+        );
+
+        $this->assertArrayHasKey('orderId', $ship, 'Expected createShipment to return an orderId');
+        fwrite(STDOUT, PHP_EOL . "=== createShipment response ===" . PHP_EOL);
+        print_r($ship);
+
+        // Capture ShipStation’s internal orderId for the next call
+        $shipStationOrderId = $ship['orderId'];
+
+        // 5) Create the label for that shipment
+        $label = $this->svc->createLabel(
+            $from,
+            $to,
+            $parcel,
+            'ups',                   // carrierCode
+            'ups_ground',            // serviceCode
+            $shipStationOrderId,     // orderNumber (from ShipStation)
+            $orderItems              // items
+        );
+
+        $this->assertArrayHasKey('labelId', $label, 'Expected createLabel to return a labelId');
+        fwrite(STDOUT, PHP_EOL . "=== createLabel response ===" . PHP_EOL);
+        print_r($label);
     }
 }
