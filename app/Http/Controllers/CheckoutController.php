@@ -20,6 +20,8 @@ use App\Services\PackagingService;
 use App\Mail\ReviewRequestMailable;
 use App\Mail\OrderConfirmationMailable;
 use App\Mail\AdminOrderNotificationMail;
+use App\Models\Shipment;
+use App\Jobs\SchedulePickup;
 
 class CheckoutController extends Controller
 {
@@ -183,6 +185,8 @@ class CheckoutController extends Controller
             'email'            => 'required|email',
             'phone'            => 'nullable|string',
             'payment_intent'   => 'required|string',
+            'carrier'          => 'nullable|string',
+            'service_code'     => 'nullable|string',
         ]);
 
         Stripe::setApiKey(config('services.stripe.secret'));
@@ -204,9 +208,9 @@ class CheckoutController extends Controller
             return response()->json(['error' => 'Payment not successful'], 422);
         }
 
-        $stripePaymentId = $pi->id ?? $data['payment_intent'];
+        $stripePaymentId = $pi->id;
 
-        // re-gather
+        // Gather cart & order details
         $cart     = $this->getCart($request);
         $items    = $cart->cartItems()->with('product')->get();
         $subtotal = $items->sum(fn($i) => $i->price * $i->quantity);
@@ -221,6 +225,7 @@ class CheckoutController extends Controller
             $shipping, $total, $stripePaymentId,
             & $order
         ) {
+            // Create order record
             $order = Order::create([
                 'user_id'          => auth()->id(),
                 'shipping_address' => $data['shipping_address'],
@@ -229,15 +234,21 @@ class CheckoutController extends Controller
                 'shipping_fee'     => $shipping,
                 'total'            => $total,
                 'status'           => 'paid',
-                'meta'             => json_encode(['payment_intent' => $stripePaymentId]),
+                'meta'             => json_encode([
+                    'payment_intent' => $stripePaymentId,
+                    'carrier'        => $data['carrier']      ?? 'ups',
+                    'service_code'   => $data['service_code'] ?? 'ups_ground',
+                ]),
             ]);
 
+            // Record payment
             app(PaymentController::class)->recordPayment(
                 $order,
                 $stripePaymentId,
                 (int) round($total * 100)
             );
 
+            // Create order items
             foreach ($items as $i) {
                 $order->orderItems()->create([
                     'product_id' => $i->product_id,
@@ -248,18 +259,62 @@ class CheckoutController extends Controller
                 ]);
             }
 
+            // Handle promo code
             if ($code = $cart->promo_code) {
                 PromoCode::where('code', $code)->increment('used_count');
             }
             CartItem::where('cart_id', $cart->id)->delete();
             $cart->update(['promo_code' => null, 'discount' => 0]);
 
+            // Send emails
             Mail::to($order->email)->queue(new OrderConfirmationMailable($order));
             if ($admin = config('mail.admin_address')) {
                 Mail::to($admin)->queue(new AdminOrderNotificationMail($order));
             }
             Mail::to($order->email)
                 ->later(now()->addDays(7), new ReviewRequestMailable($order));
+
+            // ── Create ShipStation label ──
+            $from = config('shipping.shipper_address');
+            $to   = [
+                'name'        => $order->email,
+                'street1'     => $data['shipping_address'],
+                'city'        => $data['city']    ?? null,
+                'state'       => $data['state']   ?? null,
+                'postalCode'  => $data['postal_code'],
+                'country'     => strtoupper($data['country']),
+                'phone'       => $data['phone']   ?? null,
+                'email'       => $data['email'],
+                'residential' => true,
+            ];
+            $pack   = PackagingService::selectPackage($items);
+            $parcel = [
+                'length' => $pack['dims']['length'],
+                'width'  => $pack['dims']['width'],
+                'height' => $pack['dims']['height'],
+                'weight' => $items->sum(fn($i) => $i->product->weight * $i->quantity),
+            ];
+            $meta    = json_decode($order->meta, true);
+            $carrier = $meta['carrier'];
+            $service = $meta['service_code'];
+
+            $labelResp = $this->shipStationService
+                ->createLabel($from, $to, $parcel, $carrier, $service);
+
+            Shipment::create([
+                'order_id'        => $order->id,
+                'label_id'        => $labelResp['labelId'],
+                'tracking_number' => $labelResp['trackingNumber'] ?? null,
+                'carrier_code'    => $carrier,
+                'service_code'    => $service,
+                'shipment_cost'   => $labelResp['shipmentCost'] ?? 0,
+                'other_cost'      => $labelResp['otherCost']    ?? 0,
+                'label_url'       => $labelResp['labelData']    ?? null,
+            ]);
+
+            // ── Dispatch end-of-day pickup job ──
+            SchedulePickup::dispatch()
+                ->delay(now()->endOfDay()->addSeconds(5));
         });
 
         return $request->expectsJson()
@@ -267,7 +322,7 @@ class CheckoutController extends Controller
             : redirect()->route('checkout.success');
     }
 
-    /**
+/**
      * Return all available shipping rates for the given address + cart.
      */
     public function shippingRates(Request $request)

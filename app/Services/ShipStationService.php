@@ -236,4 +236,43 @@ class ShipStationService
         return $this->filterAndIncludeUnknown($all);
 
     }
+
+
+    public function createLabel(
+        array $from,
+        array $to,
+        array $parcel,
+        string $carrierCode,
+        string $serviceCode
+    ): array {
+        $payload = [
+            'carrierCode'    => $carrierCode,
+            'serviceCode'    => $serviceCode,
+            'packageCode'    => 'package',
+            'confirmation'   => 'delivery',
+            'shipFrom'       => $from,
+            'shipTo'         => $to,
+            'weight'         => ['value' => $parcel['weight'], 'units' => 'pounds'],
+            'dimensions'     => [
+                'units'  => 'inches',
+                'length' => $parcel['length'],
+                'width'  => $parcel['width'],
+                'height' => $parcel['height'],
+            ],
+        ];
+
+        $response = Http::withBasicAuth($this->cfg['key'], $this->cfg['secret'])
+            ->acceptJson()
+            ->post("{$this->cfg['base']}/shipments/createlabel", $payload);
+
+        if ($response->failed()) {
+            Log::error('ShipStation createLabel error', [
+                'payload'  => $payload,
+                'response' => $response->body(),
+            ]);
+            throw new \Exception('Failed to create shipping label.');
+        }
+
+        return $response->json();  // contains labelId, labelData, trackingNumber, etc.
+    }
 }

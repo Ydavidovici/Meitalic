@@ -12,10 +12,15 @@ return [
     'tax_rate' => env('CART_TAX_RATE', 0.06625),
 
     'shipper_address' => [
-        'postalCode'           => env('SHIP_FROM_POSTAL_CODE'),
-        'country'              => env('SHIP_FROM_COUNTRY', 'US'),
-        'state'                => env('SHIP_FROM_STATE'),
-        'city'                 => env('SHIP_FROM_CITY'),
+        'name'        => env('SHIP_ORIGIN_NAME'),
+        'phone'       => env('SHIP_ORIGIN_PHONE'),
+        'email'       => env('SHIP_ORIGIN_EMAIL'),
+        'street1'     => env('SHIP_ORIGIN_STREET1'),
+        'city'        => env('SHIP_ORIGIN_CITY'),
+        'state'       => env('SHIP_ORIGIN_STATE'),
+        'postalCode'  => env('SHIP_ORIGIN_POSTAL_CODE'),
+        'country'     => env('SHIP_ORIGIN_COUNTRY', 'US'),
+        'residential' => false,
     ],
 
     /*
