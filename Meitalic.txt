@@ -31,7 +31,6 @@ Frontend (Important) -
  - ensure cart info is properly displayed in step 2 of checkout flow
 
 Backend (Important) -
- - Rewrite test scripts, and whichever pass ensure that they correctly test the relevant controllers and services.
 
 Backend (Unimportant) -
  - If no user is found with the credentials provided in the checkout flow, create one to store the info
