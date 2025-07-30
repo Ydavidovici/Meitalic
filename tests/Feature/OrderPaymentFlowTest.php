@@ -50,7 +50,7 @@ class OrderPaymentFlowTest extends TestCase
                     'otherCost'      => 0,
                     'labelData'      => 'data',
                 ]);
-        }); 
+        });
 
 
         // 1) Mock Stripe::PaymentIntent::retrieve() to return a succeeded intent
