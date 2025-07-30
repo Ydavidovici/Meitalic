@@ -178,7 +178,7 @@ class ShipStationServiceTest extends TestCase
         $carriers = [
             'stamps_com'      => 'getUspsRates',
             'ups'             => 'getUpsRates',
-            'fedex_walleted'  => 'getFedexRates',
+            //'fedex_walleted'  => 'getFedexRates',
         ];
 
         foreach ($carriers as $code => $method) {

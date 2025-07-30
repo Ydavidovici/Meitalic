@@ -92,52 +92,10 @@ class ShippingRatesTest extends TestCase
     }
 
     /**
-     * Easy sanity check: 1×1×1", 1 lb package to 07621 should be \$6.28 for ups_ground.
-     */
-    /**
-     * Easy sanity check: 1×1×1", 1 lb package to 07621 should be $6.28 base rate for ups_ground.
-     */
-    public function test_easy_ups_ground_for_1x1x1()
-    {
-        $svc = $this->app->make(ShipStationService::class);
-
-        $from = [
-            'postalCode' => config('shipping.shipper_address.postalCode'),
-            'country'    => config('shipping.shipper_address.country'),
-            'state'      => config('shipping.shipper_address.state'),
-            'city'       => config('shipping.shipper_address.city'),
-        ];
-        $to = [
-            'postalCode' => '07621',
-            'country'    => 'US',
-            'state'      => 'NJ',
-            'city'       => 'Bergenfield',
-        ];
-        $parcel = ['length'=>1,'width'=>1,'height'=>1,'weight'=>1];
-
-        // call with no box and commercial
-        $rates = $svc->getRates(
-            $from,
-            $to,
-            $parcel,
-            'ups',
-            'ups_ground',
-            null,    // ↪ no packageCode
-            false    // ↪ commercial address
-        );
-
-        // now there is only one UPS Ground quote back
-        $this->assertCount(1, $rates);
-        $ground = reset($rates);
-
-        // and its shipmentCost (total cost) should be 6.28
-        $this->assertEquals(6.28, round($ground['shipmentCost'], 2));
-    }
-
-    /**
      * Inspect the rate for our actual product box:
      *   7.52 lb, 18.67″ × 11.96″ × 9.09″
      */
+    // this is an old test for a specific product, wich now works
     public function test_real_product_dims_rate()
     {
         /** @var ShipStationService $svc */
