@@ -275,15 +275,15 @@ class ShipStationService
         ];
 
         // --- debug dump: what we’re sending
-        fwrite(STDOUT, PHP_EOL . "=== createLabel payload ===" . PHP_EOL);
-        fwrite(STDOUT, json_encode($payload, JSON_PRETTY_PRINT) . PHP_EOL);
+        //fwrite(STDOUT, PHP_EOL . "=== createLabel payload ===" . PHP_EOL);
+        //fwrite(STDOUT, json_encode($payload, JSON_PRETTY_PRINT) . PHP_EOL);
 
         $resp = Http::withBasicAuth($this->cfg['key'], $this->cfg['secret'])
             ->acceptJson()
             ->post("{$this->cfg['base']}/orders/createorder", $payload);
         // --- debug dump: raw response body
-        fwrite(STDOUT, PHP_EOL . "=== createLabel response body ===" . PHP_EOL);
-        fwrite(STDOUT, $resp->body() . PHP_EOL);
+        //fwrite(STDOUT, PHP_EOL . "=== createLabel response body ===" . PHP_EOL);
+        //fwrite(STDOUT, $resp->body() . PHP_EOL);
 
         if ($resp->failed()) {
             Log::error('ShipStation createShipment error', [
@@ -335,13 +335,13 @@ class ShipStationService
                     ];
 
         // (you can remove these in production, but let’s log them while we debug)
-        fwrite(STDOUT, "=== createLabel payload ===\n" . json_encode($payload, JSON_PRETTY_PRINT) . "\n");
+        //fwrite(STDOUT, "=== createLabel payload ===\n" . json_encode($payload, JSON_PRETTY_PRINT) . "\n");
 
         $response = Http::withBasicAuth($this->cfg['key'], $this->cfg['secret'])
             ->acceptJson()
             ->post("{$this->cfg['base']}/shipments/createlabel", $payload);
 
-        fwrite(STDOUT, "=== createLabel response ===\n" . $response->body() . "\n");
+        //fwrite(STDOUT, "=== createLabel response ===\n" . $response->body() . "\n");
 
         if ($response->failed()) {
             Log::error('ShipStation createLabel error', [
@@ -369,14 +369,14 @@ class ShipStationService
     public function createPickup(array $payload): array
     {
         // (Optional) dump to stdout for debug:
-        fwrite(STDOUT, PHP_EOL . "=== createPickup payload ===\n" . json_encode($payload, JSON_PRETTY_PRINT) . "\n");
+        //fwrite(STDOUT, PHP_EOL . "=== createPickup payload ===\n" . json_encode($payload, JSON_PRETTY_PRINT) . "\n");
 
         $response = Http::withBasicAuth($this->cfg['key'], $this->cfg['secret'])
             ->acceptJson()
             ->post("{$this->cfg['base']}/pickups/createpickup", $payload);
 
         // (Optional) dump raw response
-        fwrite(STDOUT, "=== createPickup response ===\n" . $response->body() . "\n");
+        //fwrite(STDOUT, "=== createPickup response ===\n" . $response->body() . "\n");
 
         if ($response->failed()) {
             Log::error('ShipStation createPickup error', [
