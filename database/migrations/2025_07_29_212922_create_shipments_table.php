@@ -20,7 +20,7 @@ class CreateShipmentsTable extends Migration
             $t->string('service_code');
             $t->decimal('shipment_cost', 8, 2)->nullable();
             $t->decimal('other_cost',    8, 2)->nullable();
-            $t->string('label_url')->nullable();        // URL or Base64
+            $t->text('label_url')->nullable();        // URL or Base64
             $t->timestamps();
         });
     }

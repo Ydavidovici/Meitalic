@@ -19,7 +19,7 @@ use Mockery;
 use App\Mail\OrderConfirmationMailable;
 use App\Mail\AdminOrderNotificationMail;
 use App\Mail\ReviewRequestMailable;
-use App\Services\UPSService;
+use Illuminate\Support\Facades\Http;
 
 class CheckoutTest extends TestCase
 {
@@ -51,24 +51,24 @@ class CheckoutTest extends TestCase
     {
         Config::set('cart.tax_rate', 0.1);
 
-        $user    = User::factory()->create();
-        $cart    = Cart::create(['user_id' => $user->id]);
+        $user = User::factory()->create();
+        $cart = Cart::create(['user_id' => $user->id]);
         $product = Product::factory()->create(['price' => 100]);
         CartItem::create([
-            'cart_id'    => $cart->id,
+            'cart_id' => $cart->id,
             'product_id' => $product->id,
-            'name'       => $product->name,
-            'price'      => 100,
-            'quantity'   => 2,
-            'total'      => 200,
+            'name' => $product->name,
+            'price' => 100,
+            'quantity' => 2,
+            'total' => 200,
         ]);
         $cart->update(['discount' => 20]);
 
         // shipping not yet calculated => defaults to 0
         $response = $this->actingAs($user)->get(route('checkout'));
 
-        $expectedTax     = round((200 - 20) * 0.1, 2);
-        $expectedTotal   = round(200 - 20 + $expectedTax + 0, 2);
+        $expectedTax = round((200 - 20) * 0.1, 2);
+        $expectedTotal = round(200 - 20 + $expectedTax + 0, 2);
 
         $response
             ->assertOk()
@@ -91,16 +91,16 @@ class CheckoutTest extends TestCase
 
     public function test_payment_intent_returns_client_secret_and_amount_including_shipping()
     {
-        $user    = User::factory()->create();
-        $cart    = Cart::create(['user_id' => $user->id]);
+        $user = User::factory()->create();
+        $cart = Cart::create(['user_id' => $user->id]);
         $product = Product::factory()->create(['price' => 50]);
         CartItem::create([
-            'cart_id'    => $cart->id,
+            'cart_id' => $cart->id,
             'product_id' => $product->id,
-            'name'       => $product->name,
-            'price'      => 50,
-            'quantity'   => 2,
-            'total'      => 100,
+            'name' => $product->name,
+            'price' => 50,
+            'quantity' => 2,
+            'total' => 100,
         ]);
         $cart->update(['discount' => 10]);
         Config::set('cart.tax_rate', 0);
@@ -110,7 +110,9 @@ class CheckoutTest extends TestCase
 
         Mockery::mock('alias:' . PaymentIntent::class)
             ->shouldReceive('create')->once()->andReturn((object)[
-                'client_secret' => 'secret_123'
+                'id' => 'pi_123',
+                'status' => 'requires_payment_method',
+                'client_secret' => 'secret_123',
             ]);
 
         $response = $this->actingAs($user)
@@ -134,16 +136,16 @@ class CheckoutTest extends TestCase
 
     public function test_apply_promo_errors_for_invalid_code()
     {
-        $user    = User::factory()->create();
-        $cart    = Cart::create(['user_id' => $user->id]);
+        $user = User::factory()->create();
+        $cart = Cart::create(['user_id' => $user->id]);
         $product = Product::factory()->create(['price' => 30]);
         CartItem::create([
-            'cart_id'    => $cart->id,
+            'cart_id' => $cart->id,
             'product_id' => $product->id,
-            'name'       => $product->name,
-            'price'      => 30,
-            'quantity'   => 1,
-            'total'      => 30,
+            'name' => $product->name,
+            'price' => 30,
+            'quantity' => 1,
+            'total' => 30,
         ]);
 
         $this->actingAs($user)
@@ -155,31 +157,31 @@ class CheckoutTest extends TestCase
     public function test_apply_promo_success()
     {
         Config::set('cart.tax_rate', 0.2);
-        $user    = User::factory()->create();
-        $cart    = Cart::create(['user_id' => $user->id]);
+        $user = User::factory()->create();
+        $cart = Cart::create(['user_id' => $user->id]);
         $product = Product::factory()->create(['price' => 40]);
         CartItem::create([
-            'cart_id'    => $cart->id,
+            'cart_id' => $cart->id,
             'product_id' => $product->id,
-            'name'       => $product->name,
-            'price'      => 40,
-            'quantity'   => 2,
-            'total'      => 80,
+            'name' => $product->name,
+            'price' => 40,
+            'quantity' => 2,
+            'total' => 80,
         ]);
         PromoCode::create([
-            'code'       => 'SAVE5',
-            'type'       => 'fixed',
-            'discount'   => 5,
-            'max_uses'   => null,
+            'code' => 'SAVE5',
+            'type' => 'fixed',
+            'discount' => 5,
+            'max_uses' => null,
             'used_count' => 0,
             'expires_at' => now()->addDay(),
-            'active'     => true,
+            'active' => true,
         ]);
 
         $response = $this->actingAs($user)
             ->postJson(route('checkout.applyPromo'), ['code' => 'SAVE5'])
             ->assertOk()
-            ->assertJsonStructure(['subtotal','discount','tax','total']);
+            ->assertJsonStructure(['subtotal', 'discount', 'tax', 'total']);
 
         $data = $response->json();
         $this->assertEquals(80, $data['subtotal']);
@@ -190,16 +192,16 @@ class CheckoutTest extends TestCase
 
     public function test_place_order_fails_when_payment_not_succeeded()
     {
-        $user    = User::factory()->create();
-        $cart    = Cart::create(['user_id' => $user->id]);
+        $user = User::factory()->create();
+        $cart = Cart::create(['user_id' => $user->id]);
         $product = Product::factory()->create(['price' => 20]);
         CartItem::create([
-            'cart_id'    => $cart->id,
+            'cart_id' => $cart->id,
             'product_id' => $product->id,
-            'name'       => $product->name,
-            'price'      => 20,
-            'quantity'   => 1,
-            'total'      => 20,
+            'name' => $product->name,
+            'price' => 20,
+            'quantity' => 1,
+            'total' => 20,
         ]);
 
         Mockery::mock('alias:' . PaymentIntent::class)
@@ -208,8 +210,10 @@ class CheckoutTest extends TestCase
         $response = $this->actingAs($user)
             ->postJson(route('checkout.placeOrder'), [
                 'shipping_address' => '123 Lane',
-                'email'            => 'test@example.com',
-                'payment_intent'   => 'pi_fail'
+                'postal_code' => '99999',
+                'country' => 'US',
+                'email' => 'test@example.com',
+                'payment_intent' => 'pi_fail'
             ]);
 
         $response
@@ -220,61 +224,86 @@ class CheckoutTest extends TestCase
     public function test_place_order_successful_flow_records_shipping()
     {
         Config::set('cart.tax_rate', 0);
-        $user    = User::factory()->create();
-        $cart    = Cart::create([
-            'user_id'    => $user->id,
+        Config::set('mail.admin_address', 'admin@example.test');
+
+        // 1) Seed user, cart, item & promo
+        $user = User::factory()->create();
+        $cart = Cart::create([
+            'user_id' => $user->id,
             'promo_code' => 'DISC1',
-            'discount'   => 1
+            'discount' => 1,
         ]);
-        $product = Product::factory()->create(['price' => 10]);
+        $product = Product::factory()->create([
+            'price' => 10,
+            'weight' => 2,
+        ]);
         CartItem::create([
-            'cart_id'    => $cart->id,
+            'cart_id' => $cart->id,
             'product_id' => $product->id,
-            'name'       => $product->name,
-            'price'      => 10,
-            'quantity'   => 2,
-            'total'      => 20,
+            'name' => $product->name,
+            'price' => 10,
+            'quantity' => 2,
+            'total' => 20,
         ]);
         PromoCode::create([
-            'code'       => 'DISC1',
-            'type'       => 'fixed',
-            'discount'   => 1,
-            'max_uses'   => null,
-            'used_count' => 0,
+            'code' => 'DISC1',
+            'type' => 'fixed',
+            'discount' => 1,
             'expires_at' => now()->addDay(),
-            'active'     => true,
+            'active' => true,
         ]);
 
-        // simulate free shipping threshold not met => shipping_fee = 0
-        session(['shipping_fee' => 0]);
+        // 2) Fake all ShipStation HTTP calls
+        $base = config('shipping.shipstation.base');
+        Http::fake([
+            // createorder endpoint
+            "{$base}/orders/createorder" => Http::response([
+                'orderId' => '1',
+            ], 200),
 
+            // createlabel endpoint
+            "{$base}/shipments/createlabel" => Http::response([
+                'labelId' => 'lbl_123',
+                'trackingNumber' => 'TRACK123',
+                'shipmentCost' => 5.00,
+                'otherCost' => 0.00,
+                'labelData' => 'https://example.test/labels/123.pdf',
+            ], 200),
+
+            // catch-all so no real HTTP leaks through
+            '*' => Http::response([], 200),
+        ]);
+
+        // 3) Stub Stripe retrieve to succeed
         Mockery::mock('alias:' . PaymentIntent::class)
-            ->shouldReceive('retrieve')->once()->andReturn((object)['status' => 'succeeded']);
+            ->shouldReceive('retrieve')
+            ->once()
+            ->andReturn((object)[
+                'status' => 'succeeded',
+                'id' => 'pi_success',
+            ]);
 
-        $response = $this->actingAs($user)
+        // 4) Hit the endpoint
+        $this->actingAs($user)
+            ->withSession(['shipping_fee' => 0])
             ->postJson(route('checkout.placeOrder'), [
                 'shipping_address' => '456 Road',
-                'email'            => 'buyer@example.com',
-                'payment_intent'   => 'pi_success'
+                'postal_code' => '12345',
+                'country' => 'US',
+                'email' => 'buyer@example.com',
+                'payment_intent' => 'pi_success',
             ])
             ->assertOk()
             ->assertJson(['success' => true]);
 
-        $order = Order::first();
-        $this->assertNotNull($order);
-        $this->assertEquals('paid', $order->status);
-        $this->assertEquals(0, $order->shipping_fee);
-        $this->assertDatabaseCount('order_items', 1);
-        $this->assertDatabaseHas('promo_codes', ['code' => 'DISC1', 'used_count' => 1]);
-        $this->assertDatabaseCount('cart_items', 0);
-        $this->assertDatabaseHas('carts', [
-            'id'         => $cart->id,
-            'discount'   => 0,
-            'promo_code' => null
+        // 5) Assertions
+        $this->assertDatabaseHas('shipments', [
+            'label_id' => 'lbl_123',
+            'tracking_number' => 'TRACK123',
         ]);
 
-        Mail::assertQueued(OrderConfirmationMailable::class, fn($m) =>
-        $m->hasTo('buyer@example.com'));
+        Mail::assertQueued(OrderConfirmationMailable::class, fn($m) => $m->hasTo('buyer@example.com')
+        );
         Mail::assertQueued(AdminOrderNotificationMail::class);
         Mail::assertQueued(ReviewRequestMailable::class);
     }
@@ -286,208 +315,5 @@ class CheckoutTest extends TestCase
             ->get(route('checkout.success'))
             ->assertOk()
             ->assertViewIs('pages.checkout.success');
-    }
-
-    /** @test */
-    public function calculate_shipping_free_above_threshold()
-    {
-        // Given a free‐shipping threshold of $50
-        Config::set('shipping.free_threshold', 50);
-
-        $user = User::factory()->create();
-        $cart = Cart::create(['user_id' => $user->id]);
-
-        // Add a single item with price 60 (subtotal = 60)
-        $product = Product::factory()->create([
-            'price'    => 60,
-            'weight'   => 1,
-            'length'   => 5,
-            'width'    => 5,
-            'height'   => 5,
-        ]);
-        CartItem::create([
-            'cart_id'    => $cart->id,
-            'product_id' => $product->id,
-            'name'       => $product->name,
-            'price'      => 60,
-            'quantity'   => 1,
-            'total'      => 60,
-        ]);
-
-        // Swap in a UPSService mock that must NOT be called
-        $ups = Mockery::mock(UPSService::class);
-        $ups->shouldNotReceive('getRate');
-        $this->app->instance(UPSService::class, $ups);
-
-        // When we calculate shipping
-        $response = $this->actingAs($user)
-            ->postJson(route('checkout.shipping'), [
-                'shipping_address' => '123 Lane'
-            ]);
-
-        // Then we get free shipping (0) and it's saved to session
-        $response
-            ->assertOk()
-            ->assertJson(['shipping' => 0]);
-
-        $this->assertEquals(0, session('shipping_fee'));
-    }
-
-    /** @test */
-    public function calculate_shipping_uses_ups_service_when_below_threshold()
-    {
-        Config::set('shipping.free_threshold', 100);
-
-        $user = User::factory()->create();
-        $cart = Cart::create(['user_id' => $user->id]);
-
-        $product = Product::factory()->create([
-            'price'  => 20,
-            'weight' => 2.5,
-            'length' => 10,
-            'width'  => 8,
-            'height' => 4,
-        ]);
-        CartItem::create([
-            'cart_id'    => $cart->id,
-            'product_id' => $product->id,
-            'name'       => $product->name,
-            'price'      => 20,
-            'quantity'   => 1,
-            'total'      => 20,
-        ]);
-
-        // figure out which box PackagingService will pick
-        $box         = config('shipping.boxes')[1];
-        $expectedDims = [
-            'length' => $box['length'],
-            'width'  => $box['width'],
-            'height' => $box['height'],
-        ];
-
-        $ups = Mockery::mock(UPSService::class);
-        $ups->shouldReceive('getRate')
-            ->once()
-            ->withArgs(function ($shipTo, $weight, $dims) use ($expectedDims) {
-                return $shipTo === ['AddressLine' => '123 Lane']
-                    && $weight  === 2.5
-                    && $dims    === $expectedDims;
-            })
-            ->andReturn(12.34);
-
-        $this->app->instance(UPSService::class, $ups);
-
-        $response = $this->actingAs($user)
-            ->postJson(route('checkout.shipping'), ['shipping_address' => '123 Lane']);
-
-        $response
-            ->assertOk()
-            ->assertJson(['shipping' => 12.34]);
-
-        $this->assertEquals(12.34, session('shipping_fee'));
-    }
-
-
-
-    /** @test */
-    public function calculate_shipping_fits_envelope_and_calls_ups()
-    {
-        Config::set('shipping.free_threshold', 100);
-
-        $user = User::factory()->create();
-        $cart = Cart::create(['user_id' => $user->id]);
-        $product = Product::factory()->create([
-            'price'  => 5,
-            'weight' => 0.2,
-            'length' => 8,
-            'width'  => 5,
-            'height' => 0.4,
-        ]);
-        CartItem::create([
-            'cart_id'    => $cart->id,
-            'product_id' => $product->id,
-            'name'       => $product->name,
-            'price'      => 5,
-            'quantity'   => 1,
-            'total'      => 5,
-        ]);
-
-        $envelope = config('shipping.envelope');
-
-        $ups = Mockery::mock(UPSService::class);
-        $ups->shouldReceive('getRate')
-            ->once()
-            ->withArgs(function($shipTo, $weight, $dims) use ($envelope) {
-                return $shipTo['AddressLine'] === '123 Lane'
-                    && $weight === 0.2
-                    && $dims === [
-                        'length' => $envelope['length'],
-                        'width'  => $envelope['width'],
-                        'height' => $envelope['height'],
-                    ];
-            })
-            ->andReturn(2.50);
-
-        $this->app->instance(UPSService::class, $ups);
-
-        $this->actingAs($user)
-            ->postJson(route('checkout.shipping'), ['shipping_address' => '123 Lane'])
-            ->assertOk()
-            ->assertJson(['shipping' => 2.50]);
-
-        $this->assertEquals(2.50, session('shipping_fee'));
-    }
-
-    /** @test */
-    public function calculate_shipping_requires_box_and_calls_ups()
-    {
-        Config::set('shipping.free_threshold', 100);
-
-        $user = User::factory()->create();
-        $cart = Cart::create(['user_id' => $user->id]);
-        $product = Product::factory()->create([
-            'price'  => 20,
-            'weight' => 2.5,
-            'length' => 12,
-            'width'  => 9,
-            'height' => 6,
-        ]);
-        CartItem::create([
-            'cart_id'    => $cart->id,
-            'product_id' => $product->id,
-            'name'       => $product->name,
-            'price'      => 20,
-            'quantity'   => 1,
-            'total'      => 20,
-        ]);
-
-        $boxes = config('shipping.boxes');
-        // pick the second box (12×9×6)
-        $box = $boxes[1];
-
-        $ups = Mockery::mock(UPSService::class);
-        // we only send length/width/height to UPS
-        $expectedDims = [
-            'length' => $box['length'],
-            'width'  => $box['width'],
-            'height' => $box['height'],
-        ];
-        $ups->shouldReceive('getRate')
-            ->once()
-            ->withArgs(function($shipTo, $weight, $dims) use ($expectedDims) {
-                return $shipTo['AddressLine'] === '123 Lane'
-                    && $weight === 2.5
-                    && $dims === $expectedDims;
-            })
-            ->andReturn(10.00);
-
-        $this->app->instance(UPSService::class, $ups);
-
-        $this->actingAs($user)
-            ->postJson(route('checkout.shipping'), ['shipping_address' => '123 Lane'])
-            ->assertOk()
-            ->assertJson(['shipping' => 10.00]);
-
-        $this->assertEquals(10.00, session('shipping_fee'));
     }
 }

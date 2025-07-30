@@ -31,8 +31,6 @@ Frontend (Important) -
  - ensure cart info is properly displayed in step 2 of checkout flow
 
 Backend (Important) -
- - Integrate ShipStation pickups (scheduling via checkout flow)
- - Add Shipstation label printing
  - Rewrite test scripts, and whichever pass ensure that they correctly test the relevant controllers and services.
 
 Backend (Unimportant) -

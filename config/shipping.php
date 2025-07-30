@@ -12,15 +12,18 @@ return [
     'tax_rate' => env('CART_TAX_RATE', 0.06625),
 
     'shipper_address' => [
-        'name'        => env('SHIP_ORIGIN_NAME'),
-        'phone'       => env('SHIP_ORIGIN_PHONE'),
-        'email'       => env('SHIP_ORIGIN_EMAIL'),
-        'street1'     => env('SHIP_ORIGIN_STREET1'),
-        'city'        => env('SHIP_ORIGIN_CITY'),
-        'state'       => env('SHIP_ORIGIN_STATE'),
-        'postalCode'  => env('SHIP_ORIGIN_POSTAL_CODE'),
-        'country'     => env('SHIP_ORIGIN_COUNTRY', 'US'),
-        'residential' => false,
+        'name'        => env('SHIP_ORIGIN_NAME',     'Meitalic'),
+        'phone'       => env('SHIP_ORIGIN_PHONE',    '(123) 456-7890'),
+        'email'       => env('SHIP_ORIGIN_EMAIL',    'noreply@meitalic.com'),
+
+        // these now match your .env SHIP_FROM_* keys
+        'street1'     => env('SHIP_FROM_STREET1'),
+        'city'        => env('SHIP_FROM_CITY'),
+        'state'       => env('SHIP_FROM_STATE'),
+        'postalCode'  => env('SHIP_FROM_POSTAL_CODE'),
+        'country'     => env('SHIP_FROM_COUNTRY',    'US'),
+
+        'residential' => env('SHIP_FROM_RESIDENTIAL', true),
     ],
 
     /*

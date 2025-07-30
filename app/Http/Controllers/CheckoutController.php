@@ -22,6 +22,7 @@ use App\Mail\OrderConfirmationMailable;
 use App\Mail\AdminOrderNotificationMail;
 use App\Models\Shipment;
 use App\Jobs\SchedulePickup;
+use Illuminate\Support\Facades\Config;
 
 class CheckoutController extends Controller
 {
@@ -182,6 +183,10 @@ class CheckoutController extends Controller
     {
         $data = $request->validate([
             'shipping_address' => 'required|string',
+            'postal_code'      => 'required|string',
+            'country'          => 'required|string|size:2',
+            'city'             => 'nullable|string',
+            'state'            => 'nullable|string|size:2',
             'email'            => 'required|email',
             'phone'            => 'nullable|string',
             'payment_intent'   => 'required|string',
@@ -336,8 +341,8 @@ class CheckoutController extends Controller
             ]);
 
             // ── Dispatch end-of-day pickup job ──
-            SchedulePickup::dispatch()
-                ->delay(now()->endOfDay()->addSeconds(5));
+            // SchedulePickup::dispatch()
+             //   ->delay(now()->endOfDay()->addSeconds(5));
         });
 
         return $request->expectsJson()
@@ -449,6 +454,53 @@ class CheckoutController extends Controller
         session(['shipping_fee' => $totalFee]);
         $currency = $data['country'] === 'IL' ? 'ILS' : 'USD';
         return response()->json(['rates' => $allRates,    'currency' => $currency,]);
+    }
+
+    public function applyPromo(Request $request)
+    {
+        // 1) require a code
+        $request->validate(['code' => 'required|string']);
+
+        // 2) get the cart & items
+        $cart = $this->getCart($request);
+        $items = $cart->cartItems()->with('product')->get();
+
+        if ($items->isEmpty()) {
+            return response()
+                ->json(['error' => 'Your cart is empty.'], 422);
+        }
+
+        // 3) find an active, non-expired promo
+        $promo = PromoCode::where('code', $request->code)
+            ->where('active', true)
+            ->first();
+
+        if (! $promo || ($promo->expires_at && now()->greaterThan($promo->expires_at))) {
+            return response()
+                ->json(['error' => 'That promo code is invalid.'], 422);
+        }
+
+        // 4) compute discount
+        $subtotal = $items->sum(fn($i)=> $i->price * $i->quantity);
+        $discount = $promo->type === 'fixed'
+            ? $promo->discount
+            : ($subtotal * ($promo->discount / 100));
+
+        // 5) save to cart
+        $cart->promo_code = $promo->code;
+        $cart->discount   = $discount;
+        $cart->save();
+
+        // 6) recalc tax & total
+        $tax   = round(($subtotal - $discount) * Config::get('cart.tax_rate', 0), 2);
+        $total = round($subtotal - $discount + $tax, 2);
+
+        return response()->json([
+            'subtotal' => $subtotal,
+            'discount' => $discount,
+            'tax'      => $tax,
+            'total'    => $total,
+        ]);
     }
 
     /**

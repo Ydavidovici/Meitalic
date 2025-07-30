@@ -16,14 +16,15 @@ class ShipStationService
         $this->cfg = config('shipping.shipstation');
     }
 
+
     /**
      * Generic legacy call: fetch all raw rates for a given carrier code.
      */
-    protected function getRates(
+    public function getRates(
         array $from,
         array $to,
         array $parcel,
-        string $carrierCode
+        string $carrierCode = 'ups'
     ): array {
         $payload = [
             'carrierCode'    => $carrierCode,
@@ -68,18 +69,21 @@ class ShipStationService
             ->acceptJson()
             ->post("{$this->cfg['base']}/shipments/getrates", $payload);
 
-        if ($response->failed()) {
-            Log::error('ShipStation rate error', [
-                'carrier'  => $carrierCode,
-                'status'   => $response->status(),
-                'payload'  => $payload,
-                'raw_body' => $response->body(),
-            ]);
-            return [];
-        }
+        try {
+                        // Will throw RequestException on 4xx/5xx
+                        $response->throw();
+                    } catch (RequestException $e) {
+                        Log::error('ShipStation rate error', [
+                                'carrier'    => $carrierCode,
+                                'status'     => $response->status(),
+                                'payload'    => $payload,
+                                'raw_body'   => $response->body(),
+                            ]);
+                        // Re-throw so the test’s catch() can continue
+                        throw $e;
+                    }
 
-        $response->throw();
-        return $response->json();
+                return $response->json();
     }
 
 
@@ -347,10 +351,41 @@ class ShipStationService
             throw new \Exception('Failed to create shipping label.');
         }
 
-// ShipStation returns "shipmentId" rather than "labelId" — tests expect labelId
         $body = $response->json();
         if (!isset($body['labelId']) && isset($body['shipmentId'])) {
             $body['labelId'] = $body['shipmentId'];
         }
-        return $body;    }
+        return $body;
+    }
+
+    /**
+     * Schedule a carrier pickup in ShipStation.
+     *
+     * @param  array  $payload  // must include carrierCode, serviceCode, shipDate, readyTime,
+     *                          // closeTime, labelIds[], address, contactDetails
+     * @return array
+     * @throws \Exception
+     */
+    public function createPickup(array $payload): array
+    {
+        // (Optional) dump to stdout for debug:
+        fwrite(STDOUT, PHP_EOL . "=== createPickup payload ===\n" . json_encode($payload, JSON_PRETTY_PRINT) . "\n");
+
+        $response = Http::withBasicAuth($this->cfg['key'], $this->cfg['secret'])
+            ->acceptJson()
+            ->post("{$this->cfg['base']}/pickups/createpickup", $payload);
+
+        // (Optional) dump raw response
+        fwrite(STDOUT, "=== createPickup response ===\n" . $response->body() . "\n");
+
+        if ($response->failed()) {
+            Log::error('ShipStation createPickup error', [
+                'payload'  => $payload,
+                'response' => $response->body(),
+            ]);
+            throw new \Exception('Failed to schedule pickup in ShipStation');
+        }
+
+        return $response->json();
+    }
 }
