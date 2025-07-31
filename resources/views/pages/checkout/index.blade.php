@@ -125,7 +125,7 @@
                 <button
                     type="button"
                     @click="goToStep(2)"
-                    class="btn-primary"
+                    class="btn-primary btn-next-step"
                 >
                     Next
                 </button>
@@ -147,7 +147,7 @@
                 <button
                     type="button"
                     @click="applyPromo()"
-                    class="btn-secondary ml-2"
+                    class="btn-apply-promo ml-2"
                 >
                     Apply
                 </button>
@@ -229,14 +229,14 @@
                 <button
                     type="button"
                     @click="goToStep(1)"
-                    class="btn-secondary"
+                    class="btn-secondary btn-next-step"
                 >
                     ← Back
                 </button>
                 <button
                     type="button"
                     @click="goToStep(3)"
-                    class="btn-primary"
+                    class="btn-primary btn-next-step"
                 >
                     Continue to Payment →
                 </button>
@@ -274,7 +274,7 @@
                 <button
                     type="button"
                     @click="goToStep(2)"
-                    class="btn-secondary"
+                    class="btn-secondary btn-next-step"
                 >
                     ← Back
                 </button>

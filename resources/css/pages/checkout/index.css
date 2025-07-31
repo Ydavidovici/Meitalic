@@ -52,11 +52,43 @@
 .btn-pay {
     display: block;
     width: 100%;                /* w-full */
-    margin-top: 1rem;           /* mt-4 */
+    margin-top: 1rem;
+    border-radius: 0.25rem !important;     /* Tailwind: rounded-sm */
+    background-color: #7BE3E2 !important;  /* Custom Aqua *//* mt-4 */
 }
 /* responsive two-column grid for step 1 */
 .checkout-grid {
     @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+}
+
+/* Promo Apply Button */
+.btn-apply-promo {
+    border-radius: 0.25rem !important;     /* Tailwind: rounded-sm */
+    background-color: #7BE3E2 !important;  /* Custom Aqua */
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.btn-apply-promo:hover {
+    background-color: #4fd8d6; /* Slightly darker aqua on hover */
+}
+
+/* Step 1 Next Button */
+.btn-next-step {
+    background-color: #7BE3E2 !important;  /* Aqua */
+    border-radius: 0.25rem !important;     /* rounded-sm */
+    color: white;
+    border: none;
+    padding: 0.5rem 1.25rem;
+    font-weight: 600;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.btn-next-step:hover {
+    background-color: #4fd8d6; /* Slightly darker aqua on hover */
 }
 
 

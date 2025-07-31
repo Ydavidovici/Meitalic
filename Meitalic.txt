@@ -21,7 +21,7 @@ Hydra 4
 # TODO
 Styling -
  - Switch Meitalic logo in shop by brand to black logo and match repechage logo in size
- - redesign checkout flow buttons and style aqua (ensure consistency)
+
 
 Frontend (Important) -
  - Ensure proper frontend input validation and error handling for checkout flow
