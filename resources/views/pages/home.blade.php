@@ -479,7 +479,7 @@
                 <div class="w-full md:w-1/2 flex h-full">
                     <a href="{{ route('products.index', ['search' => 'Dr Pimple Serum']) }}" class="w-full">
                         <img
-                            src="{{ asset('images/dr-pimple.jpeg') }}"
+                            src="{{ asset('images/dr-pimple-cropped.jpeg') }}"
                             alt="Dr. Pimple"
                             class="w-full h-full rounded-lg shadow-md object-cover"
                         />
